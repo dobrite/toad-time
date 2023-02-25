@@ -53,21 +53,14 @@ fn main() -> ! {
         &mut pac.RESETS,
     );
 
-    // This is the correct pin on the Raspberry Pico board. On other boards, even if they have an
-    // on-board LED, it might need to be changed.
-    // Notably, on the Pico W, the LED is not connected to any of the RP2040 GPIOs but to the cyw43 module instead. If you have
-    // a Pico W and want to toggle a LED with a simple GPIO output pin, you can connect an external
-    // LED to one of the GPIO pins, and reference that pin here.
     let mut led_pin = pins.led.into_push_pull_output();
 
     loop {
         info!("on!");
         led_pin.set_high().unwrap();
-        delay.delay_ms(500);
+        delay.delay_ms(5000);
         info!("off!");
         led_pin.set_low().unwrap();
-        delay.delay_ms(500);
+        delay.delay_ms(5000);
     }
 }
-
-// End of file
