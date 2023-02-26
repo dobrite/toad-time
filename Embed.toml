@@ -9,7 +9,6 @@ speed = 20000
 # usb_pid = "4444"
 # serial = "test"
 
-
 [default.flashing]
 enabled = true
 
@@ -35,5 +34,5 @@ log_enabled = false
 log_path = "./logs"
 
 [default.gdb]
-enabled = false
-gdb_connection_string = "127.0.0.1:2345"
+enabled = true
+gdb_connection_string = "127.0.0.1:3333"
