@@ -15,6 +15,12 @@ panic-probe = { version = "0.3", features = ["print-defmt"] }
 # el BSP
 rp-pico = "0.7"
 
+embedded-graphics = "0.7.1"
+ssd1306 = "0.7.1"
+
+# durations and instants
+fugit = "0.3.6"
+
 # cargo build/run
 [profile.dev]
 codegen-units = 1
