@@ -1,16 +1,13 @@
-//! Blinks the LED on a Pico board
-//!
-//! This will blink an LED attached to GP25, which is the pin the Pico uses for the on-board LED.
 #![no_std]
 #![no_main]
 
 use bsp::entry;
 use defmt::*;
 use defmt_rtt as _;
+use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
 use embedded_hal::{digital::v2::OutputPin, spi};
 use fugit::RateExtU32;
 use panic_probe as _;
-
 use rp_pico as bsp;
 
 use bsp::hal::{
@@ -21,17 +18,16 @@ use bsp::hal::{
     watchdog::Watchdog,
 };
 
-use embedded_graphics::{
-    mono_font::{ascii::FONT_6X10, MonoTextStyleBuilder},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    text::{Baseline, Text},
-};
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::*, text::Text};
 use ssd1306::{prelude::*, Ssd1306};
+
+// const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+const BIGGE_FONT: PcfFont =
+    include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 
 #[entry]
 fn main() -> ! {
-    info!("Program start");
+    info!("program start");
     let mut pac = pac::Peripherals::take().unwrap();
     let core = pac::CorePeripherals::take().unwrap();
     let mut watchdog = Watchdog::new(pac.WATCHDOG);
@@ -79,12 +75,8 @@ fn main() -> ! {
     display.reset(&mut oled_reset, &mut delay).unwrap();
     display.init().unwrap();
 
-    let text_style = MonoTextStyleBuilder::new()
-        .font(&FONT_6X10)
-        .text_color(BinaryColor::On)
-        .build();
-
-    Text::with_baseline("Hello Rust!", Point::zero(), text_style, Baseline::Top)
+    let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
+    Text::new("BPM", Point::new(30, 50), bigge_font)
         .draw(&mut display)
         .unwrap();
 
