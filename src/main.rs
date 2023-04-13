@@ -7,6 +7,7 @@
     dispatchers = [TIMER_IRQ_1]
 )]
 mod app {
+    use core::mem::MaybeUninit;
     use defmt::*;
     use defmt_rtt as _;
     use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
@@ -21,14 +22,15 @@ mod app {
 
     use rp_pico::{
         hal::{
-            clocks, gpio,
-            gpio::pin::bank0::{Gpio2, Gpio25, Gpio3},
-            gpio::pin::PushPullOutput,
+            self, clocks, gpio,
+            gpio::pin::bank0::{Gpio16, Gpio17, Gpio25},
+            gpio::pin::{PushPull, PushPullOutput},
+            gpio::Output,
             pac,
             sio::Sio,
-            spi::Spi,
+            spi::{Enabled, Spi},
             watchdog::Watchdog,
-            Clock, I2C,
+            Clock,
         },
         XOSC_CRYSTAL_FREQ,
     };
@@ -36,9 +38,19 @@ mod app {
     use embedded_graphics::{pixelcolor::BinaryColor, prelude::*, text::Text};
     use ssd1306::{prelude::*, Ssd1306};
 
+    type Display = Ssd1306<
+        ssd1306::prelude::SPIInterface<
+            Spi<Enabled, pac::SPI0, 8>,
+            gpio::Pin<Gpio16, Output<PushPull>>,
+            gpio::Pin<Gpio17, Output<PushPull>>,
+        >,
+        ssd1306::prelude::DisplaySize128x64,
+        ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
+    >;
+
     // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
-    //const BIGGE_FONT: PcfFont =
-    //    include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+    const BIGGE_FONT: PcfFont =
+        include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 
     #[shared]
     struct Shared {}
@@ -46,10 +58,15 @@ mod app {
     #[local]
     struct Local {
         led: gpio::Pin<Gpio25, PushPullOutput>,
+        display: &'static mut Display,
     }
 
-    #[init()]
+    #[init(local=[display_ctx: MaybeUninit<Display> = MaybeUninit::uninit()])]
     fn init(mut ctx: init::Context) -> (Shared, Local) {
+        unsafe {
+            hal::sio::spinlock_reset();
+        }
+
         info!("program start");
 
         let token = rtic_monotonics::create_rp2040_monotonic_token!();
@@ -67,7 +84,8 @@ mod app {
         .ok()
         .unwrap();
 
-        //let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
+        let mut delay =
+            cortex_m::delay::Delay::new(ctx.core.SYST, clocks.system_clock.freq().to_Hz());
 
         let sio = Sio::new(ctx.device.SIO);
         let pins = rp_pico::Pins::new(
@@ -77,36 +95,31 @@ mod app {
             &mut ctx.device.RESETS,
         );
 
-        //let oled_dc = pins.gpio16.into_push_pull_output();
-        //let oled_cs = pins.gpio17.into_push_pull_output();
-        //let _ = pins
-        //    .gpio18
-        //    .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
-        //let _ = pins
-        //    .gpio19
-        //    .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
-        //let mut oled_reset = pins.gpio20.into_push_pull_output();
+        let oled_dc = pins.gpio16.into_push_pull_output();
+        let oled_cs = pins.gpio17.into_push_pull_output();
+        let _ = pins
+            .gpio18
+            .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
+        let _ = pins
+            .gpio19
+            .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
+        let mut oled_reset = pins.gpio20.into_push_pull_output();
 
-        //let spi = Spi::<_, _, 8>::new(pac.SPI0).init(
-        //    &mut pac.RESETS,
-        //    125_000_000u32.Hz(),
-        //    1_000_000u32.Hz(),
-        //    &spi::MODE_0,
-        //);
+        let spi = Spi::<_, _, 8>::new(ctx.device.SPI0).init(
+            &mut ctx.device.RESETS,
+            125_000_000u32.Hz(),
+            1_000_000u32.Hz(),
+            &spi::MODE_0,
+        );
 
-        //let interface = SPIInterface::new(spi, oled_dc, oled_cs);
-        //let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
-        //    .into_buffered_graphics_mode();
+        let interface = SPIInterface::new(spi, oled_dc, oled_cs);
+        let display_ctx: &'static mut _ = ctx.local.display_ctx.write(
+            Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+                .into_buffered_graphics_mode(),
+        );
 
-        //display.reset(&mut oled_reset, &mut delay).unwrap();
-        //display.init().unwrap();
-
-        //let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-        //Text::new("BPM", Point::new(30, 50), bigge_font)
-        //    .draw(&mut display)
-        //    .unwrap();
-
-        //display.flush().unwrap();
+        display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
+        display_ctx.init().unwrap();
 
         heartbeat::spawn().ok();
 
@@ -114,7 +127,13 @@ mod app {
         info!("led high!");
         led.set_high().unwrap();
 
-        (Shared {}, Local { led })
+        (
+            Shared {},
+            Local {
+                led,
+                display: display_ctx,
+            },
+        )
     }
 
     //#[idle(local = [])]
@@ -126,12 +145,18 @@ mod app {
     //    }
     //}
 
-    #[task(local = [led], priority = 1)]
+    #[task(local = [led, display], priority = 1)]
     async fn heartbeat(ctx: heartbeat::Context) {
         info!("task!");
         // Flicker the built-in LED
         _ = ctx.local.led.toggle();
 
+        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
+        Text::new("BPM1", Point::new(30, 50), bigge_font)
+            .draw(*ctx.local.display)
+            .unwrap();
+
+        ctx.local.display.flush().unwrap();
         // Congrats, you can use your i2c and have access to it here,
         // now to do something with it!
         info!("after toggle!");
