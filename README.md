@@ -1,3 +1,6 @@
+rtic on pi pico
+https://github.com/rp-rs/rp-hal-boards/blob/main/boards/rp-pico/examples/pico_rtic.rs
+
 A simple Pi Pico Rust setup based on the [rp-2040 template][1].
 
 Blinks the built in LED, and prints "Hello Rust!" to a connected SD3306
