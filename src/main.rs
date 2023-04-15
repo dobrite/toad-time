@@ -145,23 +145,27 @@ mod app {
     //    }
     //}
 
-    #[task(local = [led, display], priority = 1)]
+    #[task(local = [led, display, times: u32 = 0], priority = 1)]
     async fn heartbeat(ctx: heartbeat::Context) {
-        info!("task!");
-        // Flicker the built-in LED
-        _ = ctx.local.led.toggle();
+        loop {
+            info!("task!");
+            // Flicker the built-in LED
+            _ = ctx.local.led.toggle();
 
-        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-        Text::new("BPM1", Point::new(30, 50), bigge_font)
-            .draw(*ctx.local.display)
-            .unwrap();
+            let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
+            Text::new("BPM", Point::new(30, 50), bigge_font)
+                .draw(*ctx.local.display)
+                .unwrap();
 
-        ctx.local.display.flush().unwrap();
-        // Congrats, you can use your i2c and have access to it here,
-        // now to do something with it!
-        info!("after toggle!");
+            *ctx.local.times += 1;
 
-        // Re-spawn this task after 1 second
-        Timer::delay(1000.millis()).await;
+            ctx.local.display.flush().unwrap();
+            // Congrats, you can use your i2c and have access to it here,
+            // now to do something with it!
+            info!("after toggle!");
+
+            // Re-spawn this task after 1 second
+            Timer::delay(500.millis()).await
+        }
     }
 }
