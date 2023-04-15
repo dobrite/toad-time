@@ -504,6 +504,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 
 [[package]]
+name = "rotary-encoder-embedded"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01c89f3f7f863c203d8346f58b485731765ecc22c27f3186b53e2013bda7d65d"
+dependencies = [
+ "embedded-hal",
+]
+
+[[package]]
 name = "rp-pico"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -585,6 +594,7 @@ dependencies = [
  "embedded-hal",
  "fugit",
  "panic-probe",
+ "rotary-encoder-embedded",
  "rp-pico",
  "rtic",
  "rtic-monotonics",

@@ -23,9 +23,9 @@ mod app {
     use rp_pico::{
         hal::{
             self, clocks, gpio,
-            gpio::pin::bank0::{Gpio16, Gpio17, Gpio25},
-            gpio::pin::{PushPull, PushPullOutput},
-            gpio::Output,
+            gpio::pin::bank0::{Gpio14, Gpio15, Gpio16, Gpio17, Gpio25},
+            gpio::pin::{PullUp, PushPull, PushPullOutput},
+            gpio::{Input, Output},
             pac,
             sio::Sio,
             spi::{Enabled, Spi},
@@ -38,6 +38,8 @@ mod app {
     use embedded_graphics::{pixelcolor::BinaryColor, prelude::*, text::Text};
     use ssd1306::{prelude::*, Ssd1306};
 
+    use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
+
     type Display = Ssd1306<
         ssd1306::prelude::SPIInterface<
             Spi<Enabled, pac::SPI0, 8>,
@@ -46,6 +48,12 @@ mod app {
         >,
         ssd1306::prelude::DisplaySize128x64,
         ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
+    >;
+
+    type Encoder = RotaryEncoder<
+        StandardMode,
+        gpio::Pin<Gpio14, Input<PullUp>>,
+        gpio::Pin<Gpio15, Input<PullUp>>,
     >;
 
     // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
@@ -57,8 +65,9 @@ mod app {
 
     #[local]
     struct Local {
-        led: gpio::Pin<Gpio25, PushPullOutput>,
         display: &'static mut Display,
+        encoder: Encoder,
+        led: gpio::Pin<Gpio25, PushPullOutput>,
     }
 
     #[init(local=[display_ctx: MaybeUninit<Display> = MaybeUninit::uninit()])]
@@ -121,35 +130,58 @@ mod app {
         display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
         display_ctx.init().unwrap();
 
+        let rotary_dt = pins.gpio14.into_pull_up_input();
+        let rotary_clk = pins.gpio15.into_pull_up_input();
+        let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
+
         heartbeat::spawn().ok();
+        update_encoder::spawn().ok();
 
         let mut led = pins.led.into_push_pull_output();
-        info!("led high!");
         led.set_high().unwrap();
 
         (
             Shared {},
             Local {
-                led,
                 display: display_ctx,
+                encoder,
+                led,
             },
         )
     }
 
-    //#[idle(local = [])]
-    //fn idle(_cx: idle::Context) -> ! {
-    //    info!("idle!");
+    #[idle(local = [])]
+    fn idle(_cx: idle::Context) -> ! {
+        info!("idle!");
 
-    //    loop {
-    //        cortex_m::asm::nop();
-    //    }
-    //}
+        loop {
+            cortex_m::asm::nop();
+        }
+    }
 
-    #[task(local = [led, display, times: u32 = 0], priority = 1)]
+    #[task(local = [encoder], priority = 1)]
+    async fn update_encoder(ctx: update_encoder::Context) {
+        let encoder = ctx.local.encoder;
+        let update_duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(1111);
+
+        loop {
+            encoder.update();
+            match encoder.direction() {
+                Direction::Clockwise => {
+                    info!("clockwise")
+                }
+                Direction::Anticlockwise => {
+                    info!("anticlockwise")
+                }
+                Direction::None => {}
+            }
+            Timer::delay(update_duration).await
+        }
+    }
+
+    #[task(local = [led, display], priority = 1)]
     async fn heartbeat(ctx: heartbeat::Context) {
         loop {
-            info!("task!");
-            // Flicker the built-in LED
             _ = ctx.local.led.toggle();
 
             let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
@@ -157,14 +189,8 @@ mod app {
                 .draw(*ctx.local.display)
                 .unwrap();
 
-            *ctx.local.times += 1;
-
             ctx.local.display.flush().unwrap();
-            // Congrats, you can use your i2c and have access to it here,
-            // now to do something with it!
-            info!("after toggle!");
 
-            // Re-spawn this task after 1 second
             Timer::delay(500.millis()).await
         }
     }

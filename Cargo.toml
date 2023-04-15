@@ -7,6 +7,7 @@ version = "0.1.0"
 cortex-m = { version = "0.7.7" }
 cortex-m-rt = "0.7.3"
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
+rotary-encoder-embedded = { version = "0.2.0", features = ["standard"] }
 rtic = { git = "https://github.com/rtic-rs/rtic", features = ["thumbv6-backend"] }
 rtic-monotonics = { git = "https://github.com/rtic-rs/rtic", features = ["rp2040"] }
 
