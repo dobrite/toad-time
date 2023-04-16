@@ -145,6 +145,7 @@ mod app {
         let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
 
         heartbeat::spawn().ok();
+        display::spawn().ok();
         update_encoder::spawn().ok();
         update_encoder_button::spawn().ok();
         update_page_button::spawn().ok();
@@ -228,17 +229,28 @@ mod app {
         }
     }
 
-    #[task(local = [led, display], priority = 1)]
+    #[task(local = [display], priority = 1)]
+    async fn display(ctx: display::Context) {
+        let mut update = true;
+        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
+        Text::new("BPM", Point::new(30, 50), bigge_font)
+            .draw(*ctx.local.display)
+            .unwrap();
+
+        loop {
+            if update {
+                ctx.local.display.flush().unwrap();
+                update = false
+            }
+
+            Timer::delay(10.millis()).await
+        }
+    }
+
+    #[task(local = [led], priority = 1)]
     async fn heartbeat(ctx: heartbeat::Context) {
         loop {
             _ = ctx.local.led.toggle();
-
-            let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-            Text::new("BPM", Point::new(30, 50), bigge_font)
-                .draw(*ctx.local.display)
-                .unwrap();
-
-            ctx.local.display.flush().unwrap();
 
             Timer::delay(500.millis()).await
         }
