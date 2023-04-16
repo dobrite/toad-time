@@ -64,9 +64,13 @@ mod app {
     const BUTTON_UPDATE: fugit::Duration<u64, 1, MICRO_SECONDS> =
         fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(FIFTY_MILLI_SECONDS);
 
+    pub struct State {
+        bpm: u32,
+    }
+
     #[shared]
     struct Shared {
-        bpm: u32,
+        state: State,
     }
 
     #[local]
@@ -157,7 +161,9 @@ mod app {
         led.set_high().unwrap();
 
         (
-            Shared { bpm: 120 },
+            Shared {
+                state: State { bpm: 120 },
+            },
             Local {
                 display: display_ctx,
                 encoder,
@@ -231,14 +237,19 @@ mod app {
         }
     }
 
-    #[task(local = [display], shared=[bpm], priority = 1)]
-    async fn display(ctx: display::Context) {
-        let mut bpm = arrayvec::ArrayString::<7>::new();
-        write!(bpm, "{} BPM", 120).unwrap();
+    #[task(local = [display], shared=[state], priority = 1)]
+    async fn display(mut ctx: display::Context) {
+        let mut bpm_str = arrayvec::ArrayString::<7>::new();
+        write!(
+            bpm_str,
+            "{} BPM",
+            ctx.shared.state.lock(|state| { state.bpm })
+        )
+        .unwrap();
 
         let mut update = true;
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-        Text::new(&bpm, Point::new(30, 70), bigge_font)
+        Text::new(&bpm_str, Point::new(30, 70), bigge_font)
             .draw(*ctx.local.display)
             .unwrap();
 
@@ -256,10 +267,10 @@ mod app {
     const PWM_PERCENT_INCREMENTS: u8 = 10;
     const SECONDS_IN_MINUTES: u8 = 60;
 
-    #[task(local = [led], shared=[bpm], priority = 2)]
+    #[task(local = [led], shared=[state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
-        let milli_seconds_per_tick = ctx.shared.bpm.lock(|bpm| {
-            *bpm as f32
+        let milli_seconds_per_tick = ctx.shared.state.lock(|state| {
+            state.bpm as f32
                 / SECONDS_IN_MINUTES as f32
                 / PWM_PERCENT_INCREMENTS as f32
                 / MAX_MULT as f32
