@@ -10,6 +10,7 @@ embedded-hal = { version = "0.2.7", features = ["unproven"] }
 rotary-encoder-embedded = { version = "0.2.0", features = ["standard"] }
 rtic = { git = "https://github.com/rtic-rs/rtic", features = ["thumbv6-backend"] }
 rtic-monotonics = { git = "https://github.com/rtic-rs/rtic", features = ["rp2040"] }
+rtic-sync = { git = "https://github.com/rtic-rs/rtic" }
 
 defmt = "=0.3.2"
 defmt-rtt = "0.4.0"
