@@ -59,6 +59,10 @@ mod app {
     // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
     const BIGGE_FONT: PcfFont =
         include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+    const FIFTY_MILLI_SECONDS: u64 = 50_000;
+    const MICRO_SECONDS: u32 = 1_000_000;
+    const BUTTON_UPDATE: fugit::Duration<u64, 1, MICRO_SECONDS> =
+        fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(FIFTY_MILLI_SECONDS);
 
     #[shared]
     struct Shared {}
@@ -173,30 +177,21 @@ mod app {
 
     #[task(local = [play_button], priority = 1)]
     async fn update_play_button(ctx: update_play_button::Context) {
-        let button = ctx.local.play_button;
-        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
-        debounced_button("play", button, duration).await
+        debounced_button("play", ctx.local.play_button).await
     }
 
     #[task(local = [page_button], priority = 1)]
     async fn update_page_button(ctx: update_page_button::Context) {
-        let button = ctx.local.page_button;
-        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
-        debounced_button("page", button, duration).await
+        debounced_button("page", ctx.local.page_button).await
     }
 
     #[task(local = [encoder_button], priority = 1)]
     async fn update_encoder_button(ctx: update_encoder_button::Context) {
-        let button = ctx.local.encoder_button;
-        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
-        debounced_button("encoder", button, duration).await
+        debounced_button("encoder", ctx.local.encoder_button).await
     }
 
-    async fn debounced_button<B: InputPin>(
-        name: &str,
-        button: &B,
-        duration: fugit::Duration<u64, 1, 1000000>,
-    ) where
+    async fn debounced_button<B: InputPin>(name: &str, button: &B)
+    where
         <B as InputPin>::Error: core::fmt::Debug,
     {
         let mut armed = true;
@@ -209,14 +204,14 @@ mod app {
                 armed = true;
             }
 
-            Timer::delay(duration).await
+            Timer::delay(BUTTON_UPDATE).await
         }
     }
 
     #[task(local = [encoder], priority = 1)]
     async fn update_encoder(ctx: update_encoder::Context) {
         let encoder = ctx.local.encoder;
-        let update_duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(1111);
+        let update_duration = fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(1111);
 
         loop {
             encoder.update();
