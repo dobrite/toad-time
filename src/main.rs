@@ -255,19 +255,27 @@ mod app {
 
     #[task(local = [led], shared=[bpm], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
-        let micro_seconds_per_tick = ctx.shared.bpm.lock(|bpm| {
+        let milli_seconds_per_tick = ctx.shared.bpm.lock(|bpm| {
             *bpm as f32
                 / SECONDS_IN_MINUTES as f32
                 / PWM_PERCENT_INCREMENTS as f32
                 / MAX_MULT as f32
                 * MICRO_SECONDS as f32
         });
-        info!("us per tick: {:?}", micro_seconds_per_tick);
+        info!("us per tick: {:?}", milli_seconds_per_tick); // 1.0416667
         let tick_duration =
-            fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(micro_seconds_per_tick as u64);
+            fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(milli_seconds_per_tick as u64);
+
+        let target = 240; // 0.25 seconds == 120 bpm at 50% PWM
+        let mut counter = 0;
 
         loop {
-            _ = ctx.local.led.toggle();
+            if counter == target {
+                _ = ctx.local.led.toggle();
+                counter = 0;
+            } else {
+                counter += 1;
+            }
 
             Timer::delay(tick_duration).await
         }
