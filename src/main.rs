@@ -4,7 +4,7 @@
 
 #[rtic::app(
     device = rp_pico::hal::pac,
-    dispatchers = [TIMER_IRQ_1]
+    dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
     use core::mem::MaybeUninit;
@@ -247,7 +247,7 @@ mod app {
         }
     }
 
-    #[task(local = [led], priority = 1)]
+    #[task(local = [led], priority = 2)]
     async fn tick(ctx: tick::Context) {
         loop {
             _ = ctx.local.led.toggle();
