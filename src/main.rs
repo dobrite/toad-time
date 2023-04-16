@@ -65,7 +65,9 @@ mod app {
         fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(FIFTY_MILLI_SECONDS);
 
     #[shared]
-    struct Shared {}
+    struct Shared {
+        bpm: u32,
+    }
 
     #[local]
     struct Local {
@@ -155,7 +157,7 @@ mod app {
         led.set_high().unwrap();
 
         (
-            Shared {},
+            Shared { bpm: 120 },
             Local {
                 display: display_ctx,
                 encoder,
@@ -229,7 +231,7 @@ mod app {
         }
     }
 
-    #[task(local = [display], priority = 1)]
+    #[task(local = [display], shared=[bpm], priority = 1)]
     async fn display(ctx: display::Context) {
         let mut update = true;
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
@@ -247,12 +249,27 @@ mod app {
         }
     }
 
-    #[task(local = [led], priority = 2)]
-    async fn tick(ctx: tick::Context) {
+    const MAX_MULT: u8 = 192;
+    const PWM_PERCENT_INCREMENTS: u8 = 10;
+    const SECONDS_IN_MINUTES: u8 = 60;
+
+    #[task(local = [led], shared=[bpm], priority = 2)]
+    async fn tick(mut ctx: tick::Context) {
+        let micro_seconds_per_tick = ctx.shared.bpm.lock(|bpm| {
+            *bpm as f32
+                / SECONDS_IN_MINUTES as f32
+                / PWM_PERCENT_INCREMENTS as f32
+                / MAX_MULT as f32
+                * MICRO_SECONDS as f32
+        });
+        info!("us per tick: {:?}", micro_seconds_per_tick);
+        let tick_duration =
+            fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(micro_seconds_per_tick as u64);
+
         loop {
             _ = ctx.local.led.toggle();
 
-            Timer::delay(500.millis()).await
+            Timer::delay(tick_duration).await
         }
     }
 }
