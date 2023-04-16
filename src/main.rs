@@ -12,7 +12,7 @@ mod app {
     use defmt_rtt as _;
     use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
     use embedded_hal::{
-        digital::v2::{OutputPin, ToggleableOutputPin},
+        digital::v2::{InputPin, OutputPin, ToggleableOutputPin},
         spi,
     };
     use fugit::RateExtU32;
@@ -23,7 +23,7 @@ mod app {
     use rp_pico::{
         hal::{
             self, clocks, gpio,
-            gpio::pin::bank0::{Gpio14, Gpio15, Gpio16, Gpio17, Gpio25},
+            gpio::pin::bank0::*,
             gpio::pin::{PullUp, PushPull, PushPullOutput},
             gpio::{Input, Output},
             pac,
@@ -67,7 +67,10 @@ mod app {
     struct Local {
         display: &'static mut Display,
         encoder: Encoder,
+        encoder_button: gpio::Pin<Gpio13, Input<PullUp>>,
         led: gpio::Pin<Gpio25, PushPullOutput>,
+        play_button: gpio::Pin<Gpio11, Input<PullUp>>,
+        page_button: gpio::Pin<Gpio12, Input<PullUp>>,
     }
 
     #[init(local=[display_ctx: MaybeUninit<Display> = MaybeUninit::uninit()])]
@@ -130,12 +133,18 @@ mod app {
         display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
         display_ctx.init().unwrap();
 
+        let play_button = pins.gpio11.into_pull_up_input();
+        let page_button = pins.gpio12.into_pull_up_input();
+        let encoder_button = pins.gpio13.into_pull_up_input();
         let rotary_dt = pins.gpio14.into_pull_up_input();
         let rotary_clk = pins.gpio15.into_pull_up_input();
         let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
 
         heartbeat::spawn().ok();
         update_encoder::spawn().ok();
+        update_encoder_button::spawn().ok();
+        update_page_button::spawn().ok();
+        update_play_button::spawn().ok();
 
         let mut led = pins.led.into_push_pull_output();
         led.set_high().unwrap();
@@ -145,7 +154,10 @@ mod app {
             Local {
                 display: display_ctx,
                 encoder,
+                encoder_button,
                 led,
+                page_button,
+                play_button,
             },
         )
     }
@@ -156,6 +168,48 @@ mod app {
 
         loop {
             cortex_m::asm::nop();
+        }
+    }
+
+    #[task(local = [play_button], priority = 1)]
+    async fn update_play_button(ctx: update_play_button::Context) {
+        let button = ctx.local.play_button;
+        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
+        debounced_button("play", button, duration).await
+    }
+
+    #[task(local = [page_button], priority = 1)]
+    async fn update_page_button(ctx: update_page_button::Context) {
+        let button = ctx.local.page_button;
+        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
+        debounced_button("page", button, duration).await
+    }
+
+    #[task(local = [encoder_button], priority = 1)]
+    async fn update_encoder_button(ctx: update_encoder_button::Context) {
+        let button = ctx.local.encoder_button;
+        let duration = fugit::Duration::<u64, 1, 1_000_000>::from_ticks(50_000);
+        debounced_button("encoder", button, duration).await
+    }
+
+    async fn debounced_button<B: InputPin>(
+        name: &str,
+        button: &B,
+        duration: fugit::Duration<u64, 1, 1000000>,
+    ) where
+        <B as InputPin>::Error: core::fmt::Debug,
+    {
+        let mut armed = true;
+
+        loop {
+            if armed && button.is_low().unwrap() {
+                armed = false;
+                info!("{:?} button click!", name);
+            } else if !armed && button.is_high().unwrap() {
+                armed = true;
+            }
+
+            Timer::delay(duration).await
         }
     }
 
