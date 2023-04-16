@@ -16,6 +16,7 @@ mod app {
         spi,
     };
     use fugit::RateExtU32;
+    use heapless::String;
     use panic_probe as _;
 
     use rtic_monotonics::rp2040::{Timer, *};
@@ -239,7 +240,7 @@ mod app {
 
     #[task(local = [display], shared=[state], priority = 1)]
     async fn display(mut ctx: display::Context) {
-        let mut bpm_str = arrayvec::ArrayString::<7>::new();
+        let mut bpm_str: String<7> = String::new();
         write!(
             bpm_str,
             "{} BPM",
