@@ -2,11 +2,14 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
+mod state;
+
 #[rtic::app(
     device = rp_pico::hal::pac,
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
+    use crate::state::{Command, State, StateChange, COMMAND_CAPACITY, STATE_CHANGE_CAPACITY};
     use core::{fmt::Write, mem::MaybeUninit};
     use defmt::info;
     use defmt_rtt as _;
@@ -20,6 +23,7 @@ mod app {
     use panic_probe as _;
 
     use rtic_monotonics::rp2040::{Timer, *};
+    use rtic_sync::{channel::*, make_channel};
 
     use rp_pico::{
         hal::{
@@ -64,10 +68,6 @@ mod app {
     const MICRO_SECONDS: u32 = 1_000_000;
     const BUTTON_UPDATE: fugit::Duration<u64, 1, MICRO_SECONDS> =
         fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(FIFTY_MILLI_SECONDS);
-
-    pub struct State {
-        bpm: u32,
-    }
 
     #[shared]
     struct Shared {
@@ -151,12 +151,16 @@ mod app {
         let rotary_clk = pins.gpio15.into_pull_up_input();
         let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
 
+        let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
+        let (state_sender, state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
+
         tick::spawn().ok();
-        display::spawn().ok();
-        update_encoder::spawn().ok();
-        update_encoder_button::spawn().ok();
-        update_page_button::spawn().ok();
-        update_play_button::spawn().ok();
+        state::spawn(command_receiver, state_sender).ok();
+        display::spawn(state_receiver).ok();
+        update_encoder::spawn(command_sender.clone()).ok();
+        update_encoder_button::spawn(command_sender.clone()).ok();
+        update_page_button::spawn(command_sender.clone()).ok();
+        update_play_button::spawn(command_sender).ok();
 
         let mut led = pins.led.into_push_pull_output();
         led.set_high().unwrap();
@@ -186,22 +190,70 @@ mod app {
     }
 
     #[task(local = [play_button], priority = 1)]
-    async fn update_play_button(ctx: update_play_button::Context) {
-        debounced_button("play", ctx.local.play_button).await
+    async fn update_play_button(
+        ctx: update_play_button::Context,
+        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+    ) {
+        debounced_button("play", sender, ctx.local.play_button, Command::PlayPress).await
     }
 
     #[task(local = [page_button], priority = 1)]
-    async fn update_page_button(ctx: update_page_button::Context) {
-        debounced_button("page", ctx.local.page_button).await
+    async fn update_page_button(
+        ctx: update_page_button::Context,
+
+        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+    ) {
+        debounced_button("page", sender, ctx.local.page_button, Command::PagePress).await
     }
 
     #[task(local = [encoder_button], priority = 1)]
-    async fn update_encoder_button(ctx: update_encoder_button::Context) {
-        debounced_button("encoder", ctx.local.encoder_button).await
+    async fn update_encoder_button(
+        ctx: update_encoder_button::Context,
+        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+    ) {
+        debounced_button(
+            "encoder",
+            sender,
+            ctx.local.encoder_button,
+            Command::EncoderPress,
+        )
+        .await
     }
 
-    async fn debounced_button<B: InputPin>(name: &str, button: &B)
-    where
+    #[task(local = [], shared = [state], priority = 1)]
+    async fn state(
+        mut ctx: state::Context,
+        mut receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
+        mut sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
+    ) {
+        while let Ok(command) = receiver.recv().await {
+            let state_change = match command {
+                Command::EncoderRight => ctx.shared.state.lock(|state| {
+                    // logic to decide what piece of state to change
+                    state.bpm += 1;
+                    StateChange::Bpm(state.bpm)
+                }),
+                Command::EncoderLeft => ctx.shared.state.lock(|state| {
+                    // logic to decide what piece of state to change
+                    state.bpm -= 1;
+                    StateChange::Bpm(state.bpm)
+                }),
+                //Command::EncoderPress => {}
+                //Command::PagePress => {}
+                //Command::PlayPress => {}
+                _ => unreachable!(),
+            };
+
+            let _ = sender.send(state_change).await;
+        }
+    }
+
+    async fn debounced_button<B: InputPin>(
+        name: &str,
+        mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        button: &B,
+        command: Command,
+    ) where
         <B as InputPin>::Error: core::fmt::Debug,
     {
         let mut armed = true;
@@ -210,6 +262,7 @@ mod app {
             if armed && button.is_low().unwrap() {
                 armed = false;
                 info!("{:?} button click!", name);
+                let _ = sender.send(command).await;
             } else if !armed && button.is_high().unwrap() {
                 armed = true;
             }
@@ -219,7 +272,10 @@ mod app {
     }
 
     #[task(local = [encoder], priority = 1)]
-    async fn update_encoder(ctx: update_encoder::Context) {
+    async fn update_encoder(
+        ctx: update_encoder::Context,
+        mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
+    ) {
         let encoder = ctx.local.encoder;
         let update_duration = fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(1111);
 
@@ -227,10 +283,12 @@ mod app {
             encoder.update();
             match encoder.direction() {
                 Direction::Clockwise => {
-                    info!("clockwise")
+                    info!("clockwise");
+                    let _ = sender.send(Command::EncoderRight).await;
                 }
                 Direction::Anticlockwise => {
-                    info!("anticlockwise")
+                    info!("anticlockwise");
+                    let _ = sender.send(Command::EncoderLeft).await;
                 }
                 Direction::None => {}
             }
@@ -238,8 +296,9 @@ mod app {
         }
     }
 
-    #[task(local = [display], shared=[state], priority = 1)]
-    async fn display(mut ctx: display::Context) {
+    #[task(local = [display], shared = [state], priority = 1)]
+    async fn display(mut ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
+        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let mut bpm_str: String<7> = String::new();
         write!(
             bpm_str,
@@ -248,19 +307,27 @@ mod app {
         )
         .unwrap();
 
-        let mut update = true;
-        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         Text::new(&bpm_str, Point::new(30, 70), bigge_font)
             .draw(*ctx.local.display)
             .unwrap();
 
-        loop {
-            if update {
-                ctx.local.display.flush().unwrap();
-                update = false
-            }
+        ctx.local.display.flush().unwrap();
 
-            Timer::delay(10.millis()).await
+        while let Ok(_state_change) = receiver.recv().await {
+            bpm_str.clear();
+            ctx.local.display.clear();
+            write!(
+                bpm_str,
+                "{} BPM",
+                ctx.shared.state.lock(|state| { state.bpm })
+            )
+            .unwrap();
+
+            Text::new(&bpm_str, Point::new(30, 70), bigge_font)
+                .draw(*ctx.local.display)
+                .unwrap();
+
+            ctx.local.display.flush().unwrap();
         }
     }
 
@@ -268,7 +335,7 @@ mod app {
     const PWM_PERCENT_INCREMENTS: u8 = 10;
     const SECONDS_IN_MINUTES: u8 = 60;
 
-    #[task(local = [led], shared=[state], priority = 2)]
+    #[task(local = [led], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let milli_seconds_per_tick = ctx.shared.state.lock(|state| {
             state.bpm as f32
