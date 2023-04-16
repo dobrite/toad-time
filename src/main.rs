@@ -7,8 +7,8 @@
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
-    use core::mem::MaybeUninit;
-    use defmt::*;
+    use core::{fmt::Write, mem::MaybeUninit};
+    use defmt::info;
     use defmt_rtt as _;
     use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
     use embedded_hal::{
@@ -233,9 +233,12 @@ mod app {
 
     #[task(local = [display], shared=[bpm], priority = 1)]
     async fn display(ctx: display::Context) {
+        let mut bpm = arrayvec::ArrayString::<7>::new();
+        write!(bpm, "{} BPM", 120).unwrap();
+
         let mut update = true;
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-        Text::new("BPM", Point::new(30, 50), bigge_font)
+        Text::new(&bpm, Point::new(30, 70), bigge_font)
             .draw(*ctx.local.display)
             .unwrap();
 
