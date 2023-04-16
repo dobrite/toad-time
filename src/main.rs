@@ -144,7 +144,7 @@ mod app {
         let rotary_clk = pins.gpio15.into_pull_up_input();
         let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
 
-        heartbeat::spawn().ok();
+        tick::spawn().ok();
         display::spawn().ok();
         update_encoder::spawn().ok();
         update_encoder_button::spawn().ok();
@@ -248,7 +248,7 @@ mod app {
     }
 
     #[task(local = [led], priority = 1)]
-    async fn heartbeat(ctx: heartbeat::Context) {
+    async fn tick(ctx: tick::Context) {
         loop {
             _ = ctx.local.led.toggle();
 
