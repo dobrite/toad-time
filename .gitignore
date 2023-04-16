@@ -3,6 +3,8 @@
 .gdb_history
 target/
 
+notes.md
+
 # editor files
 .vscode/*
 !.vscode/*.md
