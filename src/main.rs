@@ -230,7 +230,12 @@ mod app {
     ) {
         while let Ok(command) = receiver.recv().await {
             let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
-            let _ = sender.send(state_change).await;
+            match state_change {
+                StateChange::None => {}
+                _ => {
+                    let _ = sender.send(state_change).await;
+                }
+            }
         }
     }
 
@@ -311,6 +316,7 @@ mod app {
                         .draw(*display)
                         .unwrap();
                 }
+                StateChange::None => unreachable!(),
             }
 
             display.flush().unwrap();

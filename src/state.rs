@@ -14,6 +14,7 @@ pub enum Command {
 
 pub enum StateChange {
     Bpm(u32),
+    None,
 }
 
 pub struct State {
