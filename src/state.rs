@@ -1,4 +1,4 @@
-use core::ops::Deref;
+use core::ops::{AddAssign, Deref, DerefMut, SubAssign};
 use defmt::Format;
 
 pub const COMMAND_CAPACITY: usize = 4;
@@ -44,11 +44,11 @@ impl State {
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         match command {
-            Command::EncoderRight => match self.bpm.forwards() {
+            Command::EncoderRight => match forwards(&mut self.bpm) {
                 Updated::Yep => StateChange::Bpm(*self.bpm),
                 Updated::Nope => StateChange::None,
             },
-            Command::EncoderLeft => match self.bpm.backwards() {
+            Command::EncoderLeft => match backwards(&mut self.bpm) {
                 Updated::Yep => StateChange::Bpm(*self.bpm),
                 Updated::Nope => StateChange::None,
             },
@@ -60,15 +60,36 @@ impl State {
     }
 }
 
+fn forwards<U: Updatable>(state: &mut U) -> Updated
+where
+    U: DerefMut<Target = u32> + AddAssign + PartialEq,
+{
+    if **state == U::MAX {
+        Updated::Nope
+    } else {
+        **state += 1;
+        Updated::Yep
+    }
+}
+
+fn backwards<U: Updatable>(state: &mut U) -> Updated
+where
+    U: DerefMut<Target = u32> + SubAssign + PartialEq,
+{
+    if **state == U::MIN {
+        Updated::Nope
+    } else {
+        **state -= 1;
+        Updated::Yep
+    }
+}
+
 trait Updatable {
     const MAX: u32;
     const MIN: u32;
-
-    fn forwards(&mut self) -> Updated;
-    fn backwards(&mut self) -> Updated;
 }
 
-#[derive(Format)]
+#[derive(PartialEq, Format)]
 struct Bpm(u32);
 
 impl Deref for Bpm {
@@ -79,25 +100,25 @@ impl Deref for Bpm {
     }
 }
 
+impl DerefMut for Bpm {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl Updatable for Bpm {
     const MAX: u32 = 300;
     const MIN: u32 = 1;
+}
 
-    fn forwards(&mut self) -> Updated {
-        if self.0 == Self::MAX {
-            Updated::Nope
-        } else {
-            self.0 += 1;
-            Updated::Yep
-        }
+impl AddAssign for Bpm {
+    fn add_assign(&mut self, other: Self) {
+        self.0 += other.0;
     }
+}
 
-    fn backwards(&mut self) -> Updated {
-        if self.0 == Self::MIN {
-            Updated::Nope
-        } else {
-            self.0 -= 1;
-            Updated::Yep
-        }
+impl SubAssign for Bpm {
+    fn sub_assign(&mut self, other: Self) {
+        self.0 -= other.0;
     }
 }
