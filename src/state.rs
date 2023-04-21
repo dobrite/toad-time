@@ -30,4 +30,23 @@ impl State {
     pub fn new() -> Self {
         Self { bpm: 120 }
     }
+
+    pub fn handle_command(&mut self, command: Command) -> StateChange {
+        match command {
+            Command::EncoderRight => {
+                // logic to decide what piece of state to change
+                self.bpm += 1;
+                StateChange::Bpm(self.bpm)
+            }
+            Command::EncoderLeft => {
+                // logic to decide what piece of state to change
+                self.bpm -= 1;
+                StateChange::Bpm(self.bpm)
+            }
+            //Command::EncoderPress => {}
+            //Command::PagePress => {}
+            //Command::PlayPress => {}
+            _ => unreachable!(),
+        }
+    }
 }

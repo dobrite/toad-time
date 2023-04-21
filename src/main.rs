@@ -229,23 +229,7 @@ mod app {
         mut sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
         while let Ok(command) = receiver.recv().await {
-            let state_change = match command {
-                Command::EncoderRight => ctx.shared.state.lock(|state| {
-                    // logic to decide what piece of state to change
-                    state.bpm += 1;
-                    StateChange::Bpm(state.bpm)
-                }),
-                Command::EncoderLeft => ctx.shared.state.lock(|state| {
-                    // logic to decide what piece of state to change
-                    state.bpm -= 1;
-                    StateChange::Bpm(state.bpm)
-                }),
-                //Command::EncoderPress => {}
-                //Command::PagePress => {}
-                //Command::PlayPress => {}
-                _ => unreachable!(),
-            };
-
+            let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
             let _ = sender.send(state_change).await;
         }
     }
