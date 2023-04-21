@@ -154,9 +154,11 @@ mod app {
         let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
         let (state_sender, state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
 
+        let initial_state = State::new();
+
         tick::spawn().ok();
         state::spawn(command_receiver, state_sender).ok();
-        display::spawn(state_receiver).ok();
+        display::spawn(initial_state, state_receiver).ok();
         update_encoder::spawn(command_sender.clone()).ok();
         update_encoder_button::spawn(command_sender.clone()).ok();
         update_page_button::spawn(command_sender.clone()).ok();
@@ -296,38 +298,38 @@ mod app {
         }
     }
 
-    #[task(local = [display], shared = [state], priority = 1)]
-    async fn display(mut ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
+    #[task(local = [display], priority = 1)]
+    async fn display(
+        ctx: display::Context,
+        initial_state: State,
+        mut receiver: Receiver<'static, StateChange, 4>,
+    ) {
+        let display = ctx.local.display;
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let mut bpm_str: String<7> = String::new();
-        write!(
-            bpm_str,
-            "{} BPM",
-            ctx.shared.state.lock(|state| { state.bpm })
-        )
-        .unwrap();
+        write!(bpm_str, "{} BPM", initial_state.bpm).unwrap();
 
         Text::new(&bpm_str, Point::new(30, 70), bigge_font)
-            .draw(*ctx.local.display)
+            .draw(*display)
             .unwrap();
 
-        ctx.local.display.flush().unwrap();
+        display.flush().unwrap();
 
-        while let Ok(_state_change) = receiver.recv().await {
-            bpm_str.clear();
-            ctx.local.display.clear();
-            write!(
-                bpm_str,
-                "{} BPM",
-                ctx.shared.state.lock(|state| { state.bpm })
-            )
-            .unwrap();
+        while let Ok(state_change) = receiver.recv().await {
+            match state_change {
+                StateChange::Bpm(bpm) => {
+                    bpm_str.clear();
+                    display.clear();
+                    write!(bpm_str, "{} BPM", bpm).unwrap();
+                    info!("{:?}", bpm);
 
-            Text::new(&bpm_str, Point::new(30, 70), bigge_font)
-                .draw(*ctx.local.display)
-                .unwrap();
+                    Text::new(&bpm_str, Point::new(30, 70), bigge_font)
+                        .draw(*display)
+                        .unwrap();
+                }
+            }
 
-            ctx.local.display.flush().unwrap();
+            display.flush().unwrap();
         }
     }
 
