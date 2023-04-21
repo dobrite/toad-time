@@ -1,8 +1,15 @@
 use core::ops::{AddAssign, Deref, DerefMut, SubAssign};
 use defmt::Format;
+use fugit::RateExtU32;
 
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
+pub const MAX_MULT: u32 = 192;
+pub const PWM_PERCENT_INCREMENTS: u32 = 10;
+const SECONDS_IN_MINUTES: u32 = 60;
+
+const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
+pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
 
 #[derive(Clone, Copy, Format)]
 pub enum Command {
@@ -24,7 +31,7 @@ pub enum StateChange {
 }
 
 pub struct State {
-    bpm: Bpm,
+    pub bpm: Bpm,
 }
 
 impl Default for State {
@@ -90,7 +97,16 @@ trait Updatable {
 }
 
 #[derive(PartialEq, Format)]
-struct Bpm(u32);
+pub struct Bpm(u32);
+
+impl Bpm {
+    pub fn tick_duration(&self) -> MicroSeconds {
+        (self.0 / SECONDS_IN_MINUTES * PWM_PERCENT_INCREMENTS * MAX_MULT)
+            .Hz::<1, 1>()
+            .into_duration()
+            .into()
+    }
+}
 
 impl Deref for Bpm {
     type Target = u32;

@@ -9,7 +9,10 @@ mod state;
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
-    use crate::state::{Command, State, StateChange, COMMAND_CAPACITY, STATE_CHANGE_CAPACITY};
+    use crate::state::{
+        Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
+        PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
+    };
     use core::{fmt::Write, mem::MaybeUninit};
     use defmt::info;
     use defmt_rtt as _;
@@ -64,10 +67,7 @@ mod app {
     // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
     const BIGGE_FONT: PcfFont =
         include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
-    const FIFTY_MILLI_SECONDS: u64 = 50_000;
-    const MICRO_SECONDS: u32 = 1_000_000;
-    const BUTTON_UPDATE: fugit::Duration<u64, 1, MICRO_SECONDS> =
-        fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(FIFTY_MILLI_SECONDS);
+    const BUTTON_UPDATE: MicroSeconds = MicroSeconds::from_ticks(50_000);
 
     #[shared]
     struct Shared {
@@ -268,7 +268,7 @@ mod app {
         mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
         let encoder = ctx.local.encoder;
-        let update_duration = fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(1111);
+        let update_duration = MicroSeconds::from_ticks(1111);
 
         loop {
             encoder.update();
@@ -323,29 +323,25 @@ mod app {
         }
     }
 
-    const MAX_MULT: u8 = 192;
-    const PWM_PERCENT_INCREMENTS: u8 = 10;
-    const SECONDS_IN_MINUTES: u8 = 60;
+    const PWM: u32 = 5;
 
     #[task(local = [led], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
-        let milli_seconds_per_tick = ctx.shared.state.lock(|state| {
-            state.bpm() as f32
-                / SECONDS_IN_MINUTES as f32
-                / PWM_PERCENT_INCREMENTS as f32
-                / MAX_MULT as f32
-                * MICRO_SECONDS as f32
-        });
-        info!("us per tick: {:?}", milli_seconds_per_tick); // 1.0416667
-        let tick_duration =
-            fugit::Duration::<u64, 1, MICRO_SECONDS>::from_ticks(milli_seconds_per_tick as u64);
+        let mut tick_duration: fugit::Duration<u64, 1, 1000000> =
+            ctx.shared.state.lock(|state| state.bpm.tick_duration());
 
-        let target = 240; // 0.25 seconds == 120 bpm at 50% PWM
+        let target = (PWM_PERCENT_INCREMENTS * MAX_MULT) / 10 * PWM;
+        info!(
+            "tick duration: {:?} target: {:?}",
+            tick_duration.ticks(),
+            target
+        );
         let mut counter = 0;
 
         loop {
             if counter == target {
                 _ = ctx.local.led.toggle();
+                tick_duration = ctx.shared.state.lock(|state| state.bpm.tick_duration());
                 counter = 0;
             } else {
                 counter += 1;
