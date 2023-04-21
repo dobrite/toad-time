@@ -169,7 +169,7 @@ mod app {
 
         (
             Shared {
-                state: State { bpm: 120 },
+                state: Default::default(),
             },
             Local {
                 display: display_ctx,
@@ -296,7 +296,7 @@ mod app {
         let display = ctx.local.display;
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let mut bpm_str: String<7> = String::new();
-        write!(bpm_str, "{} BPM", initial_state.bpm).unwrap();
+        write!(bpm_str, "{} BPM", initial_state.bpm()).unwrap();
 
         Text::new(&bpm_str, Point::new(30, 70), bigge_font)
             .draw(*display)
@@ -330,7 +330,7 @@ mod app {
     #[task(local = [led], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let milli_seconds_per_tick = ctx.shared.state.lock(|state| {
-            state.bpm as f32
+            state.bpm() as f32
                 / SECONDS_IN_MINUTES as f32
                 / PWM_PERCENT_INCREMENTS as f32
                 / MAX_MULT as f32
