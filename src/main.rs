@@ -154,7 +154,7 @@ mod app {
         let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
         let (state_sender, state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
 
-        let initial_state = State::new();
+        let initial_state: State = Default::default();
 
         tick::spawn().ok();
         state::spawn(command_receiver, state_sender).ok();

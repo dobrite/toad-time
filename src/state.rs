@@ -20,6 +20,12 @@ pub struct State {
     pub bpm: u32,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl State {
     pub fn new() -> Self {
         Self { bpm: 120 }
