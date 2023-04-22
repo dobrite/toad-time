@@ -43,6 +43,7 @@ pub struct Display {
     pointer: Bmp<'static, BinaryColor>,
     bpm_str: heapless::String<3>,
     bpm_label: heapless::String<3>,
+    sync_str: heapless::String<3>,
 }
 
 impl Display {
@@ -51,6 +52,7 @@ impl Display {
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
         let pointer: Bmp<BinaryColor> = Bmp::from_slice(POINTER).unwrap();
         let bpm_str: String<3> = String::new();
+        let sync_str: String<3> = String::new();
         let bpm_label: String<3> = String::new();
         let mut display = Self {
             bigge_font,
@@ -58,11 +60,13 @@ impl Display {
             pointer,
             bpm_str,
             bpm_label,
+            sync_str,
             display,
         };
         display.display.clear();
         display.draw_pointer();
         display.draw_bpm(initial_state.bpm());
+        display.draw_sync(false);
         display.display.flush().unwrap();
         display
     }
@@ -96,5 +100,14 @@ impl Display {
         Image::new(&self.pointer, Point::new(4, 8))
             .draw(&mut self.display)
             .ok();
+    }
+
+    fn draw_sync(&mut self, sync: bool) {
+        self.sync_str.clear();
+        write!(self.sync_str, "{}", if sync { "Int" } else { "Ext" }).unwrap();
+
+        Text::new(&self.sync_str, Point::new(22, 50), self.smol_font)
+            .draw(&mut self.display)
+            .unwrap();
     }
 }
