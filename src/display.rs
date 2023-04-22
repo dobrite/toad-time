@@ -35,42 +35,52 @@ const BIGGE_FONT: PcfFont =
 pub struct Display {
     display: Ssd1306Display,
     bigge_font: PcfTextStyle<'static, BinaryColor>,
-    #[allow(dead_code)]
     smol_font: PcfTextStyle<'static, BinaryColor>,
-    bpm_str: heapless::String<7>,
+    bpm_str: heapless::String<3>,
+    bpm_label: heapless::String<3>,
 }
 
 impl Display {
     pub fn new(initial_state: State, display: Ssd1306Display) -> Self {
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
-        let bpm_str: String<7> = String::new();
+        let bpm_str: String<3> = String::new();
+        let bpm_label: String<3> = String::new();
         let mut display = Self {
             bigge_font,
             smol_font,
             bpm_str,
+            bpm_label,
             display,
         };
+        display.display.clear();
         display.write_bpm(initial_state.bpm());
+        display.display.flush().unwrap();
         display
     }
 
     pub fn handle_state_change(&mut self, state_change: StateChange) {
+        self.display.clear();
         match state_change {
             StateChange::Bpm(bpm) => self.write_bpm(bpm),
             StateChange::None => unreachable!(),
         }
+        self.display.flush().unwrap();
     }
 
     fn write_bpm(&mut self, bpm: u32) {
-        self.bpm_str.clear();
-        self.display.clear();
-        write!(self.bpm_str, "{} BPM", bpm).unwrap();
+        self.bpm_label.clear();
+        write!(self.bpm_label, "BPM").unwrap();
 
-        Text::new(&self.bpm_str, Point::new(30, 70), self.bigge_font)
+        Text::new(&self.bpm_label, Point::new(68, 27), self.smol_font)
             .draw(&mut self.display)
             .unwrap();
 
-        self.display.flush().unwrap();
+        self.bpm_str.clear();
+        write!(self.bpm_str, "{}", bpm).unwrap();
+
+        Text::new(&self.bpm_str, Point::new(22, 30), self.bigge_font)
+            .draw(&mut self.display)
+            .unwrap();
     }
 }
