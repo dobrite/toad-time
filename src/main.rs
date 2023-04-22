@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
+mod display;
 mod state;
 
 #[rtic::app(
@@ -9,20 +10,18 @@ mod state;
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
+    use crate::display::Display;
     use crate::state::{
         Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
         PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
     };
-    use core::{fmt::Write, mem::MaybeUninit};
     use defmt::info;
     use defmt_rtt as _;
-    use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
     use embedded_hal::{
         digital::v2::{InputPin, ToggleableOutputPin},
         spi,
     };
     use fugit::RateExtU32;
-    use heapless::String;
     use panic_probe as _;
 
     use rtic_monotonics::rp2040::{Timer, *};
@@ -32,39 +31,24 @@ mod app {
         hal::{
             self, clocks,
             gpio::pin::bank0::*,
-            gpio::pin::{PullUp, PushPull, PushPullOutput},
+            gpio::pin::{PullUp, PushPullOutput},
+            gpio::Input,
             gpio::Pin,
-            gpio::{Input, Output},
-            pac,
             sio::Sio,
-            spi::{Enabled, Spi},
+            spi::Spi,
             watchdog::Watchdog,
             Clock,
         },
         XOSC_CRYSTAL_FREQ,
     };
 
-    use embedded_graphics::{pixelcolor::BinaryColor, prelude::*, text::Text};
     use ssd1306::{prelude::*, Ssd1306};
 
     use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
 
-    type Display = Ssd1306<
-        ssd1306::prelude::SPIInterface<
-            Spi<Enabled, pac::SPI0, 8>,
-            Pin<Gpio16, Output<PushPull>>,
-            Pin<Gpio17, Output<PushPull>>,
-        >,
-        ssd1306::prelude::DisplaySize128x64,
-        ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
-    >;
-
     type Encoder =
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
-    // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
-    const BIGGE_FONT: PcfFont =
-        include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
     const BUTTON_UPDATE: MicroSeconds = MicroSeconds::from_ticks(50_000);
 
     #[shared]
@@ -74,7 +58,7 @@ mod app {
 
     #[local]
     struct Local {
-        display: &'static mut Display,
+        display: Display,
         encoder: Encoder,
         encoder_button: Pin<Gpio13, Input<PullUp>>,
         gate_a: Pin<Gpio2, PushPullOutput>,
@@ -85,7 +69,7 @@ mod app {
         page_button: Pin<Gpio12, Input<PullUp>>,
     }
 
-    #[init(local=[display_ctx: MaybeUninit<Display> = MaybeUninit::uninit()])]
+    #[init()]
     fn init(mut ctx: init::Context) -> (Shared, Local) {
         unsafe {
             hal::sio::spinlock_reset();
@@ -119,31 +103,36 @@ mod app {
             &mut ctx.device.RESETS,
         );
 
-        let oled_dc = pins.gpio16.into_push_pull_output();
-        let oled_cs = pins.gpio17.into_push_pull_output();
-        let _ = pins
-            .gpio18
-            .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
-        let _ = pins
-            .gpio19
-            .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
-        let mut oled_reset = pins.gpio20.into_push_pull_output();
+        let display = {
+            let oled_dc = pins.gpio16.into_push_pull_output();
+            let oled_cs = pins.gpio17.into_push_pull_output();
+            let _ = pins
+                .gpio18
+                .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
+            let _ = pins
+                .gpio19
+                .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
+            let mut oled_reset = pins.gpio20.into_push_pull_output();
 
-        let spi = Spi::<_, _, 8>::new(ctx.device.SPI0).init(
-            &mut ctx.device.RESETS,
-            125_000_000u32.Hz(),
-            1_000_000u32.Hz(),
-            &spi::MODE_0,
-        );
+            let spi = Spi::new(ctx.device.SPI0).init(
+                &mut ctx.device.RESETS,
+                125_000_000u32.Hz(),
+                1_000_000u32.Hz(),
+                &spi::MODE_0,
+            );
 
-        let interface = SPIInterface::new(spi, oled_dc, oled_cs);
-        let display_ctx: &'static mut _ = ctx.local.display_ctx.write(
-            Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
-                .into_buffered_graphics_mode(),
-        );
+            let interface = SPIInterface::new(spi, oled_dc, oled_cs);
+            let mut display_ctx =
+                Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+                    .into_buffered_graphics_mode();
 
-        display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
-        display_ctx.init().unwrap();
+            display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
+            display_ctx.init().unwrap();
+
+            let initial_state: State = Default::default();
+
+            Display::new(initial_state, display_ctx)
+        };
 
         let play_button = pins.gpio11.into_pull_up_input();
         let page_button = pins.gpio12.into_pull_up_input();
@@ -155,11 +144,9 @@ mod app {
         let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
         let (state_sender, state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
 
-        let initial_state: State = Default::default();
-
         tick::spawn().ok();
         state::spawn(command_receiver, state_sender).ok();
-        display::spawn(initial_state, state_receiver).ok();
+        display::spawn(state_receiver).ok();
         update_encoder::spawn(command_sender.clone()).ok();
         update_encoder_button::spawn(command_sender.clone()).ok();
         update_page_button::spawn(command_sender.clone()).ok();
@@ -175,7 +162,7 @@ mod app {
                 state: Default::default(),
             },
             Local {
-                display: display_ctx,
+                display,
                 encoder,
                 encoder_button,
                 gate_a,
@@ -294,38 +281,9 @@ mod app {
     }
 
     #[task(local = [display], priority = 1)]
-    async fn display(
-        ctx: display::Context,
-        initial_state: State,
-        mut receiver: Receiver<'static, StateChange, 4>,
-    ) {
-        let display = ctx.local.display;
-        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
-        let mut bpm_str: String<7> = String::new();
-        write!(bpm_str, "{} BPM", initial_state.bpm()).unwrap();
-
-        Text::new(&bpm_str, Point::new(30, 70), bigge_font)
-            .draw(*display)
-            .unwrap();
-
-        display.flush().unwrap();
-
+    async fn display(ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
         while let Ok(state_change) = receiver.recv().await {
-            match state_change {
-                StateChange::Bpm(bpm) => {
-                    bpm_str.clear();
-                    display.clear();
-                    write!(bpm_str, "{} BPM", bpm).unwrap();
-                    info!("{:?}", bpm);
-
-                    Text::new(&bpm_str, Point::new(30, 70), bigge_font)
-                        .draw(*display)
-                        .unwrap();
-                }
-                StateChange::None => unreachable!(),
-            }
-
-            display.flush().unwrap();
+            ctx.local.display.handle_state_change(state_change);
         }
     }
 
