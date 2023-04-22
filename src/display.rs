@@ -13,7 +13,12 @@ use rp_pico::hal::{
 };
 
 use embedded_graphics::{
-    image::Image, pixelcolor::BinaryColor, prelude::Point, text::Text, Drawable,
+    geometry::{Point, Size},
+    image::{Image, ImageDrawableExt},
+    pixelcolor::BinaryColor,
+    primitives::Rectangle,
+    text::Text,
+    Drawable,
 };
 
 use ssd1306::Ssd1306;
@@ -35,11 +40,13 @@ const SMOL_FONT: PcfFont =
 const BIGGE_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 const POINTER: &[u8; 630] = include_bytes!("assets/icons/Pointer.bmp");
+const PLAY_PAUSE: &[u8; 1590] = include_bytes!("assets/icons/PlayPause.bmp");
 
 pub struct Display {
     display: Ssd1306Display,
     bigge_font: PcfTextStyle<'static, BinaryColor>,
     smol_font: PcfTextStyle<'static, BinaryColor>,
+    play_pause: Bmp<'static, BinaryColor>,
     pointer: Bmp<'static, BinaryColor>,
     bpm_str: heapless::String<3>,
     bpm_label: heapless::String<3>,
@@ -50,6 +57,7 @@ impl Display {
     pub fn new(initial_state: State, display: Ssd1306Display) -> Self {
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
+        let play_pause: Bmp<BinaryColor> = Bmp::from_slice(PLAY_PAUSE).unwrap();
         let pointer: Bmp<BinaryColor> = Bmp::from_slice(POINTER).unwrap();
         let bpm_str: String<3> = String::new();
         let sync_str: String<3> = String::new();
@@ -57,6 +65,7 @@ impl Display {
         let mut display = Self {
             bigge_font,
             smol_font,
+            play_pause,
             pointer,
             bpm_str,
             bpm_label,
@@ -66,6 +75,7 @@ impl Display {
         display.display.clear();
         display.draw_pointer();
         display.draw_bpm(initial_state.bpm());
+        display.draw_play_pause(initial_state.is_playing());
         display.draw_sync(initial_state.sync());
         display.display.flush().unwrap();
         display
@@ -109,5 +119,17 @@ impl Display {
         Text::new(&self.sync_str, Point::new(22, 50), self.smol_font)
             .draw(&mut self.display)
             .unwrap();
+    }
+
+    fn draw_play_pause(&mut self, is_playing: bool) {
+        let rectangle = if is_playing {
+            Rectangle::new(Point::new(0, 0), Size::new(16, 16))
+        } else {
+            Rectangle::new(Point::new(16, 0), Size::new(32, 16))
+        };
+
+        Image::new(&self.play_pause.sub_image(&rectangle), Point::new(56, 30))
+            .draw(&mut self.display)
+            .ok();
     }
 }

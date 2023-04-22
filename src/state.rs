@@ -36,6 +36,7 @@ pub enum StateChange {
 pub struct State {
     pub bpm: Bpm,
     sync: Sync,
+    play_status: PlayStatus,
 }
 
 impl Default for State {
@@ -49,6 +50,7 @@ impl State {
         Self {
             bpm: Bpm(120),
             sync: Sync::Ext,
+            play_status: PlayStatus::Playing,
         }
     }
 
@@ -58,6 +60,10 @@ impl State {
 
     pub fn sync(&self) -> &Sync {
         &self.sync
+    }
+
+    pub fn is_playing(&self) -> bool {
+        self.play_status == PlayStatus::Playing
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
@@ -162,4 +168,11 @@ impl fmt::Display for Sync {
             Sync::Ext => write!(f, "Ext"),
         }
     }
+}
+
+#[derive(PartialEq)]
+pub enum PlayStatus {
+    Playing,
+    #[allow(dead_code)]
+    Paused,
 }
