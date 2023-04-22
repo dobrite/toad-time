@@ -7,7 +7,11 @@ use embedded_graphics::{
 use heapless::String;
 use tinybmp::Bmp as TinyBmp;
 
-use crate::{display::Bmp, screens::Display, state::Sync};
+use crate::{
+    display::Bmp,
+    screens::{Display, ScreenState},
+    state::Sync,
+};
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
 const POINTER: &[u8; 630] = include_bytes!("../assets/icons/Pointer.bmp");
@@ -41,12 +45,12 @@ impl Home {
         }
     }
 
-    pub fn draw(&mut self, display: &mut Display) {
-        self.draw_bpm(display, 120);
+    pub fn draw(&mut self, state: &ScreenState, display: &mut Display) {
+        self.draw_bpm(display, state.bpm);
         self.draw_frogge(display);
         self.draw_pointer(display);
-        self.draw_sync(display, &Sync::Ext);
-        self.draw_play_pause(display, true);
+        self.draw_sync(display, &state.sync);
+        self.draw_play_pause(display, state.is_playing);
     }
 
     pub fn draw_bpm(&mut self, display: &mut Display, bpm: u32) {

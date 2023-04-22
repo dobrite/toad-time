@@ -29,6 +29,21 @@ enum Updated {
     Nope,
 }
 
+enum HomeElement {
+    Bpm,
+    //Sync,
+}
+
+//enum GateElement {
+//    Div,
+//    Pwm,
+//}
+
+enum Element {
+    Home(HomeElement),
+    //Gate(GateElement),
+}
+
 pub enum StateChange {
     Bpm(u32),
     None,
@@ -38,6 +53,7 @@ pub struct State {
     pub bpm: Bpm,
     sync: Sync,
     play_status: PlayStatus,
+    current: Element,
 }
 
 impl Default for State {
@@ -52,6 +68,7 @@ impl State {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
+            current: Element::Home(HomeElement::Bpm),
         }
     }
 
@@ -69,18 +86,21 @@ impl State {
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         match command {
-            Command::EncoderRight => match forwards(&mut self.bpm) {
-                Updated::Yep => StateChange::Bpm(*self.bpm),
-                Updated::Nope => StateChange::None,
+            Command::EncoderRight => match self.current {
+                Element::Home(HomeElement::Bpm) => match forwards(&mut self.bpm) {
+                    Updated::Yep => StateChange::Bpm(*self.bpm),
+                    Updated::Nope => StateChange::None,
+                },
             },
-            Command::EncoderLeft => match backwards(&mut self.bpm) {
-                Updated::Yep => StateChange::Bpm(*self.bpm),
-                Updated::Nope => StateChange::None,
+            Command::EncoderLeft => match self.current {
+                Element::Home(HomeElement::Bpm) => match backwards(&mut self.bpm) {
+                    Updated::Yep => StateChange::Bpm(*self.bpm),
+                    Updated::Nope => StateChange::None,
+                },
             },
-            //Command::EncoderPress => {}
-            //Command::PagePress => {}
-            //Command::PlayPress => {}
-            _ => unreachable!(),
+            Command::EncoderPress => StateChange::None,
+            Command::PagePress => StateChange::None,
+            Command::PlayPress => StateChange::None,
         }
     }
 }

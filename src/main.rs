@@ -287,7 +287,7 @@ mod app {
         screens.draw(display);
 
         while let Ok(state_change) = receiver.recv().await {
-            screens.handle_state_change(state_change, display);
+            screens.handle_state_change(state_change);
             screens.draw(display);
         }
     }
