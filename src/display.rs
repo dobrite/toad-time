@@ -1,7 +1,7 @@
 use core::fmt::Write;
 use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
 use heapless::String;
-use tinybmp::Bmp;
+use tinybmp::Bmp as TinyBmp;
 
 use rp_pico::hal::{
     gpio::pin::bank0::*,
@@ -22,6 +22,9 @@ use embedded_graphics::{
 };
 
 use ssd1306::Ssd1306;
+
+type Font = PcfTextStyle<'static, BinaryColor>;
+type Bmp = TinyBmp<'static, BinaryColor>;
 
 pub type Ssd1306Display = Ssd1306<
     ssd1306::prelude::SPIInterface<
@@ -45,26 +48,26 @@ const PLAY_PAUSE: &[u8; 1590] = include_bytes!("assets/icons/PlayPause.bmp");
 
 pub struct Display {
     display: Ssd1306Display,
-    bigge_font: PcfTextStyle<'static, BinaryColor>,
-    smol_font: PcfTextStyle<'static, BinaryColor>,
-    frogge: Bmp<'static, BinaryColor>,
-    play_pause: Bmp<'static, BinaryColor>,
-    pointer: Bmp<'static, BinaryColor>,
-    bpm_str: heapless::String<3>,
-    bpm_label: heapless::String<3>,
-    sync_str: heapless::String<3>,
+    bigge_font: Font,
+    smol_font: Font,
+    frogge: Bmp,
+    play_pause: Bmp,
+    pointer: Bmp,
+    bpm_str: String<3>,
+    bpm_label: String<3>,
+    sync_str: String<3>,
 }
 
 impl Display {
     pub fn new(initial_state: State, display: Ssd1306Display) -> Self {
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
-        let frogge: Bmp<BinaryColor> = Bmp::from_slice(FROGGE).unwrap();
-        let play_pause: Bmp<BinaryColor> = Bmp::from_slice(PLAY_PAUSE).unwrap();
-        let pointer: Bmp<BinaryColor> = Bmp::from_slice(POINTER).unwrap();
-        let bpm_str: String<3> = String::new();
-        let sync_str: String<3> = String::new();
-        let bpm_label: String<3> = String::new();
+        let frogge = TinyBmp::from_slice(FROGGE).unwrap();
+        let play_pause = TinyBmp::from_slice(PLAY_PAUSE).unwrap();
+        let pointer = TinyBmp::from_slice(POINTER).unwrap();
+        let bpm_str = String::new();
+        let sync_str = String::new();
+        let bpm_label = String::new();
         let mut display = Self {
             bigge_font,
             smol_font,
