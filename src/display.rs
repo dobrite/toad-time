@@ -39,6 +39,7 @@ const SMOL_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 const BIGGE_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+const FROGGE: &[u8; 4950] = include_bytes!("assets/icons/SpinSpritesheet.bmp"); // 88x44
 const POINTER: &[u8; 630] = include_bytes!("assets/icons/Pointer.bmp");
 const PLAY_PAUSE: &[u8; 1590] = include_bytes!("assets/icons/PlayPause.bmp");
 
@@ -46,6 +47,7 @@ pub struct Display {
     display: Ssd1306Display,
     bigge_font: PcfTextStyle<'static, BinaryColor>,
     smol_font: PcfTextStyle<'static, BinaryColor>,
+    frogge: Bmp<'static, BinaryColor>,
     play_pause: Bmp<'static, BinaryColor>,
     pointer: Bmp<'static, BinaryColor>,
     bpm_str: heapless::String<3>,
@@ -57,6 +59,7 @@ impl Display {
     pub fn new(initial_state: State, display: Ssd1306Display) -> Self {
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
+        let frogge: Bmp<BinaryColor> = Bmp::from_slice(FROGGE).unwrap();
         let play_pause: Bmp<BinaryColor> = Bmp::from_slice(PLAY_PAUSE).unwrap();
         let pointer: Bmp<BinaryColor> = Bmp::from_slice(POINTER).unwrap();
         let bpm_str: String<3> = String::new();
@@ -65,6 +68,7 @@ impl Display {
         let mut display = Self {
             bigge_font,
             smol_font,
+            frogge,
             play_pause,
             pointer,
             bpm_str,
@@ -75,6 +79,7 @@ impl Display {
         display.display.clear();
         display.draw_pointer();
         display.draw_bpm(initial_state.bpm());
+        display.draw_frogge();
         display.draw_play_pause(initial_state.is_playing());
         display.draw_sync(initial_state.sync());
         display.display.flush().unwrap();
@@ -104,6 +109,13 @@ impl Display {
         Text::new(&self.bpm_str, Point::new(22, 30), self.bigge_font)
             .draw(&mut self.display)
             .unwrap();
+    }
+
+    fn draw_frogge(&mut self) {
+        let rectangle = Rectangle::new(Point::new(0, 0), Size::new(22, 22));
+        Image::new(&self.frogge.sub_image(&rectangle), Point::new(80, 26))
+            .draw(&mut self.display)
+            .ok();
     }
 
     fn draw_pointer(&mut self) {
