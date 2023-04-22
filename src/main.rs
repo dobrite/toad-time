@@ -30,9 +30,10 @@ mod app {
 
     use rp_pico::{
         hal::{
-            self, clocks, gpio,
+            self, clocks,
             gpio::pin::bank0::*,
             gpio::pin::{PullUp, PushPull, PushPullOutput},
+            gpio::Pin,
             gpio::{Input, Output},
             pac,
             sio::Sio,
@@ -51,18 +52,15 @@ mod app {
     type Display = Ssd1306<
         ssd1306::prelude::SPIInterface<
             Spi<Enabled, pac::SPI0, 8>,
-            gpio::Pin<Gpio16, Output<PushPull>>,
-            gpio::Pin<Gpio17, Output<PushPull>>,
+            Pin<Gpio16, Output<PushPull>>,
+            Pin<Gpio17, Output<PushPull>>,
         >,
         ssd1306::prelude::DisplaySize128x64,
         ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
     >;
 
-    type Encoder = RotaryEncoder<
-        StandardMode,
-        gpio::Pin<Gpio14, Input<PullUp>>,
-        gpio::Pin<Gpio15, Input<PullUp>>,
-    >;
+    type Encoder =
+        RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
     // const SMOL_FONT: PcfFont = include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
     const BIGGE_FONT: PcfFont =
@@ -78,13 +76,13 @@ mod app {
     struct Local {
         display: &'static mut Display,
         encoder: Encoder,
-        encoder_button: gpio::Pin<Gpio13, Input<PullUp>>,
-        gate_a: gpio::Pin<Gpio2, PushPullOutput>,
-        gate_b: gpio::Pin<Gpio3, PushPullOutput>,
-        gate_c: gpio::Pin<Gpio4, PushPullOutput>,
-        gate_d: gpio::Pin<Gpio5, PushPullOutput>,
-        play_button: gpio::Pin<Gpio11, Input<PullUp>>,
-        page_button: gpio::Pin<Gpio12, Input<PullUp>>,
+        encoder_button: Pin<Gpio13, Input<PullUp>>,
+        gate_a: Pin<Gpio2, PushPullOutput>,
+        gate_b: Pin<Gpio3, PushPullOutput>,
+        gate_c: Pin<Gpio4, PushPullOutput>,
+        gate_d: Pin<Gpio5, PushPullOutput>,
+        play_button: Pin<Gpio11, Input<PullUp>>,
+        page_button: Pin<Gpio12, Input<PullUp>>,
     }
 
     #[init(local=[display_ctx: MaybeUninit<Display> = MaybeUninit::uninit()])]
