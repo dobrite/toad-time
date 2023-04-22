@@ -1,6 +1,7 @@
 use core::fmt::Write;
 use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
 use heapless::String;
+use tinybmp::Bmp;
 
 use rp_pico::hal::{
     gpio::pin::bank0::*,
@@ -11,7 +12,9 @@ use rp_pico::hal::{
     spi::{Enabled, Spi},
 };
 
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::Point, text::Text, Drawable};
+use embedded_graphics::{
+    image::Image, pixelcolor::BinaryColor, prelude::Point, text::Text, Drawable,
+};
 
 use ssd1306::Ssd1306;
 
@@ -31,11 +34,13 @@ const SMOL_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 const BIGGE_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+const POINTER: &[u8; 630] = include_bytes!("assets/icons/Pointer.bmp");
 
 pub struct Display {
     display: Ssd1306Display,
     bigge_font: PcfTextStyle<'static, BinaryColor>,
     smol_font: PcfTextStyle<'static, BinaryColor>,
+    pointer: Bmp<'static, BinaryColor>,
     bpm_str: heapless::String<3>,
     bpm_label: heapless::String<3>,
 }
@@ -44,16 +49,19 @@ impl Display {
     pub fn new(initial_state: State, display: Ssd1306Display) -> Self {
         let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
+        let pointer: Bmp<BinaryColor> = Bmp::from_slice(POINTER).unwrap();
         let bpm_str: String<3> = String::new();
         let bpm_label: String<3> = String::new();
         let mut display = Self {
             bigge_font,
             smol_font,
+            pointer,
             bpm_str,
             bpm_label,
             display,
         };
         display.display.clear();
+        display.draw_pointer();
         display.write_bpm(initial_state.bpm());
         display.display.flush().unwrap();
         display
@@ -82,5 +90,11 @@ impl Display {
         Text::new(&self.bpm_str, Point::new(22, 30), self.bigge_font)
             .draw(&mut self.display)
             .unwrap();
+    }
+
+    fn draw_pointer(&mut self) {
+        Image::new(&self.pointer, Point::new(4, 8))
+            .draw(&mut self.display)
+            .ok();
     }
 }
