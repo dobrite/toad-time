@@ -3,6 +3,7 @@
 #![feature(type_alias_impl_trait)]
 
 mod display;
+mod screens;
 mod state;
 
 #[rtic::app(
@@ -39,6 +40,7 @@ mod app {
 
     use crate::{
         display::Display,
+        screens::{Home, Screens},
         state::{
             Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
             PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
@@ -128,9 +130,7 @@ mod app {
             display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
             display_ctx.init().unwrap();
 
-            let initial_state: State = Default::default();
-
-            Display::new(initial_state, display_ctx)
+            Display::new(display_ctx)
         };
 
         let play_button = pins.gpio11.into_pull_up_input();
@@ -281,8 +281,14 @@ mod app {
 
     #[task(local = [display], priority = 1)]
     async fn display(ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
+        let display = ctx.local.display;
+        let home = Home::new();
+        let mut screens = Screens::new(home);
+        screens.draw(display);
+
         while let Ok(state_change) = receiver.recv().await {
-            ctx.local.display.handle_state_change(state_change);
+            screens.handle_state_change(state_change, display);
+            screens.draw(display);
         }
     }
 
