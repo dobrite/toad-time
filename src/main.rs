@@ -18,7 +18,7 @@ mod app {
     use defmt_rtt as _;
     use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
     use embedded_hal::{
-        digital::v2::{InputPin, OutputPin, ToggleableOutputPin},
+        digital::v2::{InputPin, ToggleableOutputPin},
         spi,
     };
     use fugit::RateExtU32;
@@ -79,7 +79,10 @@ mod app {
         display: &'static mut Display,
         encoder: Encoder,
         encoder_button: gpio::Pin<Gpio13, Input<PullUp>>,
-        led: gpio::Pin<Gpio25, PushPullOutput>,
+        gate_a: gpio::Pin<Gpio2, PushPullOutput>,
+        gate_b: gpio::Pin<Gpio3, PushPullOutput>,
+        gate_c: gpio::Pin<Gpio4, PushPullOutput>,
+        gate_d: gpio::Pin<Gpio5, PushPullOutput>,
         play_button: gpio::Pin<Gpio11, Input<PullUp>>,
         page_button: gpio::Pin<Gpio12, Input<PullUp>>,
     }
@@ -164,8 +167,10 @@ mod app {
         update_page_button::spawn(command_sender.clone()).ok();
         update_play_button::spawn(command_sender).ok();
 
-        let mut led = pins.led.into_push_pull_output();
-        led.set_high().unwrap();
+        let gate_a = pins.gpio2.into_push_pull_output();
+        let gate_b = pins.gpio3.into_push_pull_output();
+        let gate_c = pins.gpio4.into_push_pull_output();
+        let gate_d = pins.gpio5.into_push_pull_output();
 
         (
             Shared {
@@ -175,7 +180,10 @@ mod app {
                 display: display_ctx,
                 encoder,
                 encoder_button,
-                led,
+                gate_a,
+                gate_b,
+                gate_c,
+                gate_d,
                 page_button,
                 play_button,
             },
@@ -325,7 +333,7 @@ mod app {
 
     const PWM: u32 = 5;
 
-    #[task(local = [led], shared = [state], priority = 2)]
+    #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let mut tick_duration: fugit::Duration<u64, 1, 1000000> =
             ctx.shared.state.lock(|state| state.bpm.tick_duration());
@@ -340,7 +348,10 @@ mod app {
 
         loop {
             if counter == target {
-                _ = ctx.local.led.toggle();
+                _ = ctx.local.gate_a.toggle();
+                _ = ctx.local.gate_b.toggle();
+                _ = ctx.local.gate_c.toggle();
+                _ = ctx.local.gate_d.toggle();
                 tick_duration = ctx.shared.state.lock(|state| state.bpm.tick_duration());
                 counter = 0;
             } else {
