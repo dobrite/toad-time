@@ -10,11 +10,6 @@ mod state;
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
-    use crate::display::Display;
-    use crate::state::{
-        Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
-        PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
-    };
     use defmt::info;
     use defmt_rtt as _;
     use embedded_hal::{
@@ -23,17 +18,14 @@ mod app {
     };
     use fugit::RateExtU32;
     use panic_probe as _;
-
-    use rtic_monotonics::rp2040::{Timer, *};
-    use rtic_sync::{channel::*, make_channel};
-
+    use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
     use rp_pico::{
         hal::{
             self, clocks,
-            gpio::pin::bank0::*,
-            gpio::pin::{PullUp, PushPullOutput},
-            gpio::Input,
-            gpio::Pin,
+            gpio::{
+                pin::{bank0::*, PullUp, PushPullOutput},
+                Input, Pin,
+            },
             sio::Sio,
             spi::Spi,
             watchdog::Watchdog,
@@ -41,10 +33,17 @@ mod app {
         },
         XOSC_CRYSTAL_FREQ,
     };
-
+    use rtic_monotonics::rp2040::{Timer, *};
+    use rtic_sync::{channel::*, make_channel};
     use ssd1306::{prelude::*, Ssd1306};
 
-    use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
+    use crate::{
+        display::Display,
+        state::{
+            Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
+            PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
+        },
+    };
 
     type Encoder =
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;

@@ -2,6 +2,7 @@ use core::{
     fmt,
     ops::{AddAssign, Deref, DerefMut, SubAssign},
 };
+
 use defmt::Format;
 use fugit::RateExtU32;
 

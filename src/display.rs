@@ -1,17 +1,6 @@
 use core::fmt::Write;
+
 use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
-use heapless::String;
-use tinybmp::Bmp as TinyBmp;
-
-use rp_pico::hal::{
-    gpio::pin::bank0::*,
-    gpio::pin::PushPull,
-    gpio::Output,
-    gpio::Pin,
-    pac,
-    spi::{Enabled, Spi},
-};
-
 use embedded_graphics::{
     geometry::{Point, Size},
     image::{Image, ImageDrawableExt},
@@ -20,8 +9,17 @@ use embedded_graphics::{
     text::Text,
     Drawable,
 };
-
+use heapless::String;
+use rp_pico::hal::{
+    gpio::{
+        pin::{bank0::*, PushPull},
+        Output, Pin,
+    },
+    pac,
+    spi::{Enabled, Spi},
+};
 use ssd1306::Ssd1306;
+use tinybmp::Bmp as TinyBmp;
 
 type Font = PcfTextStyle<'static, BinaryColor>;
 type Bmp = TinyBmp<'static, BinaryColor>;
