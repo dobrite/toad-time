@@ -28,9 +28,9 @@ pub type Ssd1306Display = Ssd1306<
 use crate::state::{State, StateChange};
 
 const SMOL_FONT: PcfFont =
-    include_pcf!("fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+    include_pcf!("src/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 const BIGGE_FONT: PcfFont =
-    include_pcf!("fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+    include_pcf!("src/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
 
 pub struct Display {
     display: Ssd1306Display,
