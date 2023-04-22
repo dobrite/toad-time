@@ -62,7 +62,7 @@ impl Display {
         };
         display.display.clear();
         display.draw_pointer();
-        display.write_bpm(initial_state.bpm());
+        display.draw_bpm(initial_state.bpm());
         display.display.flush().unwrap();
         display
     }
@@ -70,13 +70,13 @@ impl Display {
     pub fn handle_state_change(&mut self, state_change: StateChange) {
         self.display.clear();
         match state_change {
-            StateChange::Bpm(bpm) => self.write_bpm(bpm),
+            StateChange::Bpm(bpm) => self.draw_bpm(bpm),
             StateChange::None => unreachable!(),
         }
         self.display.flush().unwrap();
     }
 
-    fn write_bpm(&mut self, bpm: u32) {
+    fn draw_bpm(&mut self, bpm: u32) {
         self.bpm_label.clear();
         write!(self.bpm_label, "BPM").unwrap();
 
