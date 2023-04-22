@@ -1,4 +1,7 @@
-use core::ops::{AddAssign, Deref, DerefMut, SubAssign};
+use core::{
+    fmt,
+    ops::{AddAssign, Deref, DerefMut, SubAssign},
+};
 use defmt::Format;
 use fugit::RateExtU32;
 
@@ -32,6 +35,7 @@ pub enum StateChange {
 
 pub struct State {
     pub bpm: Bpm,
+    sync: Sync,
 }
 
 impl Default for State {
@@ -42,11 +46,18 @@ impl Default for State {
 
 impl State {
     pub fn new() -> Self {
-        Self { bpm: Bpm(120) }
+        Self {
+            bpm: Bpm(120),
+            sync: Sync::Ext,
+        }
     }
 
     pub fn bpm(&self) -> u32 {
         *self.bpm
+    }
+
+    pub fn sync(&self) -> &Sync {
+        &self.sync
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
@@ -136,5 +147,19 @@ impl AddAssign for Bpm {
 impl SubAssign for Bpm {
     fn sub_assign(&mut self, other: Self) {
         self.0 -= other.0;
+    }
+}
+
+pub enum Sync {
+    Int,
+    Ext,
+}
+
+impl fmt::Display for Sync {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Sync::Int => write!(f, "Int"),
+            Sync::Ext => write!(f, "Ext"),
+        }
     }
 }

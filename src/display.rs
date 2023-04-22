@@ -28,7 +28,7 @@ pub type Ssd1306Display = Ssd1306<
     ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
 >;
 
-use crate::state::{State, StateChange};
+use crate::state::{State, StateChange, Sync};
 
 const SMOL_FONT: PcfFont =
     include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
@@ -66,7 +66,7 @@ impl Display {
         display.display.clear();
         display.draw_pointer();
         display.draw_bpm(initial_state.bpm());
-        display.draw_sync(false);
+        display.draw_sync(initial_state.sync());
         display.display.flush().unwrap();
         display
     }
@@ -102,9 +102,9 @@ impl Display {
             .ok();
     }
 
-    fn draw_sync(&mut self, sync: bool) {
+    fn draw_sync(&mut self, sync: &Sync) {
         self.sync_str.clear();
-        write!(self.sync_str, "{}", if sync { "Int" } else { "Ext" }).unwrap();
+        write!(self.sync_str, "{}", sync).unwrap();
 
         Text::new(&self.sync_str, Point::new(22, 50), self.smol_font)
             .draw(&mut self.display)
