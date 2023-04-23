@@ -26,6 +26,12 @@ pub struct Home {
     sync_str: String<3>,
 }
 
+impl Default for Home {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Home {
     pub fn new() -> Self {
         let bpm_label = String::new();

@@ -45,7 +45,7 @@ impl ScreenState {
 impl Screens {
     pub fn new() -> Self {
         Self {
-            home: Home::new(),
+            home: Default::default(),
             gate_a: Gate::new("A"),
             gate_b: Gate::new("B"),
             gate_c: Gate::new("C"),
