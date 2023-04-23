@@ -42,14 +42,20 @@ impl Screens {
         }
     }
 
-    pub fn handle_state_change(&mut self, state_change: StateChange) {
+    pub fn handle_state_change(&mut self, state_change: StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Bpm(bpm) => self.state.bpm = bpm,
+            StateChange::Initialize => {
+                self.draw_home(display);
+            }
+            StateChange::Bpm(bpm) => {
+                self.state.bpm = bpm;
+                self.draw_home(display);
+            }
             StateChange::None => unreachable!(),
         }
     }
 
-    pub fn draw(&mut self, display: &mut Display) {
+    fn draw_home(&mut self, display: &mut Display) {
         display.clear();
         self.home.draw(&self.state, display);
         display.flush();

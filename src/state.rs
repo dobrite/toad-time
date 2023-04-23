@@ -45,6 +45,7 @@ enum Element {
 }
 
 pub enum StateChange {
+    Initialize,
     Bpm(u32),
     None,
 }

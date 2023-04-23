@@ -284,11 +284,10 @@ mod app {
         let display = ctx.local.display;
         let home = Home::new();
         let mut screens = Screens::new(home);
-        screens.draw(display);
+        screens.handle_state_change(StateChange::Initialize, display);
 
         while let Ok(state_change) = receiver.recv().await {
-            screens.handle_state_change(state_change);
-            screens.draw(display);
+            screens.handle_state_change(state_change, display);
         }
     }
 
