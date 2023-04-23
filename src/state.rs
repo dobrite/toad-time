@@ -43,6 +43,17 @@ pub enum Gate {
     D,
 }
 
+impl fmt::Display for Gate {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::A => write!(f, "A"),
+            Self::B => write!(f, "B"),
+            Self::C => write!(f, "C"),
+            Self::D => write!(f, "D"),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 pub enum GateElement {
     Div,
@@ -203,8 +214,8 @@ pub enum Sync {
 impl fmt::Display for Sync {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Sync::Int => write!(f, "Int"),
-            Sync::Ext => write!(f, "Ext"),
+            Self::Int => write!(f, "Int"),
+            Self::Ext => write!(f, "Ext"),
         }
     }
 }

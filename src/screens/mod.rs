@@ -43,10 +43,10 @@ impl Screens {
     pub fn new() -> Self {
         Self {
             home: Default::default(),
-            gate_a: gate::Gate::new("A"),
-            gate_b: gate::Gate::new("B"),
-            gate_c: gate::Gate::new("C"),
-            gate_d: gate::Gate::new("D"),
+            gate_a: gate::Gate::new(Gate::A),
+            gate_b: gate::Gate::new(Gate::B),
+            gate_c: gate::Gate::new(Gate::C),
+            gate_d: gate::Gate::new(Gate::D),
             state: Default::default(),
         }
     }
