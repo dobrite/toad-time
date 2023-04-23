@@ -1,20 +1,17 @@
 use crate::{
     display::Display,
-    state::{Element, HomeElement, StateChange, Sync},
+    state::{Element, Gate, HomeElement, StateChange, Sync},
 };
 
 mod gate;
 mod home;
 
-use gate::Gate;
-use home::Home;
-
 pub struct Screens {
-    home: Home,
-    gate_a: Gate,
-    gate_b: Gate,
-    gate_c: Gate,
-    gate_d: Gate,
+    home: home::Home,
+    gate_a: gate::Gate,
+    gate_b: gate::Gate,
+    gate_c: gate::Gate,
+    gate_d: gate::Gate,
     state: ScreenState,
 }
 
@@ -46,10 +43,10 @@ impl Screens {
     pub fn new() -> Self {
         Self {
             home: Default::default(),
-            gate_a: Gate::new("A"),
-            gate_b: Gate::new("B"),
-            gate_c: Gate::new("C"),
-            gate_d: Gate::new("D"),
+            gate_a: gate::Gate::new("A"),
+            gate_b: gate::Gate::new("B"),
+            gate_c: gate::Gate::new("C"),
+            gate_d: gate::Gate::new("D"),
             state: Default::default(),
         }
     }
@@ -68,21 +65,9 @@ impl Screens {
                     self.state.current = page;
                     self.draw_home(display);
                 }
-                Element::GateA(_) => {
+                Element::Gate(gate, _) => {
                     self.state.current = page;
-                    self.draw_gate_a(display);
-                }
-                Element::GateB(_) => {
-                    self.state.current = page;
-                    self.draw_gate_b(display);
-                }
-                Element::GateC(_) => {
-                    self.state.current = page;
-                    self.draw_gate_c(display);
-                }
-                Element::GateD(_) => {
-                    self.state.current = page;
-                    self.draw_gate_d(display);
+                    self.draw_gate(gate, display);
                 }
             },
             StateChange::None => unreachable!(),
@@ -95,27 +80,14 @@ impl Screens {
         display.flush();
     }
 
-    fn draw_gate_a(&mut self, display: &mut Display) {
+    fn draw_gate(&mut self, gate: Gate, display: &mut Display) {
         display.clear();
-        self.gate_a.draw(&self.state, display);
-        display.flush();
-    }
-
-    fn draw_gate_b(&mut self, display: &mut Display) {
-        display.clear();
-        self.gate_b.draw(&self.state, display);
-        display.flush();
-    }
-
-    fn draw_gate_c(&mut self, display: &mut Display) {
-        display.clear();
-        self.gate_c.draw(&self.state, display);
-        display.flush();
-    }
-
-    fn draw_gate_d(&mut self, display: &mut Display) {
-        display.clear();
-        self.gate_d.draw(&self.state, display);
+        match gate {
+            Gate::A => self.gate_a.draw(&self.state, display),
+            Gate::B => self.gate_b.draw(&self.state, display),
+            Gate::C => self.gate_c.draw(&self.state, display),
+            Gate::D => self.gate_d.draw(&self.state, display),
+        }
         display.flush();
     }
 }

@@ -36,6 +36,14 @@ pub enum HomeElement {
 }
 
 #[derive(Clone, Copy)]
+pub enum Gate {
+    A,
+    B,
+    C,
+    D,
+}
+
+#[derive(Clone, Copy)]
 pub enum GateElement {
     Div,
     // Pwm,
@@ -44,10 +52,7 @@ pub enum GateElement {
 #[derive(Clone, Copy)]
 pub enum Element {
     Home(HomeElement),
-    GateA(GateElement),
-    GateB(GateElement),
-    GateC(GateElement),
-    GateD(GateElement),
+    Gate(Gate, GateElement),
 }
 
 pub enum StateChange {
@@ -106,11 +111,11 @@ impl State {
 
     fn next_page(&mut self) -> Element {
         self.current = match self.current {
-            Element::Home(_) => Element::GateA(GateElement::Div),
-            Element::GateA(_) => Element::GateB(GateElement::Div),
-            Element::GateB(_) => Element::GateC(GateElement::Div),
-            Element::GateC(_) => Element::GateD(GateElement::Div),
-            Element::GateD(_) => Element::Home(HomeElement::Bpm),
+            Element::Home(_) => Element::Gate(Gate::A, GateElement::Div),
+            Element::Gate(Gate::A, _) => Element::Gate(Gate::B, GateElement::Div),
+            Element::Gate(Gate::B, _) => Element::Gate(Gate::C, GateElement::Div),
+            Element::Gate(Gate::C, _) => Element::Gate(Gate::D, GateElement::Div),
+            Element::Gate(Gate::D, _) => Element::Home(HomeElement::Bpm),
         };
 
         self.current
