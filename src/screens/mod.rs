@@ -72,6 +72,10 @@ impl Screens {
                     self.draw_gate(gate, display);
                 }
             },
+            StateChange::Sync(sync) => {
+                self.state.sync = sync;
+                self.draw_home(display);
+            }
             StateChange::None => unreachable!(),
         }
     }

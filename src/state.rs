@@ -61,6 +61,7 @@ pub enum Element {
 pub enum StateChange {
     Initialize,
     Bpm(u32),
+    Sync(Sync),
     NextPage(Element),
     NextElement(Element),
     None,
@@ -68,7 +69,6 @@ pub enum StateChange {
 
 pub struct State {
     pub bpm: Bpm,
-    #[allow(dead_code)]
     sync: Sync,
     #[allow(dead_code)]
     play_status: PlayStatus,
@@ -95,10 +95,12 @@ impl State {
         match command {
             Command::EncoderRight => match self.current {
                 Element::Home(HomeElement::Bpm) => self.bpm.next(),
+                Element::Home(HomeElement::Sync) => self.sync.next(),
                 _ => todo!(),
             },
             Command::EncoderLeft => match self.current {
                 Element::Home(HomeElement::Bpm) => self.bpm.prev(),
+                Element::Home(HomeElement::Sync) => self.sync.prev(),
                 _ => todo!(),
             },
             Command::EncoderPress => StateChange::NextElement(self.next_element()),
@@ -168,10 +170,30 @@ impl Updatable for Bpm {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
 pub enum Sync {
-    #[allow(dead_code)]
     Int,
     Ext,
+}
+
+impl Updatable for Sync {
+    fn next(&mut self) -> StateChange {
+        if *self == Sync::Int {
+            StateChange::None
+        } else {
+            *self = Sync::Int;
+            StateChange::Sync(*self)
+        }
+    }
+
+    fn prev(&mut self) -> StateChange {
+        if *self == Sync::Ext {
+            StateChange::None
+        } else {
+            *self = Sync::Ext;
+            StateChange::Sync(*self)
+        }
+    }
 }
 
 impl fmt::Display for Sync {
