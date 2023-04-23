@@ -1,7 +1,4 @@
-use core::{
-    fmt,
-    ops::{AddAssign, Deref, DerefMut, SubAssign},
-};
+use core::fmt;
 
 use defmt::Format;
 use fugit::RateExtU32;
@@ -22,11 +19,6 @@ pub enum Command {
     EncoderPress,
     PagePress,
     PlayPress,
-}
-
-enum Updated {
-    Yep,
-    Nope,
 }
 
 #[derive(Clone, Copy)]
@@ -102,17 +94,11 @@ impl State {
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         match command {
             Command::EncoderRight => match self.current {
-                Element::Home(HomeElement::Bpm) => match forwards(&mut self.bpm) {
-                    Updated::Yep => StateChange::Bpm(*self.bpm),
-                    Updated::Nope => StateChange::None,
-                },
+                Element::Home(HomeElement::Bpm) => self.bpm.next(),
                 _ => todo!(),
             },
             Command::EncoderLeft => match self.current {
-                Element::Home(HomeElement::Bpm) => match backwards(&mut self.bpm) {
-                    Updated::Yep => StateChange::Bpm(*self.bpm),
-                    Updated::Nope => StateChange::None,
-                },
+                Element::Home(HomeElement::Bpm) => self.bpm.prev(),
                 _ => todo!(),
             },
             Command::EncoderPress => StateChange::NextElement(self.next_element()),
@@ -145,33 +131,9 @@ impl State {
     }
 }
 
-fn forwards<U: Updatable>(state: &mut U) -> Updated
-where
-    U: DerefMut<Target = u32> + AddAssign + PartialEq,
-{
-    if **state == U::MAX {
-        Updated::Nope
-    } else {
-        **state += 1;
-        Updated::Yep
-    }
-}
-
-fn backwards<U: Updatable>(state: &mut U) -> Updated
-where
-    U: DerefMut<Target = u32> + SubAssign + PartialEq,
-{
-    if **state == U::MIN {
-        Updated::Nope
-    } else {
-        **state -= 1;
-        Updated::Yep
-    }
-}
-
 trait Updatable {
-    const MAX: u32;
-    const MIN: u32;
+    fn next(&mut self) -> StateChange;
+    fn prev(&mut self) -> StateChange;
 }
 
 #[derive(PartialEq, Format)]
@@ -186,34 +148,23 @@ impl Bpm {
     }
 }
 
-impl Deref for Bpm {
-    type Target = u32;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for Bpm {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl Updatable for Bpm {
-    const MAX: u32 = 300;
-    const MIN: u32 = 1;
-}
-
-impl AddAssign for Bpm {
-    fn add_assign(&mut self, other: Self) {
-        self.0 += other.0;
+    fn next(&mut self) -> StateChange {
+        if self.0 == 300 {
+            StateChange::None
+        } else {
+            self.0 += 1;
+            StateChange::Bpm(self.0)
+        }
     }
-}
 
-impl SubAssign for Bpm {
-    fn sub_assign(&mut self, other: Self) {
-        self.0 -= other.0;
+    fn prev(&mut self) -> StateChange {
+        if self.0 == 1 {
+            StateChange::None
+        } else {
+            self.0 -= 1;
+            StateChange::Bpm(self.0)
+        }
     }
 }
 
