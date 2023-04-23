@@ -62,13 +62,13 @@ impl Screens {
                 self.state.bpm = bpm;
                 self.draw_home(display);
             }
-            StateChange::NextPage(page) => match page {
+            StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
                 Element::Home(_) => {
-                    self.state.current = page;
+                    self.state.current = element;
                     self.draw_home(display);
                 }
                 Element::Gate(gate, _) => {
-                    self.state.current = page;
+                    self.state.current = element;
                     self.draw_gate(gate, display);
                 }
             },

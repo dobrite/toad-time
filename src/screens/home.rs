@@ -10,7 +10,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::Bmp,
     screens::{Display, ScreenState, POINTER},
-    state::Sync,
+    state::{Element, HomeElement, Sync},
 };
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
@@ -53,7 +53,7 @@ impl Home {
     pub fn draw(&mut self, state: &ScreenState, display: &mut Display) {
         self.draw_bpm(display, state.bpm);
         self.draw_frogge(display);
-        self.draw_pointer(display);
+        self.draw_pointer(display, state.current);
         self.draw_sync(display, &state.sync);
         self.draw_play_pause(display, state.is_playing);
     }
@@ -75,8 +75,13 @@ impl Home {
         display.draw_sub_bmp(&self.frogge, &rectangle, Point::new(80, 26));
     }
 
-    fn draw_pointer(&mut self, display: &mut Display) {
-        display.draw_bmp(&self.pointer, Point::new(4, 8));
+    fn draw_pointer(&mut self, display: &mut Display, current: Element) {
+        let point = match current {
+            Element::Home(HomeElement::Bpm) => Point::new(4, 8),
+            Element::Home(HomeElement::Sync) => Point::new(4, 32),
+            Element::Gate(..) => unreachable!(),
+        };
+        display.draw_bmp(&self.pointer, point);
     }
 
     fn draw_sync(&mut self, display: &mut Display, sync: &Sync) {

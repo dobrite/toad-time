@@ -30,12 +30,6 @@ enum Updated {
 }
 
 #[derive(Clone, Copy)]
-pub enum HomeElement {
-    Bpm,
-    //Sync,
-}
-
-#[derive(Clone, Copy)]
 pub enum Gate {
     A,
     B,
@@ -57,19 +51,26 @@ impl fmt::Display for Gate {
 #[derive(Clone, Copy)]
 pub enum GateElement {
     Div,
-    // Pwm,
+    Pwm,
+}
+
+#[derive(Clone, Copy)]
+pub enum HomeElement {
+    Bpm,
+    Sync,
 }
 
 #[derive(Clone, Copy)]
 pub enum Element {
-    Home(HomeElement),
     Gate(Gate, GateElement),
+    Home(HomeElement),
 }
 
 pub enum StateChange {
     Initialize,
     Bpm(u32),
     NextPage(Element),
+    NextElement(Element),
     None,
 }
 
@@ -114,7 +115,7 @@ impl State {
                 },
                 _ => todo!(),
             },
-            Command::EncoderPress => StateChange::None,
+            Command::EncoderPress => StateChange::NextElement(self.next_element()),
             Command::PagePress => StateChange::NextPage(self.next_page()),
             Command::PlayPress => StateChange::None,
         }
@@ -127,6 +128,17 @@ impl State {
             Element::Gate(Gate::B, _) => Element::Gate(Gate::C, GateElement::Div),
             Element::Gate(Gate::C, _) => Element::Gate(Gate::D, GateElement::Div),
             Element::Gate(Gate::D, _) => Element::Home(HomeElement::Bpm),
+        };
+
+        self.current
+    }
+
+    fn next_element(&mut self) -> Element {
+        self.current = match self.current {
+            Element::Home(HomeElement::Bpm) => Element::Home(HomeElement::Sync),
+            Element::Home(HomeElement::Sync) => Element::Home(HomeElement::Bpm),
+            Element::Gate(gate, GateElement::Div) => Element::Gate(gate, GateElement::Pwm),
+            Element::Gate(gate, GateElement::Pwm) => Element::Gate(gate, GateElement::Div),
         };
 
         self.current

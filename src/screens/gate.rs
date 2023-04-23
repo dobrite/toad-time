@@ -11,6 +11,7 @@ use crate::{
     display::Bmp,
     screens::{Display, ScreenState, POINTER},
     state,
+    state::{Element, GateElement},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -40,9 +41,9 @@ impl Gate {
         }
     }
 
-    pub fn draw(&mut self, _state: &ScreenState, display: &mut Display) {
+    pub fn draw(&mut self, state: &ScreenState, display: &mut Display) {
         self.draw_name(display);
-        self.draw_pointer(display);
+        self.draw_pointer(display, state.current);
         self.draw_clock(display);
         self.draw_div(display);
         self.draw_pwm(display); // 65x16 (13x8)
@@ -52,8 +53,13 @@ impl Gate {
         display.draw_bigge_text(&self.name, Point::new(0, 24));
     }
 
-    fn draw_pointer(&mut self, display: &mut Display) {
-        display.draw_bmp(&self.pointer, Point::new(36, 10));
+    fn draw_pointer(&mut self, display: &mut Display, current: Element) {
+        let point = match current {
+            Element::Gate(_, GateElement::Div) => Point::new(36, 10),
+            Element::Gate(_, GateElement::Pwm) => Point::new(36, 28),
+            Element::Home(..) => unreachable!(),
+        };
+        display.draw_bmp(&self.pointer, point);
     }
 
     fn draw_clock(&mut self, display: &mut Display) {
