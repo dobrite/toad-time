@@ -9,12 +9,11 @@ use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
-    screens::{Display, ScreenState},
+    screens::{Display, ScreenState, POINTER},
     state::Sync,
 };
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
-const POINTER: &[u8; 630] = include_bytes!("../assets/icons/Pointer.bmp");
 const PLAY_PAUSE: &[u8; 1590] = include_bytes!("../assets/icons/PlayPause.bmp");
 
 pub struct Home {
