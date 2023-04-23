@@ -52,7 +52,9 @@ pub enum StateChange {
 
 pub struct State {
     pub bpm: Bpm,
+    #[allow(dead_code)]
     sync: Sync,
+    #[allow(dead_code)]
     play_status: PlayStatus,
     current: Element,
 }
@@ -71,18 +73,6 @@ impl State {
             play_status: PlayStatus::Playing,
             current: Element::Home(HomeElement::Bpm),
         }
-    }
-
-    pub fn bpm(&self) -> u32 {
-        *self.bpm
-    }
-
-    pub fn sync(&self) -> &Sync {
-        &self.sync
-    }
-
-    pub fn is_playing(&self) -> bool {
-        self.play_status == PlayStatus::Playing
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
@@ -179,6 +169,7 @@ impl SubAssign for Bpm {
 }
 
 pub enum Sync {
+    #[allow(dead_code)]
     Int,
     Ext,
 }
