@@ -40,7 +40,7 @@ mod app {
 
     use crate::{
         display::Display,
-        screens::{Home, Screens},
+        screens::Screens,
         state::{
             Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
             PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
@@ -282,8 +282,7 @@ mod app {
     #[task(local = [display], priority = 1)]
     async fn display(ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
         let display = ctx.local.display;
-        let home = Home::new();
-        let mut screens = Screens::new(home);
+        let mut screens = Screens::new();
         screens.handle_state_change(StateChange::Initialize, display);
 
         while let Ok(state_change) = receiver.recv().await {
