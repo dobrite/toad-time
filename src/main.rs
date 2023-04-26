@@ -158,7 +158,7 @@ mod app {
 
         (
             Shared {
-                state: Default::default(),
+                state: State::new(),
             },
             Local {
                 display,
