@@ -1,3 +1,5 @@
+use defmt::Format;
+
 use crate::{
     display::Display,
     state::{Bpm, Element, Gate, HomeElement, PlayStatus, StateChange, Sync},
@@ -17,6 +19,7 @@ pub struct Screens {
     state: ScreenState,
 }
 
+#[derive(Format)]
 pub struct ScreenState {
     bpm: Bpm,
     sync: Sync,

@@ -21,7 +21,7 @@ pub enum Command {
     PlayPress,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Format)]
 pub enum Gate {
     A,
     B,
@@ -40,19 +40,19 @@ impl fmt::Display for Gate {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Format)]
 pub enum GateElement {
     Div,
     Pwm,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Format)]
 pub enum HomeElement {
     Bpm,
     Sync,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Format)]
 pub enum Element {
     Gate(Gate, GateElement),
     Home(HomeElement),
@@ -185,7 +185,7 @@ impl Updatable for Bpm {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Format)]
 pub enum Sync {
     Int,
     Ext,
@@ -220,7 +220,7 @@ impl fmt::Display for Sync {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Format)]
 pub enum PlayStatus {
     Playing,
     Paused,
