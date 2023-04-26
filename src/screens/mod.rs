@@ -1,6 +1,6 @@
 use crate::{
     display::Display,
-    state::{Element, Gate, HomeElement, PlayStatus, StateChange, Sync},
+    state::{Bpm, Element, Gate, HomeElement, PlayStatus, StateChange, Sync},
 };
 
 mod gate;
@@ -18,9 +18,9 @@ pub struct Screens {
 }
 
 pub struct ScreenState {
-    bpm: u32,
+    bpm: Bpm,
     sync: Sync,
-    is_playing: bool,
+    play_status: PlayStatus,
     current: Element,
 }
 
@@ -33,9 +33,9 @@ impl Default for ScreenState {
 impl ScreenState {
     pub fn new() -> Self {
         Self {
-            bpm: 120,
+            bpm: Bpm(120),
             sync: Sync::Ext,
-            is_playing: true,
+            play_status: PlayStatus::Playing,
             current: Element::Home(HomeElement::Bpm),
         }
     }
@@ -59,7 +59,7 @@ impl Screens {
                 self.draw_home(display);
             }
             StateChange::Bpm(bpm) => {
-                self.state.bpm = bpm;
+                self.state.bpm = Bpm(bpm);
                 self.draw_home(display);
             }
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
@@ -77,7 +77,7 @@ impl Screens {
                 self.draw_home(display);
             }
             StateChange::PlayStatus(play_status) => {
-                self.state.is_playing = play_status == PlayStatus::Playing;
+                self.state.play_status = play_status;
                 self.draw_home(display);
             }
             StateChange::None => unreachable!(),

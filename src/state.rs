@@ -148,7 +148,7 @@ trait Updatable {
 }
 
 #[derive(PartialEq, Format)]
-pub struct Bpm(u32);
+pub struct Bpm(pub u32);
 
 impl Bpm {
     pub fn tick_duration(&self) -> MicroSeconds {
@@ -156,6 +156,12 @@ impl Bpm {
             .Hz::<1, 1>()
             .into_duration()
             .into()
+    }
+}
+
+impl fmt::Display for Bpm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

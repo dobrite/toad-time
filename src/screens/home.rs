@@ -10,7 +10,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::Bmp,
     screens::{Display, ScreenState, POINTER},
-    state::{Element, HomeElement, Sync},
+    state::{Bpm, Element, HomeElement, PlayStatus, Sync},
 };
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
@@ -51,14 +51,14 @@ impl Home {
     }
 
     pub fn draw(&mut self, state: &ScreenState, display: &mut Display) {
-        self.draw_bpm(display, state.bpm);
+        self.draw_bpm(display, &state.bpm);
         self.draw_frogge(display);
         self.draw_pointer(display, state.current);
         self.draw_sync(display, &state.sync);
-        self.draw_play_pause(display, state.is_playing);
+        self.draw_play_pause(display, state.play_status);
     }
 
-    pub fn draw_bpm(&mut self, display: &mut Display, bpm: u32) {
+    pub fn draw_bpm(&mut self, display: &mut Display, bpm: &Bpm) {
         self.bpm_label.clear();
         write!(self.bpm_label, "BPM").unwrap();
 
@@ -91,8 +91,8 @@ impl Home {
         display.draw_smol_text(&self.sync_str, Point::new(22, 50));
     }
 
-    fn draw_play_pause(&mut self, display: &mut Display, is_playing: bool) {
-        let rectangle = if is_playing {
+    fn draw_play_pause(&mut self, display: &mut Display, play_status: PlayStatus) {
+        let rectangle = if play_status == PlayStatus::Playing {
             Rectangle::new(Point::new(0, 0), Size::new(16, 16))
         } else {
             Rectangle::new(Point::new(16, 0), Size::new(32, 16))
