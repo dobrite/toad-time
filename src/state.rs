@@ -62,6 +62,7 @@ pub enum StateChange {
     Initialize,
     Bpm(u32),
     Sync(Sync),
+    PlayStatus(PlayStatus),
     NextPage(Element),
     NextElement(Element),
     None,
@@ -70,7 +71,6 @@ pub enum StateChange {
 pub struct State {
     pub bpm: Bpm,
     sync: Sync,
-    #[allow(dead_code)]
     play_status: PlayStatus,
     current: Element,
 }
@@ -105,7 +105,7 @@ impl State {
             },
             Command::EncoderPress => StateChange::NextElement(self.next_element()),
             Command::PagePress => StateChange::NextPage(self.next_page()),
-            Command::PlayPress => StateChange::None,
+            Command::PlayPress => self.toggle_play(),
         }
     }
 
@@ -130,6 +130,15 @@ impl State {
         };
 
         self.current
+    }
+
+    fn toggle_play(&mut self) -> StateChange {
+        self.play_status = match self.play_status {
+            PlayStatus::Playing => PlayStatus::Paused,
+            PlayStatus::Paused => PlayStatus::Playing,
+        };
+
+        StateChange::PlayStatus(self.play_status)
     }
 }
 
@@ -205,9 +214,8 @@ impl fmt::Display for Sync {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum PlayStatus {
     Playing,
-    #[allow(dead_code)]
     Paused,
 }

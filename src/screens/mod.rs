@@ -1,6 +1,6 @@
 use crate::{
     display::Display,
-    state::{Element, Gate, HomeElement, StateChange, Sync},
+    state::{Element, Gate, HomeElement, PlayStatus, StateChange, Sync},
 };
 
 mod gate;
@@ -74,6 +74,10 @@ impl Screens {
             },
             StateChange::Sync(sync) => {
                 self.state.sync = sync;
+                self.draw_home(display);
+            }
+            StateChange::PlayStatus(play_status) => {
+                self.state.is_playing = play_status == PlayStatus::Playing;
                 self.draw_home(display);
             }
             StateChange::None => unreachable!(),
