@@ -59,7 +59,7 @@ impl Screens {
                 self.draw_home(display);
             }
             StateChange::Bpm(bpm) => {
-                self.state.bpm = Bpm(bpm);
+                self.state.bpm = bpm;
                 self.draw_home(display);
             }
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {

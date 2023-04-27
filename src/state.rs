@@ -91,7 +91,7 @@ pub enum Element {
 
 pub enum StateChange {
     Initialize,
-    Bpm(u32),
+    Bpm(Bpm),
     Sync(Sync),
     PlayStatus(PlayStatus),
     NextPage(Element),
@@ -200,7 +200,7 @@ trait Updatable {
     fn prev(&mut self) -> StateChange;
 }
 
-#[derive(PartialEq, Format)]
+#[derive(Clone, Copy, PartialEq, Format)]
 pub struct Bpm(pub u32);
 
 impl Bpm {
@@ -224,7 +224,7 @@ impl Updatable for Bpm {
             StateChange::None
         } else {
             self.0 += 1;
-            StateChange::Bpm(self.0)
+            StateChange::Bpm(*self)
         }
     }
 
@@ -233,7 +233,7 @@ impl Updatable for Bpm {
             StateChange::None
         } else {
             self.0 -= 1;
-            StateChange::Bpm(self.0)
+            StateChange::Bpm(*self)
         }
     }
 }
