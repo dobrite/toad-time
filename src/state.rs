@@ -21,6 +21,37 @@ pub enum Command {
     PlayPress,
 }
 
+const RATES: [Rate; 17] = [
+    Rate::Div(64),
+    Rate::Div(32),
+    Rate::Div(16),
+    Rate::Div(8),
+    Rate::Div(5),
+    Rate::Div(4),
+    Rate::Div(3),
+    Rate::Div(2),
+    Rate::Unity,
+    Rate::Mult(2),
+    Rate::Mult(3),
+    Rate::Mult(4),
+    Rate::Mult(5),
+    Rate::Mult(8),
+    Rate::Mult(16),
+    Rate::Mult(32),
+    Rate::Mult(64),
+];
+
+pub enum Rate {
+    Div(u8),
+    Unity,
+    Mult(u8),
+}
+
+pub enum Pwm {
+    P(u8),
+    Pew,
+}
+
 #[derive(Clone, Copy, Format)]
 pub enum Gate {
     A,
@@ -68,11 +99,29 @@ pub enum StateChange {
     None,
 }
 
+pub struct GateState {
+    rate: Rate,
+    pwm: Pwm,
+}
+
+impl GateState {
+    fn new() -> Self {
+        GateState {
+            rate: Rate::Unity,
+            pwm: Pwm::P(50),
+        }
+    }
+}
+
 pub struct State {
     pub bpm: Bpm,
     sync: Sync,
     play_status: PlayStatus,
     current: Element,
+    gate_a: GateState,
+    gate_b: GateState,
+    gate_c: GateState,
+    gate_d: GateState,
 }
 
 impl Default for State {
@@ -88,6 +137,10 @@ impl State {
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current: Element::Home(HomeElement::Bpm),
+            gate_a: GateState::new(),
+            gate_b: GateState::new(),
+            gate_c: GateState::new(),
+            gate_d: GateState::new(),
         }
     }
 
