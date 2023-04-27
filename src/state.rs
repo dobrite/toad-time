@@ -73,7 +73,7 @@ impl fmt::Display for Gate {
 
 #[derive(Clone, Copy, Format)]
 pub enum GateElement {
-    Div,
+    Rate,
     Pwm,
 }
 
@@ -164,10 +164,10 @@ impl State {
 
     fn next_page(&mut self) -> Element {
         self.current = match self.current {
-            Element::Home(_) => Element::Gate(Gate::A, GateElement::Div),
-            Element::Gate(Gate::A, _) => Element::Gate(Gate::B, GateElement::Div),
-            Element::Gate(Gate::B, _) => Element::Gate(Gate::C, GateElement::Div),
-            Element::Gate(Gate::C, _) => Element::Gate(Gate::D, GateElement::Div),
+            Element::Home(_) => Element::Gate(Gate::A, GateElement::Rate),
+            Element::Gate(Gate::A, _) => Element::Gate(Gate::B, GateElement::Rate),
+            Element::Gate(Gate::B, _) => Element::Gate(Gate::C, GateElement::Rate),
+            Element::Gate(Gate::C, _) => Element::Gate(Gate::D, GateElement::Rate),
             Element::Gate(Gate::D, _) => Element::Home(HomeElement::Bpm),
         };
 
@@ -178,8 +178,8 @@ impl State {
         self.current = match self.current {
             Element::Home(HomeElement::Bpm) => Element::Home(HomeElement::Sync),
             Element::Home(HomeElement::Sync) => Element::Home(HomeElement::Bpm),
-            Element::Gate(gate, GateElement::Div) => Element::Gate(gate, GateElement::Pwm),
-            Element::Gate(gate, GateElement::Pwm) => Element::Gate(gate, GateElement::Div),
+            Element::Gate(gate, GateElement::Rate) => Element::Gate(gate, GateElement::Pwm),
+            Element::Gate(gate, GateElement::Pwm) => Element::Gate(gate, GateElement::Rate),
         };
 
         self.current

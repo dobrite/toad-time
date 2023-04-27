@@ -55,7 +55,7 @@ impl Gate {
 
     fn draw_pointer(&mut self, display: &mut Display, current: Element) {
         let point = match current {
-            Element::Gate(_, GateElement::Div) => Point::new(36, 10),
+            Element::Gate(_, GateElement::Rate) => Point::new(36, 10),
             Element::Gate(_, GateElement::Pwm) => Point::new(36, 28),
             Element::Home(..) => unreachable!(),
         };
