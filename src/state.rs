@@ -2,6 +2,8 @@ use core::fmt;
 
 use defmt::Format;
 use fugit::RateExtU32;
+use hash32::{Hash, Hasher};
+use heapless::FnvIndexMap;
 
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
@@ -52,12 +54,23 @@ pub enum Pwm {
     Pew,
 }
 
-#[derive(Clone, Copy, Format)]
+#[derive(Clone, Copy, Eq, Format, PartialEq)]
 pub enum Gate {
     A,
     B,
     C,
     D,
+}
+
+impl Hash for Gate {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Gate::A => state.write(&[0]),
+            Gate::B => state.write(&[1]),
+            Gate::C => state.write(&[2]),
+            Gate::D => state.write(&[3]),
+        }
+    }
 }
 
 impl fmt::Display for Gate {
@@ -118,10 +131,7 @@ pub struct State {
     sync: Sync,
     play_status: PlayStatus,
     current: Element,
-    gate_a: GateState,
-    gate_b: GateState,
-    gate_c: GateState,
-    gate_d: GateState,
+    gates: FnvIndexMap<Gate, GateState, 4>,
 }
 
 impl Default for State {
@@ -132,15 +142,18 @@ impl Default for State {
 
 impl State {
     pub fn new() -> Self {
+        let mut gates = FnvIndexMap::<_, _, 4>::new();
+        gates.insert(Gate::A, GateState::new()).ok();
+        gates.insert(Gate::B, GateState::new()).ok();
+        gates.insert(Gate::C, GateState::new()).ok();
+        gates.insert(Gate::D, GateState::new()).ok();
+
         Self {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current: Element::Home(HomeElement::Bpm),
-            gate_a: GateState::new(),
-            gate_b: GateState::new(),
-            gate_c: GateState::new(),
-            gate_d: GateState::new(),
+            gates,
         }
     }
 

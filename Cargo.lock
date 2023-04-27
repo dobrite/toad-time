@@ -635,6 +635,7 @@ dependencies = [
  "embedded-graphics",
  "embedded-hal",
  "fugit",
+ "hash32",
  "heapless",
  "panic-probe",
  "rotary-encoder-embedded",
