@@ -147,13 +147,25 @@ impl State {
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         match command {
             Command::EncoderRight => match self.current {
-                Element::Home(HomeElement::Bpm) => self.bpm.next(),
-                Element::Home(HomeElement::Sync) => self.sync.next(),
+                Element::Home(HomeElement::Bpm) => match self.bpm.next() {
+                    Result::Ok(bpm) => StateChange::Bpm(bpm),
+                    Result::Err(_) => StateChange::None,
+                },
+                Element::Home(HomeElement::Sync) => match self.sync.next() {
+                    Result::Ok(sync) => StateChange::Sync(sync),
+                    Result::Err(_) => StateChange::None,
+                },
                 _ => todo!(),
             },
             Command::EncoderLeft => match self.current {
-                Element::Home(HomeElement::Bpm) => self.bpm.prev(),
-                Element::Home(HomeElement::Sync) => self.sync.prev(),
+                Element::Home(HomeElement::Bpm) => match self.bpm.prev() {
+                    Result::Ok(bpm) => StateChange::Bpm(bpm),
+                    Result::Err(_) => StateChange::None,
+                },
+                Element::Home(HomeElement::Sync) => match self.sync.prev() {
+                    Result::Ok(sync) => StateChange::Sync(sync),
+                    Result::Err(_) => StateChange::None,
+                },
                 _ => todo!(),
             },
             Command::EncoderPress => StateChange::NextElement(self.next_element()),
@@ -196,8 +208,12 @@ impl State {
 }
 
 trait Updatable {
-    fn next(&mut self) -> StateChange;
-    fn prev(&mut self) -> StateChange;
+    fn next(&mut self) -> Result<Self, ()>
+    where
+        Self: Sized;
+    fn prev(&mut self) -> Result<Self, ()>
+    where
+        Self: Sized;
 }
 
 #[derive(Clone, Copy, PartialEq, Format)]
@@ -219,21 +235,21 @@ impl fmt::Display for Bpm {
 }
 
 impl Updatable for Bpm {
-    fn next(&mut self) -> StateChange {
+    fn next(&mut self) -> Result<Self, ()> {
         if self.0 == 300 {
-            StateChange::None
+            Result::Err(())
         } else {
             self.0 += 1;
-            StateChange::Bpm(*self)
+            Result::Ok(*self)
         }
     }
 
-    fn prev(&mut self) -> StateChange {
+    fn prev(&mut self) -> Result<Self, ()> {
         if self.0 == 1 {
-            StateChange::None
+            Result::Err(())
         } else {
             self.0 -= 1;
-            StateChange::Bpm(*self)
+            Result::Ok(*self)
         }
     }
 }
@@ -245,21 +261,21 @@ pub enum Sync {
 }
 
 impl Updatable for Sync {
-    fn next(&mut self) -> StateChange {
+    fn next(&mut self) -> Result<Self, ()> {
         if *self == Sync::Int {
-            StateChange::None
+            Result::Err(())
         } else {
             *self = Sync::Int;
-            StateChange::Sync(*self)
+            Result::Ok(*self)
         }
     }
 
-    fn prev(&mut self) -> StateChange {
+    fn prev(&mut self) -> Result<Self, ()> {
         if *self == Sync::Ext {
-            StateChange::None
+            Result::Err(())
         } else {
             *self = Sync::Ext;
-            StateChange::Sync(*self)
+            Result::Ok(*self)
         }
     }
 }
