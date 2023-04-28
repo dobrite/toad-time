@@ -154,23 +154,23 @@ impl State {
         match command {
             Command::EncoderRight => match self.current {
                 Element::Bpm(_) => match self.bpm.next() {
-                    Result::Ok(bpm) => StateChange::Bpm(bpm),
-                    Result::Err(_) => StateChange::None,
+                    Option::Some(bpm) => StateChange::Bpm(bpm),
+                    Option::None => StateChange::None,
                 },
                 Element::Sync(_) => match self.sync.next() {
-                    Result::Ok(sync) => StateChange::Sync(sync),
-                    Result::Err(_) => StateChange::None,
+                    Option::Some(sync) => StateChange::Sync(sync),
+                    Option::None => StateChange::None,
                 },
                 _ => todo!(),
             },
             Command::EncoderLeft => match self.current {
                 Element::Bpm(_) => match self.bpm.prev() {
-                    Result::Ok(bpm) => StateChange::Bpm(bpm),
-                    Result::Err(_) => StateChange::None,
+                    Option::Some(bpm) => StateChange::Bpm(bpm),
+                    Option::None => StateChange::None,
                 },
                 Element::Sync(_) => match self.sync.prev() {
-                    Result::Ok(sync) => StateChange::Sync(sync),
-                    Result::Err(_) => StateChange::None,
+                    Option::Some(sync) => StateChange::Sync(sync),
+                    Option::None => StateChange::None,
                 },
                 _ => todo!(),
             },
@@ -219,10 +219,10 @@ impl State {
 }
 
 trait Updatable {
-    fn next(&mut self) -> Result<Self, ()>
+    fn next(&mut self) -> Option<Self>
     where
         Self: Sized;
-    fn prev(&mut self) -> Result<Self, ()>
+    fn prev(&mut self) -> Option<Self>
     where
         Self: Sized;
 }
@@ -246,21 +246,21 @@ impl fmt::Display for Bpm {
 }
 
 impl Updatable for Bpm {
-    fn next(&mut self) -> Result<Self, ()> {
+    fn next(&mut self) -> Option<Self> {
         if self.0 == 300 {
-            Result::Err(())
+            Option::None
         } else {
             self.0 += 1;
-            Result::Ok(*self)
+            Option::Some(*self)
         }
     }
 
-    fn prev(&mut self) -> Result<Self, ()> {
+    fn prev(&mut self) -> Option<Self> {
         if self.0 == 1 {
-            Result::Err(())
+            Option::None
         } else {
             self.0 -= 1;
-            Result::Ok(*self)
+            Option::Some(*self)
         }
     }
 }
@@ -272,21 +272,21 @@ pub enum Sync {
 }
 
 impl Updatable for Sync {
-    fn next(&mut self) -> Result<Self, ()> {
+    fn next(&mut self) -> Option<Self> {
         if *self == Sync::Int {
-            Result::Err(())
+            Option::None
         } else {
             *self = Sync::Int;
-            Result::Ok(*self)
+            Option::Some(*self)
         }
     }
 
-    fn prev(&mut self) -> Result<Self, ()> {
+    fn prev(&mut self) -> Option<Self> {
         if *self == Sync::Ext {
-            Result::Err(())
+            Option::None
         } else {
             *self = Sync::Ext;
-            Result::Ok(*self)
+            Option::Some(*self)
         }
     }
 }
