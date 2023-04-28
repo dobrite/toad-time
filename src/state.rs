@@ -14,6 +14,8 @@ const SECONDS_IN_MINUTES: u32 = 60;
 const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
 pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
 
+pub type Gates = FnvIndexMap<Gate, GateState, 4>;
+
 #[derive(Clone, Copy, Format)]
 pub enum Command {
     EncoderRight,
@@ -43,15 +45,57 @@ const RATES: [Rate; 17] = [
     Rate::Mult(64),
 ];
 
+#[derive(Clone, Copy, PartialEq)]
 pub enum Rate {
     Div(u8),
     Unity,
     Mult(u8),
 }
 
+impl Updatable for (Gate, Rate) {
+    fn next(&mut self) -> Option<Self> {
+        if self.1 == *RATES.last().unwrap() {
+            Option::None
+        } else {
+            let index = RATES.iter().position(|r| *r == self.1).unwrap() + 1;
+            self.1 = RATES[index];
+            Option::Some(*self)
+        }
+    }
+
+    fn prev(&mut self) -> Option<Self> {
+        if self.1 == *RATES.first().unwrap() {
+            Option::None
+        } else {
+            let index = RATES.iter().position(|r| *r == self.1).unwrap() - 1;
+            self.1 = RATES[index];
+            Option::Some(*self)
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
 pub enum Pwm {
     P(u8),
     Pew,
+}
+
+impl Updatable for (Gate, Pwm) {
+    fn next(&mut self) -> Option<Self> {
+        match self.1 {
+            Pwm::P(100) => Option::None,
+            Pwm::P(num) => Option::Some((self.0, Pwm::P(num + 10))),
+            Pwm::Pew => Option::Some((self.0, Pwm::P(10))),
+        }
+    }
+
+    fn prev(&mut self) -> Option<Self> {
+        match self.1 {
+            Pwm::Pew => Option::None,
+            Pwm::P(10) => Option::Some((self.0, Pwm::Pew)),
+            Pwm::P(num) => Option::Some((self.0, Pwm::P(num - 10))),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Eq, Format, PartialEq)]
@@ -100,7 +144,8 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.next().into(),
             Element::Sync(Home) => state.sync.next().into(),
-            _ => unimplemented!(),
+            Element::Rate(gate) => (*gate, state.gates[gate].rate).next().into(),
+            Element::Pwm(gate) => (*gate, state.gates[gate].pwm).next().into(),
         }
     }
 
@@ -108,7 +153,8 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.prev().into(),
             Element::Sync(Home) => state.sync.prev().into(),
-            _ => unimplemented!(),
+            Element::Rate(gate) => (*gate, state.gates[gate].rate).next().into(),
+            Element::Pwm(gate) => (*gate, state.gates[gate].pwm).next().into(),
         }
     }
 }
@@ -117,6 +163,8 @@ pub enum StateChange {
     Initialize,
     Bpm(Bpm),
     Sync(Sync),
+    Rate(Gate, Rate),
+    Pwm(Gate, Pwm),
     PlayStatus(PlayStatus),
     NextPage(Element),
     NextElement(Element),
@@ -141,13 +189,31 @@ impl From<Option<Sync>> for StateChange {
     }
 }
 
+impl From<Option<(Gate, Rate)>> for StateChange {
+    fn from(val: Option<(Gate, Rate)>) -> Self {
+        match val {
+            Option::Some((gate, rate)) => StateChange::Rate(gate, rate),
+            Option::None => StateChange::None,
+        }
+    }
+}
+
+impl From<Option<(Gate, Pwm)>> for StateChange {
+    fn from(val: Option<(Gate, Pwm)>) -> Self {
+        match val {
+            Option::Some((gate, pwm)) => StateChange::Pwm(gate, pwm),
+            Option::None => StateChange::None,
+        }
+    }
+}
+
 pub struct GateState {
-    rate: Rate,
-    pwm: Pwm,
+    pub rate: Rate,
+    pub pwm: Pwm,
 }
 
 impl GateState {
-    fn new() -> Self {
+    pub fn new() -> Self {
         GateState {
             rate: Rate::Unity,
             pwm: Pwm::P(50),
@@ -160,7 +226,7 @@ pub struct State {
     sync: Sync,
     play_status: PlayStatus,
     current: Element,
-    gates: FnvIndexMap<Gate, GateState, 4>,
+    gates: Gates,
 }
 
 impl Default for State {
