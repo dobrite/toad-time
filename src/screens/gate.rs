@@ -9,9 +9,9 @@ use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
-    screens::{Display, ScreenState, POINTER},
+    screens::{Display, POINTER},
     state,
-    state::Element,
+    state::{Element, State},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -41,7 +41,7 @@ impl Gate {
         }
     }
 
-    pub fn draw(&mut self, state: &ScreenState, display: &mut Display) {
+    pub fn draw(&mut self, state: &State, display: &mut Display) {
         self.draw_name(display);
         self.draw_pointer(display, state.current);
         self.draw_clock(display);

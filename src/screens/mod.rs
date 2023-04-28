@@ -1,8 +1,6 @@
-use heapless::FnvIndexMap;
-
 use crate::{
     display::Display,
-    state::{Bpm, Element, Gate, GateState, Gates, Home, PlayStatus, StateChange, Sync},
+    state::{Element, Gate, State, StateChange},
 };
 
 mod gate;
@@ -16,39 +14,7 @@ pub struct Screens {
     gate_b: gate::Gate,
     gate_c: gate::Gate,
     gate_d: gate::Gate,
-    state: ScreenState,
-}
-
-pub struct ScreenState {
-    bpm: Bpm,
-    sync: Sync,
-    play_status: PlayStatus,
-    current: Element,
-    gates: Gates,
-}
-
-impl Default for ScreenState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ScreenState {
-    pub fn new() -> Self {
-        let mut gates = FnvIndexMap::<_, _, 4>::new();
-        gates.insert(Gate::A, GateState::new()).ok();
-        gates.insert(Gate::B, GateState::new()).ok();
-        gates.insert(Gate::C, GateState::new()).ok();
-        gates.insert(Gate::D, GateState::new()).ok();
-
-        Self {
-            bpm: Bpm(120),
-            sync: Sync::Ext,
-            play_status: PlayStatus::Playing,
-            current: Element::Bpm(Home),
-            gates,
-        }
-    }
+    state: State,
 }
 
 impl Screens {
@@ -59,7 +25,7 @@ impl Screens {
             gate_b: gate::Gate::new(Gate::B),
             gate_c: gate::Gate::new(Gate::C),
             gate_d: gate::Gate::new(Gate::D),
-            state: Default::default(),
+            state: State::new(),
         }
     }
 

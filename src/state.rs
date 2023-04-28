@@ -212,6 +212,12 @@ pub struct GateState {
     pub pwm: Pwm,
 }
 
+impl Default for GateState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GateState {
     pub fn new() -> Self {
         GateState {
@@ -222,11 +228,11 @@ impl GateState {
 }
 
 pub struct State {
-    bpm: Bpm,
-    sync: Sync,
-    play_status: PlayStatus,
-    current: Element,
-    gates: Gates,
+    pub bpm: Bpm,
+    pub sync: Sync,
+    pub play_status: PlayStatus,
+    pub current: Element,
+    pub gates: Gates,
 }
 
 impl Default for State {
