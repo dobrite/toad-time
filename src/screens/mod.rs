@@ -1,6 +1,6 @@
 use crate::{
     display::Display,
-    state::{Bpm, Element, Gate, HomeElement, PlayStatus, StateChange, Sync},
+    state::{Bpm, Element, Gate, Home, PlayStatus, StateChange, Sync},
 };
 
 mod gate;
@@ -36,7 +36,7 @@ impl ScreenState {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
-            current: Element::Home(HomeElement::Bpm),
+            current: Element::Bpm(Home),
         }
     }
 }
@@ -63,11 +63,11 @@ impl Screens {
                 self.draw_home(display);
             }
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
-                Element::Home(_) => {
+                Element::Bpm(_) | Element::Sync(_) => {
                     self.state.current = element;
                     self.draw_home(display);
                 }
-                Element::Gate(gate, _) => {
+                Element::Pwm(gate) | Element::Rate(gate) => {
                     self.state.current = element;
                     self.draw_gate(gate, display);
                 }

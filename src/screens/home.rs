@@ -10,7 +10,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::Bmp,
     screens::{Display, ScreenState, POINTER},
-    state::{Bpm, Element, HomeElement, PlayStatus, Sync},
+    state::{Bpm, Element, PlayStatus, Sync},
 };
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
@@ -77,9 +77,10 @@ impl Home {
 
     fn draw_pointer(&mut self, display: &mut Display, current: Element) {
         let point = match current {
-            Element::Home(HomeElement::Bpm) => Point::new(4, 8),
-            Element::Home(HomeElement::Sync) => Point::new(4, 32),
-            Element::Gate(..) => unreachable!(),
+            Element::Bpm(_) => Point::new(4, 8),
+            Element::Sync(_) => Point::new(4, 32),
+            Element::Rate(_) => unreachable!(),
+            Element::Pwm(_) => unreachable!(),
         };
         display.draw_bmp(&self.pointer, point);
     }

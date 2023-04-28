@@ -11,7 +11,7 @@ use crate::{
     display::Bmp,
     screens::{Display, ScreenState, POINTER},
     state,
-    state::{Element, GateElement},
+    state::Element,
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -55,9 +55,10 @@ impl Gate {
 
     fn draw_pointer(&mut self, display: &mut Display, current: Element) {
         let point = match current {
-            Element::Gate(_, GateElement::Rate) => Point::new(36, 10),
-            Element::Gate(_, GateElement::Pwm) => Point::new(36, 28),
-            Element::Home(..) => unreachable!(),
+            Element::Rate(_) => Point::new(36, 10),
+            Element::Pwm(_) => Point::new(36, 28),
+            Element::Bpm(_) => unreachable!(),
+            Element::Sync(_) => unreachable!(),
         };
         display.draw_bmp(&self.pointer, point);
     }

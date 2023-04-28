@@ -84,22 +84,15 @@ impl fmt::Display for Gate {
     }
 }
 
-#[derive(Clone, Copy, Format)]
-pub enum GateElement {
-    Rate,
-    Pwm,
-}
+#[derive(Clone, Copy)]
+pub struct Home;
 
-#[derive(Clone, Copy, Format)]
-pub enum HomeElement {
-    Bpm,
-    Sync,
-}
-
-#[derive(Clone, Copy, Format)]
+#[derive(Clone, Copy)]
 pub enum Element {
-    Gate(Gate, GateElement),
-    Home(HomeElement),
+    Rate(Gate),
+    Pwm(Gate),
+    Bpm(Home),
+    Sync(Home),
 }
 
 pub enum StateChange {
@@ -152,7 +145,7 @@ impl State {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
-            current: Element::Home(HomeElement::Bpm),
+            current: Element::Bpm(Home),
             gates,
         }
     }
@@ -160,22 +153,22 @@ impl State {
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         match command {
             Command::EncoderRight => match self.current {
-                Element::Home(HomeElement::Bpm) => match self.bpm.next() {
+                Element::Bpm(_) => match self.bpm.next() {
                     Result::Ok(bpm) => StateChange::Bpm(bpm),
                     Result::Err(_) => StateChange::None,
                 },
-                Element::Home(HomeElement::Sync) => match self.sync.next() {
+                Element::Sync(_) => match self.sync.next() {
                     Result::Ok(sync) => StateChange::Sync(sync),
                     Result::Err(_) => StateChange::None,
                 },
                 _ => todo!(),
             },
             Command::EncoderLeft => match self.current {
-                Element::Home(HomeElement::Bpm) => match self.bpm.prev() {
+                Element::Bpm(_) => match self.bpm.prev() {
                     Result::Ok(bpm) => StateChange::Bpm(bpm),
                     Result::Err(_) => StateChange::None,
                 },
-                Element::Home(HomeElement::Sync) => match self.sync.prev() {
+                Element::Sync(_) => match self.sync.prev() {
                     Result::Ok(sync) => StateChange::Sync(sync),
                     Result::Err(_) => StateChange::None,
                 },
@@ -189,11 +182,16 @@ impl State {
 
     fn next_page(&mut self) -> Element {
         self.current = match self.current {
-            Element::Home(_) => Element::Gate(Gate::A, GateElement::Rate),
-            Element::Gate(Gate::A, _) => Element::Gate(Gate::B, GateElement::Rate),
-            Element::Gate(Gate::B, _) => Element::Gate(Gate::C, GateElement::Rate),
-            Element::Gate(Gate::C, _) => Element::Gate(Gate::D, GateElement::Rate),
-            Element::Gate(Gate::D, _) => Element::Home(HomeElement::Bpm),
+            Element::Bpm(_) => Element::Rate(Gate::A),
+            Element::Sync(_) => Element::Rate(Gate::A),
+            Element::Rate(Gate::A) => Element::Rate(Gate::B),
+            Element::Pwm(Gate::A) => Element::Rate(Gate::B),
+            Element::Rate(Gate::B) => Element::Rate(Gate::C),
+            Element::Pwm(Gate::B) => Element::Rate(Gate::C),
+            Element::Rate(Gate::C) => Element::Rate(Gate::D),
+            Element::Pwm(Gate::C) => Element::Rate(Gate::D),
+            Element::Rate(Gate::D) => Element::Bpm(Home),
+            Element::Pwm(Gate::D) => Element::Bpm(Home),
         };
 
         self.current
@@ -201,10 +199,10 @@ impl State {
 
     fn next_element(&mut self) -> Element {
         self.current = match self.current {
-            Element::Home(HomeElement::Bpm) => Element::Home(HomeElement::Sync),
-            Element::Home(HomeElement::Sync) => Element::Home(HomeElement::Bpm),
-            Element::Gate(gate, GateElement::Rate) => Element::Gate(gate, GateElement::Pwm),
-            Element::Gate(gate, GateElement::Pwm) => Element::Gate(gate, GateElement::Rate),
+            Element::Bpm(_) => Element::Sync(Home),
+            Element::Sync(_) => Element::Bpm(Home),
+            Element::Rate(gate) => Element::Pwm(gate),
+            Element::Pwm(gate) => Element::Rate(gate),
         };
 
         self.current
