@@ -95,6 +95,24 @@ pub enum Element {
     Sync(Home),
 }
 
+impl Element {
+    fn next(&self, state: &mut State) -> StateChange {
+        match self {
+            Element::Bpm(Home) => state.bpm.next().into(),
+            Element::Sync(Home) => state.sync.next().into(),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn prev(&self, state: &mut State) -> StateChange {
+        match self {
+            Element::Bpm(Home) => state.bpm.prev().into(),
+            Element::Sync(Home) => state.sync.prev().into(),
+            _ => unimplemented!(),
+        }
+    }
+}
+
 pub enum StateChange {
     Initialize,
     Bpm(Bpm),
@@ -103,6 +121,24 @@ pub enum StateChange {
     NextPage(Element),
     NextElement(Element),
     None,
+}
+
+impl From<Option<Bpm>> for StateChange {
+    fn from(val: Option<Bpm>) -> Self {
+        match val {
+            Option::Some(bpm) => StateChange::Bpm(bpm),
+            Option::None => StateChange::None,
+        }
+    }
+}
+
+impl From<Option<Sync>> for StateChange {
+    fn from(val: Option<Sync>) -> Self {
+        match val {
+            Option::Some(sync) => StateChange::Sync(sync),
+            Option::None => StateChange::None,
+        }
+    }
 }
 
 pub struct GateState {
@@ -151,29 +187,11 @@ impl State {
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
+        let current = self.current;
+
         match command {
-            Command::EncoderRight => match self.current {
-                Element::Bpm(_) => match self.bpm.next() {
-                    Option::Some(bpm) => StateChange::Bpm(bpm),
-                    Option::None => StateChange::None,
-                },
-                Element::Sync(_) => match self.sync.next() {
-                    Option::Some(sync) => StateChange::Sync(sync),
-                    Option::None => StateChange::None,
-                },
-                _ => todo!(),
-            },
-            Command::EncoderLeft => match self.current {
-                Element::Bpm(_) => match self.bpm.prev() {
-                    Option::Some(bpm) => StateChange::Bpm(bpm),
-                    Option::None => StateChange::None,
-                },
-                Element::Sync(_) => match self.sync.prev() {
-                    Option::Some(sync) => StateChange::Sync(sync),
-                    Option::None => StateChange::None,
-                },
-                _ => todo!(),
-            },
+            Command::EncoderRight => current.next(self),
+            Command::EncoderLeft => current.prev(self),
             Command::EncoderPress => StateChange::NextElement(self.next_element()),
             Command::PagePress => StateChange::NextPage(self.next_page()),
             Command::PlayPress => self.toggle_play(),
