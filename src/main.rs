@@ -295,7 +295,7 @@ mod app {
     #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let mut tick_duration: fugit::Duration<u64, 1, 1000000> =
-            ctx.shared.state.lock(|state| state.bpm.tick_duration());
+            ctx.shared.state.lock(|state| state.tick_duration());
 
         let target = (PWM_PERCENT_INCREMENTS * MAX_MULT) / 10 * PWM;
         info!(
@@ -311,7 +311,7 @@ mod app {
                 _ = ctx.local.gate_b.toggle();
                 _ = ctx.local.gate_c.toggle();
                 _ = ctx.local.gate_d.toggle();
-                tick_duration = ctx.shared.state.lock(|state| state.bpm.tick_duration());
+                tick_duration = ctx.shared.state.lock(|state| state.tick_duration());
                 counter = 0;
             } else {
                 counter += 1;

@@ -156,7 +156,7 @@ impl GateState {
 }
 
 pub struct State {
-    pub bpm: Bpm,
+    bpm: Bpm,
     sync: Sync,
     play_status: PlayStatus,
     current: Element,
@@ -184,6 +184,13 @@ impl State {
             current: Element::Bpm(Home),
             gates,
         }
+    }
+
+    pub fn tick_duration(&self) -> MicroSeconds {
+        (self.bpm.0 / SECONDS_IN_MINUTES * PWM_PERCENT_INCREMENTS * MAX_MULT)
+            .Hz::<1, 1>()
+            .into_duration()
+            .into()
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
@@ -247,15 +254,6 @@ trait Updatable {
 
 #[derive(Clone, Copy, PartialEq, Format)]
 pub struct Bpm(pub u32);
-
-impl Bpm {
-    pub fn tick_duration(&self) -> MicroSeconds {
-        (self.0 / SECONDS_IN_MINUTES * PWM_PERCENT_INCREMENTS * MAX_MULT)
-            .Hz::<1, 1>()
-            .into_duration()
-            .into()
-    }
-}
 
 impl fmt::Display for Bpm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
