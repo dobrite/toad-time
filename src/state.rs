@@ -45,30 +45,30 @@ const RATES: [Rate; 17] = [
     Rate::Mult(64),
 ];
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Copy, Clone, Format, PartialEq)]
 pub enum Rate {
     Div(u8),
     Unity,
     Mult(u8),
 }
 
-impl Updatable for (Gate, Rate) {
+impl Updatable for Rate {
     fn next(&mut self) -> Option<Self> {
-        if self.1 == *RATES.last().unwrap() {
+        if self == RATES.last().unwrap() {
             Option::None
         } else {
-            let index = RATES.iter().position(|r| *r == self.1).unwrap() + 1;
-            self.1 = RATES[index];
+            let index = RATES.iter().position(|r| r == self).unwrap() + 1;
+            *self = RATES[index];
             Option::Some(*self)
         }
     }
 
     fn prev(&mut self) -> Option<Self> {
-        if self.1 == *RATES.first().unwrap() {
+        if self == RATES.first().unwrap() {
             Option::None
         } else {
-            let index = RATES.iter().position(|r| *r == self.1).unwrap() - 1;
-            self.1 = RATES[index];
+            let index = RATES.iter().position(|r| r == self).unwrap() - 1;
+            *self = RATES[index];
             Option::Some(*self)
         }
     }
@@ -80,35 +80,35 @@ pub enum Pwm {
     Pew,
 }
 
-impl Updatable for (Gate, Pwm) {
+impl Updatable for Pwm {
     fn next(&mut self) -> Option<Self> {
-        let next = match self.1 {
+        let next = match self {
             Pwm::P(100) => Pwm::P(100),
-            Pwm::P(num) => Pwm::P(num + 10),
+            Pwm::P(num) => Pwm::P(*num + 10),
             Pwm::Pew => Pwm::P(10),
         };
 
-        self.1 = next;
+        *self = next;
 
-        match self.1 {
+        match self {
             Pwm::P(100) => Option::None,
-            Pwm::P(num) => Option::Some((self.0, Pwm::P(num + 10))),
-            Pwm::Pew => Option::Some((self.0, Pwm::P(10))),
+            Pwm::P(num) => Option::Some(Pwm::P(*num + 10)),
+            Pwm::Pew => Option::Some(Pwm::P(10)),
         }
     }
 
     fn prev(&mut self) -> Option<Self> {
-        let prev = match self.1 {
+        let prev = match self {
             Pwm::Pew | Pwm::P(10) => Pwm::Pew,
-            Pwm::P(num) => Pwm::P(num - 10),
+            Pwm::P(num) => Pwm::P(*num - 10),
         };
 
-        self.1 = prev;
+        *self = prev;
 
-        match self.1 {
+        match self {
             Pwm::Pew => Option::None,
-            Pwm::P(10) => Option::Some((self.0, Pwm::Pew)),
-            Pwm::P(num) => Option::Some((self.0, Pwm::P(num - 10))),
+            Pwm::P(10) => Option::Some(Pwm::Pew),
+            Pwm::P(num) => Option::Some(Pwm::P(*num - 10)),
         }
     }
 }
@@ -159,8 +159,14 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.next().into(),
             Element::Sync(Home) => state.sync.next().into(),
-            Element::Rate(gate) => (*gate, state.gates[gate].rate).next().into(),
-            Element::Pwm(gate) => (*gate, state.gates[gate].pwm).next().into(),
+            Element::Rate(gate) => match state.gates[gate].rate.next() {
+                Option::Some(rate) => StateChange::Rate(*gate, rate),
+                Option::None => StateChange::None,
+            },
+            Element::Pwm(gate) => match state.gates[gate].pwm.next() {
+                Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
+                Option::None => StateChange::None,
+            },
         }
     }
 
@@ -168,8 +174,14 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.prev().into(),
             Element::Sync(Home) => state.sync.prev().into(),
-            Element::Rate(gate) => (*gate, state.gates[gate].rate).next().into(),
-            Element::Pwm(gate) => (*gate, state.gates[gate].pwm).next().into(),
+            Element::Rate(gate) => match state.gates[gate].rate.prev() {
+                Option::Some(rate) => StateChange::Rate(*gate, rate),
+                Option::None => StateChange::None,
+            },
+            Element::Pwm(gate) => match state.gates[gate].pwm.prev() {
+                Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
+                Option::None => StateChange::None,
+            },
         }
     }
 }
@@ -199,24 +211,6 @@ impl From<Option<Sync>> for StateChange {
     fn from(val: Option<Sync>) -> Self {
         match val {
             Option::Some(sync) => StateChange::Sync(sync),
-            Option::None => StateChange::None,
-        }
-    }
-}
-
-impl From<Option<(Gate, Rate)>> for StateChange {
-    fn from(val: Option<(Gate, Rate)>) -> Self {
-        match val {
-            Option::Some((gate, rate)) => StateChange::Rate(gate, rate),
-            Option::None => StateChange::None,
-        }
-    }
-}
-
-impl From<Option<(Gate, Pwm)>> for StateChange {
-    fn from(val: Option<(Gate, Pwm)>) -> Self {
-        match val {
-            Option::Some((gate, pwm)) => StateChange::Pwm(gate, pwm),
             Option::None => StateChange::None,
         }
     }
