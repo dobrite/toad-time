@@ -16,7 +16,6 @@ const PWM: &[u8; 2166] = include_bytes!("../assets/icons/PWMSpritesheetSmol.bmp"
 
 pub struct GateScreen {
     clock: Bmp,
-    gate: Gate,
     name: String<3>,
     pwm: Bmp,
     pwm_tile_grid: TileGrid,
@@ -33,7 +32,6 @@ impl GateScreen {
 
         Self {
             clock,
-            gate,
             name,
             pwm,
             pwm_tile_grid,
