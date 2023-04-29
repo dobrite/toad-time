@@ -10,22 +10,21 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::Bmp,
     screens::{Display, POINTER},
-    state,
-    state::{Element, State},
+    state::{Element, Gate, State},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
 const PWM: &[u8; 2166] = include_bytes!("../assets/icons/PWMSpritesheetSmol.bmp");
 
-pub struct Gate {
+pub struct GateScreen {
     clock: Bmp,
     name: String<3>,
     pointer: Bmp,
     pwm: Bmp,
 }
 
-impl Gate {
-    pub fn new(gate: state::Gate) -> Self {
+impl GateScreen {
+    pub fn new(gate: Gate) -> Self {
         let mut name = String::new();
         write!(name, "{}", gate).unwrap();
 

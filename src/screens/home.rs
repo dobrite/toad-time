@@ -16,7 +16,7 @@ use crate::{
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
 const PLAY_PAUSE: &[u8; 1590] = include_bytes!("../assets/icons/PlayPause.bmp");
 
-pub struct Home {
+pub struct HomeScreen {
     bpm_label: String<3>,
     bpm_str: String<3>,
     frogge: Bmp,
@@ -25,13 +25,13 @@ pub struct Home {
     sync_str: String<3>,
 }
 
-impl Default for Home {
+impl Default for HomeScreen {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Home {
+impl HomeScreen {
     pub fn new() -> Self {
         let bpm_label = String::new();
         let bpm_str = String::new();

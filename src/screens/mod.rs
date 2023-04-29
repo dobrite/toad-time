@@ -1,5 +1,6 @@
 use crate::{
     display::Display,
+    screens::{gate::GateScreen, home::HomeScreen},
     state::{Element, Gate, State, StateChange},
 };
 
@@ -9,22 +10,22 @@ mod home;
 const POINTER: &[u8; 630] = include_bytes!("../assets/icons/Pointer.bmp");
 
 pub struct Screens {
-    home: home::Home,
-    gate_a: gate::Gate,
-    gate_b: gate::Gate,
-    gate_c: gate::Gate,
-    gate_d: gate::Gate,
+    home: HomeScreen,
+    gate_a: GateScreen,
+    gate_b: GateScreen,
+    gate_c: GateScreen,
+    gate_d: GateScreen,
     state: State,
 }
 
 impl Screens {
     pub fn new() -> Self {
         Self {
-            home: Default::default(),
-            gate_a: gate::Gate::new(Gate::A),
-            gate_b: gate::Gate::new(Gate::B),
-            gate_c: gate::Gate::new(Gate::C),
-            gate_d: gate::Gate::new(Gate::D),
+            home: HomeScreen::new(),
+            gate_a: GateScreen::new(Gate::A),
+            gate_b: GateScreen::new(Gate::B),
+            gate_c: GateScreen::new(Gate::C),
+            gate_d: GateScreen::new(Gate::D),
             state: State::new(),
         }
     }
