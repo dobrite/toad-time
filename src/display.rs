@@ -32,10 +32,8 @@ pub type Ssd1306Display = Ssd1306<
     ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
 >;
 
-const SMOL_FONT: PcfFont =
-    include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
-const BIGGE_FONT: PcfFont =
-    include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ');
+const SMOL_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/');
+const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/');
 
 pub struct Display {
     display: Ssd1306Display,
