@@ -88,28 +88,33 @@ impl Updatable for Pwm {
             Pwm::Pew => Pwm::P(10),
         };
 
-        *self = next;
-
-        match self {
+        let output = match self {
             Pwm::P(90) => Option::None,
             Pwm::P(num) => Option::Some(Pwm::P(*num + 10)),
             Pwm::Pew => Option::Some(Pwm::P(10)),
-        }
+        };
+
+        *self = next;
+
+        output
     }
 
     fn prev(&mut self) -> Option<Self> {
         let prev = match self {
-            Pwm::Pew | Pwm::P(10) => Pwm::Pew,
+            Pwm::Pew => Pwm::Pew,
+            Pwm::P(10) => Pwm::Pew,
             Pwm::P(num) => Pwm::P(*num - 10),
+        };
+
+        let output = match self {
+            Pwm::Pew => Option::None,
+            Pwm::P(10) => Option::Some(Pwm::Pew),
+            Pwm::P(num) => Option::Some(Pwm::P(*num - 10)),
         };
 
         *self = prev;
 
-        match self {
-            Pwm::Pew => Option::None,
-            Pwm::P(10) => Option::Some(Pwm::Pew),
-            Pwm::P(num) => Option::Some(Pwm::P(*num - 10)),
-        }
+        output
     }
 }
 
