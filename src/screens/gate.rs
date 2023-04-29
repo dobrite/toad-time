@@ -44,7 +44,7 @@ impl GateScreen {
         self.draw_name(display);
         self.draw_pointer(display, state.current);
         self.draw_clock(display);
-        self.draw_div(display);
+        self.draw_rate(display);
         self.draw_pwm(display); // 65x16 (13x8)
     }
 
@@ -66,7 +66,7 @@ impl GateScreen {
         display.draw_bmp(&self.clock, Point::new(54, 8));
     }
 
-    fn draw_div(&mut self, display: &mut Display) {
+    fn draw_rate(&mut self, display: &mut Display) {
         display.draw_smol_text(&"x1".into(), Point::new(72, 29));
     }
 
