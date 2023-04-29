@@ -83,7 +83,7 @@ pub enum Pwm {
 impl Updatable for Pwm {
     fn next(&mut self) -> Option<Self> {
         let next = match self {
-            Pwm::P(100) => Pwm::P(100),
+            Pwm::P(90) => Pwm::P(90),
             Pwm::P(num) => Pwm::P(*num + 10),
             Pwm::Pew => Pwm::P(10),
         };
@@ -91,7 +91,7 @@ impl Updatable for Pwm {
         *self = next;
 
         match self {
-            Pwm::P(100) => Option::None,
+            Pwm::P(90) => Option::None,
             Pwm::P(num) => Option::Some(Pwm::P(*num + 10)),
             Pwm::Pew => Option::Some(Pwm::P(10)),
         }
