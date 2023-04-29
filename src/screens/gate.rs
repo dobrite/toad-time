@@ -9,8 +9,8 @@ use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
-    screens::{Display, POINTER},
-    state::{Element, Gate, State},
+    screens::Display,
+    state::{Gate, State},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -20,7 +20,6 @@ pub struct GateScreen {
     clock: Bmp,
     gate: Gate,
     name: String<3>,
-    pointer: Bmp,
     pwm: Bmp,
 }
 
@@ -30,21 +29,18 @@ impl GateScreen {
         write!(name, "{}", gate).unwrap();
 
         let clock = TinyBmp::from_slice(CLOCK).unwrap();
-        let pointer = TinyBmp::from_slice(POINTER).unwrap();
         let pwm = TinyBmp::from_slice(PWM).unwrap();
 
         Self {
             clock,
             gate,
             name,
-            pointer,
             pwm,
         }
     }
 
     pub fn draw(&mut self, state: &State, display: &mut Display) {
         self.draw_name(display);
-        self.draw_pointer(display, state.current);
         self.draw_clock(display);
         self.draw_rate(display);
         self.draw_pwm(display); // 65x16 (13x8)
@@ -52,16 +48,6 @@ impl GateScreen {
 
     fn draw_name(&mut self, display: &mut Display) {
         display.draw_bigge_text(&self.name, Point::new(0, 24));
-    }
-
-    fn draw_pointer(&mut self, display: &mut Display, current: Element) {
-        let point = match current {
-            Element::Rate(_) => Point::new(36, 10),
-            Element::Pwm(_) => Point::new(36, 28),
-            Element::Bpm(_) => unreachable!(),
-            Element::Sync(_) => unreachable!(),
-        };
-        display.draw_bmp(&self.pointer, point);
     }
 
     fn draw_clock(&mut self, display: &mut Display) {

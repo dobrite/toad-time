@@ -9,8 +9,8 @@ use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
-    screens::{Display, POINTER},
-    state::{Bpm, Element, PlayStatus, State, Sync},
+    screens::Display,
+    state::{Bpm, PlayStatus, State, Sync},
 };
 
 const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
@@ -21,7 +21,6 @@ pub struct HomeScreen {
     bpm_str: String<3>,
     frogge: Bmp,
     play_pause: Bmp,
-    pointer: Bmp,
     sync_str: String<3>,
 }
 
@@ -36,7 +35,6 @@ impl HomeScreen {
         let bpm_label = String::new();
         let bpm_str = String::new();
         let play_pause = TinyBmp::from_slice(PLAY_PAUSE).unwrap();
-        let pointer = TinyBmp::from_slice(POINTER).unwrap();
         let sync_str = String::new();
         let frogge = TinyBmp::from_slice(FROGGE).unwrap();
 
@@ -45,7 +43,6 @@ impl HomeScreen {
             bpm_str,
             frogge,
             play_pause,
-            pointer,
             sync_str,
         }
     }
@@ -53,7 +50,6 @@ impl HomeScreen {
     pub fn draw(&mut self, state: &State, display: &mut Display) {
         self.draw_bpm(display, &state.bpm);
         self.draw_frogge(display);
-        self.draw_pointer(display, state.current);
         self.draw_sync(display, &state.sync);
         self.draw_play_pause(display, state.play_status);
     }
@@ -73,16 +69,6 @@ impl HomeScreen {
     fn draw_frogge(&mut self, display: &mut Display) {
         let rectangle = Rectangle::new(Point::new(0, 0), Size::new(22, 22));
         display.draw_sub_bmp(&self.frogge, &rectangle, Point::new(80, 26));
-    }
-
-    fn draw_pointer(&mut self, display: &mut Display, current: Element) {
-        let point = match current {
-            Element::Bpm(_) => Point::new(4, 8),
-            Element::Sync(_) => Point::new(4, 32),
-            Element::Rate(_) => unreachable!(),
-            Element::Pwm(_) => unreachable!(),
-        };
-        display.draw_bmp(&self.pointer, point);
     }
 
     fn draw_sync(&mut self, display: &mut Display, sync: &Sync) {
