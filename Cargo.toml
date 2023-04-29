@@ -25,6 +25,7 @@ ssd1306 = "0.7.1"
 tinybmp = "0.4.0"
 
 eg-pcf = { version = "0.1.0", path = "../pcf/eg-pcf" }
+seq = { version = "0.1.0", path = "../seq" }
 
 # cargo build/run
 [profile.dev]
