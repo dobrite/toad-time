@@ -5,6 +5,7 @@
 mod display;
 mod screens;
 mod state;
+mod tile_grid;
 
 #[rtic::app(
     device = rp_pico::hal::pac,

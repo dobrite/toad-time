@@ -3,7 +3,7 @@ use core::fmt;
 use defmt::Format;
 use fugit::RateExtU32;
 use hash32::{Hash, Hasher};
-use heapless::FnvIndexMap;
+use heapless::{FnvIndexMap, String};
 
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
@@ -74,10 +74,54 @@ impl Updatable for Rate {
     }
 }
 
+impl From<Rate> for String<3> {
+    fn from(val: Rate) -> Self {
+        match val {
+            Rate::Div(64) => "/64",
+            Rate::Div(32) => "/32",
+            Rate::Div(16) => "/16",
+            Rate::Div(8) => "/8",
+            Rate::Div(5) => "/5",
+            Rate::Div(4) => "/4",
+            Rate::Div(3) => "/3",
+            Rate::Div(2) => "/2",
+            Rate::Unity => "x1",
+            Rate::Mult(2) => "x2",
+            Rate::Mult(3) => "x3",
+            Rate::Mult(4) => "x4",
+            Rate::Mult(5) => "x5",
+            Rate::Mult(8) => "x8",
+            Rate::Mult(16) => "x16",
+            Rate::Mult(32) => "x32",
+            Rate::Mult(64) => "x64",
+            _ => unreachable!(),
+        }
+        .into()
+    }
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Pwm {
     P(u8),
     Pew,
+}
+
+impl Pwm {
+    pub fn index(&self) -> usize {
+        match self {
+            Pwm::Pew => 0,
+            Pwm::P(10) => 1,
+            Pwm::P(20) => 2,
+            Pwm::P(30) => 3,
+            Pwm::P(40) => 4,
+            Pwm::P(50) => 5,
+            Pwm::P(60) => 6,
+            Pwm::P(70) => 7,
+            Pwm::P(80) => 8,
+            Pwm::P(90) => 9,
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl Updatable for Pwm {
