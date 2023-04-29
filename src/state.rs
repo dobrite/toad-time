@@ -4,6 +4,7 @@ use defmt::Format;
 use fugit::RateExtU32;
 use hash32::{Hash, Hasher};
 use heapless::{FnvIndexMap, String};
+use seq::{Pwm, Rate};
 
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
@@ -45,13 +46,6 @@ const RATES: [Rate; 17] = [
     Rate::Mult(64),
 ];
 
-#[derive(Copy, Clone, Format, PartialEq)]
-pub enum Rate {
-    Div(u8),
-    Unity,
-    Mult(u8),
-}
-
 impl Updatable for Rate {
     fn next(&mut self) -> Option<Self> {
         if self == RATES.last().unwrap() {
@@ -74,9 +68,11 @@ impl Updatable for Rate {
     }
 }
 
-impl From<Rate> for String<3> {
+pub struct RateString(pub String<3>);
+
+impl From<Rate> for RateString {
     fn from(val: Rate) -> Self {
-        match val {
+        let rate_string = match val {
             Rate::Div(64) => "/64",
             Rate::Div(32) => "/32",
             Rate::Div(16) => "/16",
@@ -95,32 +91,9 @@ impl From<Rate> for String<3> {
             Rate::Mult(32) => "x32",
             Rate::Mult(64) => "x64",
             _ => unreachable!(),
-        }
-        .into()
-    }
-}
+        };
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum Pwm {
-    P(u8),
-    Pew,
-}
-
-impl Pwm {
-    pub fn index(&self) -> usize {
-        match self {
-            Pwm::Pew => 0,
-            Pwm::P(10) => 1,
-            Pwm::P(20) => 2,
-            Pwm::P(30) => 3,
-            Pwm::P(40) => 4,
-            Pwm::P(50) => 5,
-            Pwm::P(60) => 6,
-            Pwm::P(70) => 7,
-            Pwm::P(80) => 8,
-            Pwm::P(90) => 9,
-            _ => unreachable!(),
-        }
+        RateString(rate_string.into())
     }
 }
 
