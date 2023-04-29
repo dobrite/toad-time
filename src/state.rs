@@ -82,6 +82,14 @@ pub enum Pwm {
 
 impl Updatable for (Gate, Pwm) {
     fn next(&mut self) -> Option<Self> {
+        let next = match self.1 {
+            Pwm::P(100) => Pwm::P(100),
+            Pwm::P(num) => Pwm::P(num + 10),
+            Pwm::Pew => Pwm::P(10),
+        };
+
+        self.1 = next;
+
         match self.1 {
             Pwm::P(100) => Option::None,
             Pwm::P(num) => Option::Some((self.0, Pwm::P(num + 10))),
@@ -90,6 +98,13 @@ impl Updatable for (Gate, Pwm) {
     }
 
     fn prev(&mut self) -> Option<Self> {
+        let prev = match self.1 {
+            Pwm::Pew | Pwm::P(10) => Pwm::Pew,
+            Pwm::P(num) => Pwm::P(num - 10),
+        };
+
+        self.1 = prev;
+
         match self.1 {
             Pwm::Pew => Option::None,
             Pwm::P(10) => Option::Some((self.0, Pwm::Pew)),
