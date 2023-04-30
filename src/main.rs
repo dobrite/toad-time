@@ -15,7 +15,7 @@ mod app {
     use defmt::info;
     use defmt_rtt as _;
     use embedded_hal::{
-        digital::v2::{InputPin, ToggleableOutputPin},
+        digital::v2::{InputPin, OutputPin},
         spi,
     };
     use fugit::RateExtU32;
@@ -37,6 +37,7 @@ mod app {
     };
     use rtic_monotonics::rp2040::{Timer, *};
     use rtic_sync::{channel::*, make_channel};
+    use seq::Outputs;
     use ssd1306::{prelude::*, Ssd1306};
 
     use crate::{
@@ -291,33 +292,40 @@ mod app {
         }
     }
 
-    const PWM: u32 = 5;
-
     #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
-        let mut tick_duration: fugit::Duration<u64, 1, 1000000> =
-            ctx.shared.state.lock(|state| state.tick_duration());
-
-        let target = (PWM_PERCENT_INCREMENTS * MAX_MULT) / 10 * PWM;
-        info!(
-            "tick duration: {:?} target: {:?}",
-            tick_duration.ticks(),
-            target
-        );
-        let mut counter = 0;
+        let resolution = PWM_PERCENT_INCREMENTS * MAX_MULT;
+        let mut outputs = Outputs::new(4, resolution);
 
         loop {
-            if counter == target {
-                _ = ctx.local.gate_a.toggle();
-                _ = ctx.local.gate_b.toggle();
-                _ = ctx.local.gate_c.toggle();
-                _ = ctx.local.gate_d.toggle();
-                tick_duration = ctx.shared.state.lock(|state| state.tick_duration());
-                counter = 0;
+            outputs.update();
+            let result = outputs.state();
+
+            if result.outputs[0] == seq::State::On {
+                _ = ctx.local.gate_a.set_high();
             } else {
-                counter += 1;
+                _ = ctx.local.gate_a.set_low();
             }
 
+            if result.outputs[1] == seq::State::On {
+                _ = ctx.local.gate_b.set_high();
+            } else {
+                _ = ctx.local.gate_b.set_low();
+            }
+
+            if result.outputs[2] == seq::State::On {
+                _ = ctx.local.gate_c.set_high();
+            } else {
+                _ = ctx.local.gate_c.set_low();
+            }
+
+            if result.outputs[3] == seq::State::On {
+                _ = ctx.local.gate_d.set_high();
+            } else {
+                _ = ctx.local.gate_d.set_low();
+            }
+
+            let tick_duration = ctx.shared.state.lock(|state| state.tick_duration());
             Timer::delay(tick_duration).await
         }
     }
