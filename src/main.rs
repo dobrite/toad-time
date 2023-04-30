@@ -12,7 +12,6 @@ mod tile_grid;
     dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
 )]
 mod app {
-    use defmt::info;
     use defmt_rtt as _;
     use embedded_hal::{
         digital::v2::{InputPin, OutputPin},
@@ -77,8 +76,6 @@ mod app {
         unsafe {
             hal::sio::spinlock_reset();
         }
-
-        info!("program start");
 
         let token = rtic_monotonics::create_rp2040_monotonic_token!();
         Timer::start(ctx.device.TIMER, &mut ctx.device.RESETS, token);
@@ -178,8 +175,6 @@ mod app {
 
     #[idle(local = [])]
     fn idle(_cx: idle::Context) -> ! {
-        info!("idle!");
-
         loop {
             cortex_m::asm::nop();
         }
@@ -190,7 +185,7 @@ mod app {
         ctx: update_play_button::Context,
         sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button("play", sender, ctx.local.play_button, Command::PlayPress).await
+        debounced_button(sender, ctx.local.play_button, Command::PlayPress).await
     }
 
     #[task(local = [page_button], priority = 1)]
@@ -199,7 +194,7 @@ mod app {
 
         sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button("page", sender, ctx.local.page_button, Command::PagePress).await
+        debounced_button(sender, ctx.local.page_button, Command::PagePress).await
     }
 
     #[task(local = [encoder_button], priority = 1)]
@@ -207,13 +202,7 @@ mod app {
         ctx: update_encoder_button::Context,
         sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button(
-            "encoder",
-            sender,
-            ctx.local.encoder_button,
-            Command::EncoderPress,
-        )
-        .await
+        debounced_button(sender, ctx.local.encoder_button, Command::EncoderPress).await
     }
 
     #[task(local = [], shared = [state], priority = 1)]
@@ -234,7 +223,6 @@ mod app {
     }
 
     async fn debounced_button<B: InputPin>(
-        name: &str,
         mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
         button: &B,
         command: Command,
@@ -246,7 +234,6 @@ mod app {
         loop {
             if armed && button.is_low().unwrap() {
                 armed = false;
-                info!("{:?} button click!", name);
                 let _ = sender.send(command).await;
             } else if !armed && button.is_high().unwrap() {
                 armed = true;
@@ -268,11 +255,9 @@ mod app {
             encoder.update();
             match encoder.direction() {
                 Direction::Clockwise => {
-                    info!("clockwise");
                     let _ = sender.send(Command::EncoderRight).await;
                 }
                 Direction::Anticlockwise => {
-                    info!("anticlockwise");
                     let _ = sender.send(Command::EncoderLeft).await;
                 }
                 Direction::None => {}
