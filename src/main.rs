@@ -316,25 +316,25 @@ mod app {
                 tick_duration
             });
 
-            if result.outputs[0] == seq::State::On {
+            if result.outputs[0] {
                 _ = ctx.local.gate_a.set_high();
             } else {
                 _ = ctx.local.gate_a.set_low();
             }
 
-            if result.outputs[1] == seq::State::On {
+            if result.outputs[1] {
                 _ = ctx.local.gate_b.set_high();
             } else {
                 _ = ctx.local.gate_b.set_low();
             }
 
-            if result.outputs[2] == seq::State::On {
+            if result.outputs[2] {
                 _ = ctx.local.gate_c.set_high();
             } else {
                 _ = ctx.local.gate_c.set_low();
             }
 
-            if result.outputs[3] == seq::State::On {
+            if result.outputs[3] {
                 _ = ctx.local.gate_d.set_high();
             } else {
                 _ = ctx.local.gate_d.set_low();
