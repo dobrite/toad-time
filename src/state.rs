@@ -302,7 +302,7 @@ impl Default for State {
 
 impl State {
     pub fn new() -> Self {
-        let mut gates = FnvIndexMap::<_, _, 4>::new();
+        let mut gates = Gates::new();
         gates.insert(Gate::A, GateState::new()).ok();
         gates.insert(Gate::B, GateState::new()).ok();
         gates.insert(Gate::C, GateState::new()).ok();
