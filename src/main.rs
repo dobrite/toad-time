@@ -291,7 +291,7 @@ mod app {
         outputs.set_rate(3, Rate::Mult(5));
 
         loop {
-            outputs.tick();
+            let tick = outputs.tick();
             let result = outputs.state();
 
             if result.outputs[0] == seq::State::On {
