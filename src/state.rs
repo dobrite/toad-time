@@ -266,6 +266,7 @@ impl From<Option<Sync>> for StateChange {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct GateState {
     pub rate: Rate,
     pub pwm: Pwm,
@@ -317,8 +318,8 @@ impl State {
         }
     }
 
-    pub fn gate_configs(&self) -> bool {
-        true
+    pub fn gate_configs(&self) -> heapless::Vec<GateState, 4> {
+        self.gates.values().copied().collect()
     }
 
     pub fn tick_duration(&self) -> MicroSeconds {

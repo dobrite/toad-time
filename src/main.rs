@@ -36,7 +36,7 @@ mod app {
     };
     use rtic_monotonics::rp2040::{Timer, *};
     use rtic_sync::{channel::*, make_channel};
-    use seq::{Outputs, Pwm, Rate};
+    use seq::Outputs;
     use ssd1306::{prelude::*, Ssd1306};
 
     use crate::{
@@ -281,33 +281,39 @@ mod app {
     async fn tick(mut ctx: tick::Context) {
         let resolution = PWM_PERCENT_INCREMENTS * MAX_MULT;
         let mut outputs = Outputs::new(4, resolution);
-        outputs.set_pwm(0, Pwm::P10);
-        outputs.set_rate(0, Rate::Unity);
-        outputs.set_pwm(1, Pwm::P30);
-        outputs.set_rate(1, Rate::Mult(3));
-        outputs.set_pwm(2, Pwm::P60);
-        outputs.set_rate(2, Rate::Mult(4));
-        outputs.set_pwm(3, Pwm::P90);
-        outputs.set_rate(3, Rate::Mult(5));
 
-        let (mut tick_duration, mut gate_configs) = ctx.shared.state.lock(|state| {
+        let mut tick_duration = ctx.shared.state.lock(|state| {
             let tick_duration = state.tick_duration();
-            let gate_configs = state.gate_configs();
+            state
+                .gate_configs()
+                .iter()
+                .enumerate()
+                .for_each(|(index, config)| {
+                    outputs.set_pwm(index, config.pwm);
+                    outputs.set_rate(index, config.rate);
+                });
 
-            (tick_duration, gate_configs)
+            tick_duration
         });
 
         loop {
             let tick = outputs.tick();
             let result = outputs.state();
 
-            (tick_duration, gate_configs) = ctx.shared.state.lock(|state| {
+            tick_duration = ctx.shared.state.lock(|state| {
                 tick_duration = state.tick_duration();
                 if tick.major {
-                    gate_configs = state.gate_configs();
+                    state
+                        .gate_configs()
+                        .iter()
+                        .enumerate()
+                        .for_each(|(index, config)| {
+                            outputs.set_pwm(index, config.pwm);
+                            outputs.set_rate(index, config.rate);
+                        });
                 }
 
-                (tick_duration, gate_configs)
+                tick_duration
             });
 
             if result.outputs[0] == seq::State::On {
