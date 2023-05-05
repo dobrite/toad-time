@@ -4,7 +4,7 @@ use defmt::Format;
 use fugit::RateExtU32;
 use hash32::{Hash, Hasher};
 use heapless::{FnvIndexMap, String};
-use seq::{Pwm, Rate};
+use seq::{Prob, Pwm, Rate};
 
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
@@ -163,6 +163,93 @@ impl Updatable for Pwm {
     }
 }
 
+impl Updatable for Prob {
+    fn next(&mut self) -> Option<Self> {
+        let next = match self {
+            Prob::P100 => Prob::P100,
+            Prob::P90 => Prob::P100,
+            Prob::P80 => Prob::P90,
+            Prob::P70 => Prob::P80,
+            Prob::P60 => Prob::P70,
+            Prob::P50 => Prob::P60,
+            Prob::P40 => Prob::P50,
+            Prob::P30 => Prob::P40,
+            Prob::P20 => Prob::P30,
+            Prob::P10 => Prob::P20,
+        };
+
+        let output = match self {
+            Prob::P100 => Option::None,
+            Prob::P90 => Option::Some(Prob::P100),
+            Prob::P80 => Option::Some(Prob::P90),
+            Prob::P70 => Option::Some(Prob::P80),
+            Prob::P60 => Option::Some(Prob::P70),
+            Prob::P50 => Option::Some(Prob::P60),
+            Prob::P40 => Option::Some(Prob::P50),
+            Prob::P30 => Option::Some(Prob::P40),
+            Prob::P20 => Option::Some(Prob::P30),
+            Prob::P10 => Option::Some(Prob::P20),
+        };
+
+        *self = next;
+
+        output
+    }
+
+    fn prev(&mut self) -> Option<Self> {
+        let prev = match self {
+            Prob::P10 => Prob::P10,
+            Prob::P20 => Prob::P10,
+            Prob::P30 => Prob::P20,
+            Prob::P40 => Prob::P30,
+            Prob::P50 => Prob::P40,
+            Prob::P60 => Prob::P50,
+            Prob::P70 => Prob::P60,
+            Prob::P80 => Prob::P70,
+            Prob::P90 => Prob::P80,
+            Prob::P100 => Prob::P90,
+        };
+
+        let output = match self {
+            Prob::P10 => Option::None,
+            Prob::P20 => Option::Some(Prob::P10),
+            Prob::P30 => Option::Some(Prob::P20),
+            Prob::P40 => Option::Some(Prob::P30),
+            Prob::P50 => Option::Some(Prob::P40),
+            Prob::P60 => Option::Some(Prob::P50),
+            Prob::P70 => Option::Some(Prob::P60),
+            Prob::P80 => Option::Some(Prob::P70),
+            Prob::P90 => Option::Some(Prob::P80),
+            Prob::P100 => Option::Some(Prob::P90),
+        };
+
+        *self = prev;
+
+        output
+    }
+}
+
+pub struct ProbString(pub String<3>);
+
+impl From<Prob> for ProbString {
+    fn from(val: Prob) -> Self {
+        let prob_string = match val {
+            Prob::P100 => "100",
+            Prob::P90 => "90",
+            Prob::P80 => "80",
+            Prob::P70 => "70",
+            Prob::P60 => "60",
+            Prob::P50 => "50",
+            Prob::P40 => "40",
+            Prob::P30 => "30",
+            Prob::P20 => "20",
+            Prob::P10 => "10",
+        };
+
+        ProbString(prob_string.into())
+    }
+}
+
 #[derive(Clone, Copy, Eq, Format, PartialEq)]
 pub enum Gate {
     A,
@@ -200,6 +287,7 @@ pub struct Home;
 pub enum Element {
     Rate(Gate),
     Pwm(Gate),
+    Prob(Gate),
     Bpm(Home),
     Sync(Home),
 }
@@ -217,6 +305,10 @@ impl Element {
                 Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
                 Option::None => StateChange::None,
             },
+            Element::Prob(gate) => match state.gates[gate].prob.next() {
+                Option::Some(prob) => StateChange::Prob(*gate, prob),
+                Option::None => StateChange::None,
+            },
         }
     }
 
@@ -232,6 +324,10 @@ impl Element {
                 Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
                 Option::None => StateChange::None,
             },
+            Element::Prob(gate) => match state.gates[gate].prob.prev() {
+                Option::Some(prob) => StateChange::Prob(*gate, prob),
+                Option::None => StateChange::None,
+            },
         }
     }
 }
@@ -242,6 +338,7 @@ pub enum StateChange {
     Sync(Sync),
     Rate(Gate, Rate),
     Pwm(Gate, Pwm),
+    Prob(Gate, Prob),
     PlayStatus(PlayStatus),
     NextPage(Element),
     NextElement(Element),
@@ -270,6 +367,7 @@ impl From<Option<Sync>> for StateChange {
 pub struct GateState {
     pub rate: Rate,
     pub pwm: Pwm,
+    pub prob: Prob,
 }
 
 impl Default for GateState {
@@ -283,6 +381,7 @@ impl GateState {
         GateState {
             rate: Rate::Unity,
             pwm: Pwm::P50,
+            prob: Prob::P100,
         }
     }
 }
@@ -349,12 +448,16 @@ impl State {
             Element::Sync(_) => Element::Rate(Gate::A),
             Element::Rate(Gate::A) => Element::Rate(Gate::B),
             Element::Pwm(Gate::A) => Element::Rate(Gate::B),
+            Element::Prob(Gate::A) => Element::Rate(Gate::B),
             Element::Rate(Gate::B) => Element::Rate(Gate::C),
             Element::Pwm(Gate::B) => Element::Rate(Gate::C),
+            Element::Prob(Gate::B) => Element::Rate(Gate::C),
             Element::Rate(Gate::C) => Element::Rate(Gate::D),
             Element::Pwm(Gate::C) => Element::Rate(Gate::D),
+            Element::Prob(Gate::C) => Element::Rate(Gate::D),
             Element::Rate(Gate::D) => Element::Bpm(Home),
             Element::Pwm(Gate::D) => Element::Bpm(Home),
+            Element::Prob(Gate::D) => Element::Bpm(Home),
         };
 
         self.current
@@ -365,7 +468,8 @@ impl State {
             Element::Bpm(_) => Element::Sync(Home),
             Element::Sync(_) => Element::Bpm(Home),
             Element::Rate(gate) => Element::Pwm(gate),
-            Element::Pwm(gate) => Element::Rate(gate),
+            Element::Pwm(gate) => Element::Prob(gate),
+            Element::Prob(gate) => Element::Rate(gate),
         };
 
         self.current

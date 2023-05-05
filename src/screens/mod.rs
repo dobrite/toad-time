@@ -49,7 +49,7 @@ impl Screens {
                     self.state.current = element;
                     self.draw_home(display);
                 }
-                Element::Pwm(gate) | Element::Rate(gate) => {
+                Element::Pwm(gate) | Element::Rate(gate) | Element::Prob(gate) => {
                     self.state.current = element;
                     self.draw_gate(gate, display);
                 }
@@ -68,6 +68,10 @@ impl Screens {
             }
             StateChange::Pwm(gate, pwm) => {
                 self.state.gates[&gate].pwm = pwm;
+                self.draw_gate(gate, display);
+            }
+            StateChange::Prob(gate, prob) => {
+                self.state.gates[&gate].prob = prob;
                 self.draw_gate(gate, display);
             }
             StateChange::None => unreachable!(),
@@ -97,6 +101,7 @@ impl Screens {
         let point = match current {
             Element::Rate(_) => Point::new(36, 10),
             Element::Pwm(_) => Point::new(36, 28),
+            Element::Prob(_) => Point::new(36, 46),
             Element::Bpm(_) => Point::new(4, 8),
             Element::Sync(_) => Point::new(4, 32),
         };

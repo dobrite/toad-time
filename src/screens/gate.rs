@@ -2,13 +2,13 @@ use core::fmt::Write;
 
 use embedded_graphics::prelude::{Point, Size};
 use heapless::String;
-use seq::{Pwm, Rate};
+use seq::{Prob, Pwm, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
     screens::Display,
-    state::{Gate, GateState, RateString},
+    state::{Gate, GateState, ProbString, RateString},
     tile_grid::TileGrid,
 };
 
@@ -48,6 +48,7 @@ impl GateScreen {
         self.draw_clock(display);
         self.draw_dice(display);
         self.draw_rate(state.rate, display);
+        self.draw_prob(state.prob, display);
         self.draw_pwm(state.pwm, display); // 65x16 (13x8)
     }
 
@@ -65,6 +66,10 @@ impl GateScreen {
 
     fn draw_rate(&mut self, rate: Rate, display: &mut Display) {
         display.draw_smol_text(&RateString::from(rate).0, Point::new(72, 29));
+    }
+
+    fn draw_prob(&mut self, prob: Prob, display: &mut Display) {
+        display.draw_smol_text(&ProbString::from(prob).0, Point::new(74, 66));
     }
 
     fn draw_pwm(&mut self, pwm: Pwm, display: &mut Display) {
