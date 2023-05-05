@@ -36,7 +36,7 @@ mod app {
     };
     use rtic_monotonics::rp2040::{Timer, *};
     use rtic_sync::{channel::*, make_channel};
-    use seq::{Outputs, Pwm};
+    use seq::{Outputs, Pwm, Rate};
     use ssd1306::{prelude::*, Ssd1306};
 
     use crate::{
@@ -282,9 +282,13 @@ mod app {
         let resolution = PWM_PERCENT_INCREMENTS * MAX_MULT;
         let mut outputs = Outputs::new(4, resolution);
         outputs.set_pwm(0, Pwm::P10);
+        outputs.set_rate(0, Rate::Unity);
         outputs.set_pwm(1, Pwm::P30);
+        outputs.set_rate(1, Rate::Mult(3));
         outputs.set_pwm(2, Pwm::P60);
+        outputs.set_rate(2, Rate::Mult(4));
         outputs.set_pwm(3, Pwm::P90);
+        outputs.set_rate(3, Rate::Mult(5));
 
         loop {
             outputs.update();
