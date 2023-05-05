@@ -290,9 +290,25 @@ mod app {
         outputs.set_pwm(3, Pwm::P90);
         outputs.set_rate(3, Rate::Mult(5));
 
+        let (mut tick_duration, mut gate_configs) = ctx.shared.state.lock(|state| {
+            let tick_duration = state.tick_duration();
+            let gate_configs = state.gate_configs();
+
+            (tick_duration, gate_configs)
+        });
+
         loop {
             let tick = outputs.tick();
             let result = outputs.state();
+
+            (tick_duration, gate_configs) = ctx.shared.state.lock(|state| {
+                tick_duration = state.tick_duration();
+                if tick.major {
+                    gate_configs = state.gate_configs();
+                }
+
+                (tick_duration, gate_configs)
+            });
 
             if result.outputs[0] == seq::State::On {
                 _ = ctx.local.gate_a.set_high();
@@ -318,7 +334,6 @@ mod app {
                 _ = ctx.local.gate_d.set_low();
             }
 
-            let tick_duration = ctx.shared.state.lock(|state| state.tick_duration());
             Timer::delay(tick_duration).await
         }
     }

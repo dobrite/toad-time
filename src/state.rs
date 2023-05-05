@@ -317,6 +317,10 @@ impl State {
         }
     }
 
+    pub fn gate_configs(&self) -> bool {
+        true
+    }
+
     pub fn tick_duration(&self) -> MicroSeconds {
         let bpm: f32 = self.bpm.0 as f32;
         let bps = bpm / SECONDS_IN_MINUTES;
