@@ -7,7 +7,6 @@ use embedded_graphics::{
     text::Text,
     Drawable,
 };
-use heapless::String;
 use rp_pico::hal::{
     gpio::{
         pin::{bank0::*, PushPull},
@@ -61,14 +60,14 @@ impl Display {
         self.display.flush().ok();
     }
 
-    pub fn draw_smol_text(&mut self, str: &String<3>, point: Point) {
-        Text::new(str, point, self.smol_font)
+    pub fn draw_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+        Text::new(str.as_ref(), point, self.smol_font)
             .draw(&mut self.display)
             .unwrap();
     }
 
-    pub fn draw_bigge_text(&mut self, str: &String<3>, point: Point) {
-        Text::new(str, point, self.bigge_font)
+    pub fn draw_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+        Text::new(str.as_ref(), point, self.bigge_font)
             .draw(&mut self.display)
             .unwrap();
     }
