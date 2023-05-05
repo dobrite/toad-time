@@ -291,6 +291,7 @@ mod app {
                 .for_each(|(index, config)| {
                     outputs.set_pwm(index, config.pwm);
                     outputs.set_rate(index, config.rate);
+                    outputs.set_prob(index, config.prob);
                 });
 
             tick_duration
@@ -310,6 +311,7 @@ mod app {
                         .for_each(|(index, config)| {
                             outputs.set_pwm(index, config.pwm);
                             outputs.set_rate(index, config.rate);
+                            outputs.set_prob(index, config.prob);
                         });
                 }
 
