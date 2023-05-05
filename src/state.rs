@@ -229,21 +229,21 @@ impl Updatable for Prob {
     }
 }
 
-pub struct ProbString(pub String<3>);
+pub struct ProbString(pub String<4>);
 
 impl From<Prob> for ProbString {
     fn from(val: Prob) -> Self {
         let prob_string = match val {
-            Prob::P100 => "100",
-            Prob::P90 => "90",
-            Prob::P80 => "80",
-            Prob::P70 => "70",
-            Prob::P60 => "60",
-            Prob::P50 => "50",
-            Prob::P40 => "40",
-            Prob::P30 => "30",
-            Prob::P20 => "20",
-            Prob::P10 => "10",
+            Prob::P100 => "100%",
+            Prob::P90 => "90%",
+            Prob::P80 => "80%",
+            Prob::P70 => "70%",
+            Prob::P60 => "60%",
+            Prob::P50 => "50%",
+            Prob::P40 => "40%",
+            Prob::P30 => "30%",
+            Prob::P20 => "20%",
+            Prob::P10 => "10%",
         };
 
         ProbString(prob_string.into())
