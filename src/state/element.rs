@@ -5,7 +5,7 @@ use hash32::{Hash, Hasher};
 
 use super::{State, StateChange, Updatable};
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 pub enum Element {
     Rate(Gate),
     Pwm(Gate),
@@ -84,5 +84,5 @@ impl fmt::Display for Gate {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 pub struct Home;

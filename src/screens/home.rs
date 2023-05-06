@@ -79,10 +79,9 @@ impl HomeScreen {
     }
 
     fn draw_play_pause(&mut self, display: &mut Display, play_status: PlayStatus) {
-        let rectangle = if play_status == PlayStatus::Playing {
-            Rectangle::new(Point::new(0, 0), Size::new(16, 16))
-        } else {
-            Rectangle::new(Point::new(16, 0), Size::new(32, 16))
+        let rectangle = match play_status {
+            PlayStatus::Playing => Rectangle::new(Point::new(0, 0), Size::new(16, 16)),
+            PlayStatus::Paused => Rectangle::new(Point::new(16, 0), Size::new(32, 16)),
         };
 
         display.draw_sub_bmp(&self.play_pause, &rectangle, Point::new(56, 30));

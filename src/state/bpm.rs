@@ -4,7 +4,7 @@ use defmt::Format;
 
 use super::Updatable;
 
-#[derive(Clone, Copy, PartialEq, Format)]
+#[derive(Clone, Copy, Format)]
 pub struct Bpm(pub u32);
 
 impl fmt::Display for Bpm {

@@ -1,6 +1,5 @@
 use super::{Bpm, Element, Gate, PlayStatus, Prob, Pwm, Rate, Sync};
 
-#[derive(PartialEq)]
 pub enum StateChange {
     Initialize,
     Bpm(Bpm),

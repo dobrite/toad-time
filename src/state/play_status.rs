@@ -1,6 +1,6 @@
 use defmt::Format;
 
-#[derive(Clone, Copy, PartialEq, Format)]
+#[derive(Clone, Copy, Format)]
 pub enum PlayStatus {
     Playing,
     Paused,

@@ -260,10 +260,12 @@ mod app {
         let mut state = State::new();
 
         while let Ok(command) = command_receiver.recv().await {
-            let state_change = state.handle_command(command);
-            if state_change != StateChange::None {
-                state.handle_state_change(&state_change);
-                let _ = state_sender.send(state_change).await;
+            match state.handle_command(command) {
+                StateChange::None => {}
+                state_change => {
+                    state.handle_state_change(&state_change);
+                    let _ = state_sender.send(state_change).await;
+                }
             }
         }
     }

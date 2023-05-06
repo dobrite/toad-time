@@ -4,7 +4,7 @@ use defmt::Format;
 
 use super::Updatable;
 
-#[derive(Clone, Copy, PartialEq, Format)]
+#[derive(Clone, Copy, Format)]
 pub enum Sync {
     Int,
     Ext,
@@ -12,18 +12,16 @@ pub enum Sync {
 
 impl Updatable for Sync {
     fn next(&self) -> Option<Self> {
-        if *self == Sync::Int {
-            Option::None
-        } else {
-            Option::Some(Sync::Int)
+        match self {
+            Sync::Int => Option::None,
+            Sync::Ext => Option::Some(Sync::Int),
         }
     }
 
     fn prev(&self) -> Option<Self> {
-        if *self == Sync::Ext {
-            Option::None
-        } else {
-            Option::Some(Sync::Ext)
+        match self {
+            Sync::Ext => Option::None,
+            Sync::Int => Option::Some(Sync::Ext),
         }
     }
 }
