@@ -274,10 +274,15 @@ mod app {
     async fn display(ctx: display::Context, mut state_receiver: Receiver<'static, StateChange, 4>) {
         let display = ctx.local.display;
         let mut screens = Screens::new();
-        screens.handle_state_change(StateChange::Initialize, display);
+        let mut state = State::new();
+        screens.draw(&state, &StateChange::Initialize, display);
 
         while let Ok(state_change) = state_receiver.recv().await {
-            screens.handle_state_change(state_change, display);
+            match state_change {
+                StateChange::None => {}
+                _ => state.handle_state_change(&state_change),
+            }
+            screens.draw(&state, &state_change, display);
         }
     }
 

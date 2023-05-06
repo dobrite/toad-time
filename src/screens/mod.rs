@@ -19,7 +19,6 @@ pub struct Screens {
     gate_d: GateScreen,
     home: HomeScreen,
     pointer: Bmp,
-    state: State,
 }
 
 impl Screens {
@@ -31,69 +30,46 @@ impl Screens {
             gate_d: GateScreen::new(Gate::D),
             home: HomeScreen::new(),
             pointer: TinyBmp::from_slice(POINTER).unwrap(),
-            state: State::new(),
         }
     }
 
-    pub fn handle_state_change(&mut self, state_change: StateChange, display: &mut Display) {
+    pub fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Initialize => {
-                self.draw_home(display);
-            }
-            StateChange::Bpm(bpm) => {
-                self.state.bpm = bpm;
-                self.draw_home(display);
+            StateChange::Bpm(_)
+            | StateChange::Initialize
+            | StateChange::PlayStatus(_)
+            | StateChange::Sync(_) => self.draw_home(state, display),
+            StateChange::Rate(gate, _) | StateChange::Pwm(gate, _) | StateChange::Prob(gate, _) => {
+                self.draw_gate(gate, state, display)
             }
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
                 Element::Bpm(_) | Element::Sync(_) => {
-                    self.state.current = element;
-                    self.draw_home(display);
+                    self.draw_home(state, display);
                 }
                 Element::Pwm(gate) | Element::Rate(gate) | Element::Prob(gate) => {
-                    self.state.current = element;
-                    self.draw_gate(gate, display);
+                    self.draw_gate(gate, state, display);
                 }
             },
-            StateChange::Sync(sync) => {
-                self.state.sync = sync;
-                self.draw_home(display);
-            }
-            StateChange::PlayStatus(play_status) => {
-                self.state.play_status = play_status;
-                self.draw_home(display);
-            }
-            StateChange::Rate(gate, rate) => {
-                self.state.gates[&gate].rate = rate;
-                self.draw_gate(gate, display);
-            }
-            StateChange::Pwm(gate, pwm) => {
-                self.state.gates[&gate].pwm = pwm;
-                self.draw_gate(gate, display);
-            }
-            StateChange::Prob(gate, prob) => {
-                self.state.gates[&gate].prob = prob;
-                self.draw_gate(gate, display);
-            }
             StateChange::None => unreachable!(),
         }
     }
 
-    fn draw_home(&mut self, display: &mut Display) {
+    fn draw_home(&mut self, state: &State, display: &mut Display) {
         display.clear();
-        self.home.draw(&self.state, display);
-        self.draw_pointer(self.state.current, display);
+        self.home.draw(state, display);
+        self.draw_pointer(state.current, display);
         display.flush();
     }
 
-    fn draw_gate(&mut self, gate: Gate, display: &mut Display) {
+    fn draw_gate(&mut self, gate: &Gate, state: &State, display: &mut Display) {
         display.clear();
         match gate {
-            Gate::A => self.gate_a.draw(&self.state.gates[&gate], display),
-            Gate::B => self.gate_b.draw(&self.state.gates[&gate], display),
-            Gate::C => self.gate_c.draw(&self.state.gates[&gate], display),
-            Gate::D => self.gate_d.draw(&self.state.gates[&gate], display),
+            Gate::A => self.gate_a.draw(&state.gates[gate], display),
+            Gate::B => self.gate_b.draw(&state.gates[gate], display),
+            Gate::C => self.gate_c.draw(&state.gates[gate], display),
+            Gate::D => self.gate_d.draw(&state.gates[gate], display),
         }
-        self.draw_pointer(self.state.current, display);
+        self.draw_pointer(state.current, display);
         display.flush();
     }
 
