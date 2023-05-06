@@ -56,9 +56,7 @@ mod app {
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
     #[shared]
-    struct Shared {
-        state: State,
-    }
+    struct Shared {}
 
     #[local]
     struct Local {
@@ -138,11 +136,13 @@ mod app {
         let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
 
         let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
-        let (state_sender, state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
+        let (state_sender, tick_state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
+        let (tick_state_sender, display_state_receiver) =
+            make_channel!(StateChange, STATE_CHANGE_CAPACITY);
 
-        tick::spawn().ok();
+        tick::spawn(tick_state_receiver, tick_state_sender).ok();
         state::spawn(command_receiver, state_sender).ok();
-        display::spawn(state_receiver).ok();
+        display::spawn(display_state_receiver).ok();
         update_encoder::spawn(command_sender.clone()).ok();
         update_encoder_button::spawn(command_sender.clone()).ok();
         update_page_button::spawn(command_sender.clone()).ok();
@@ -154,9 +154,7 @@ mod app {
         let gate_d = pins.gpio5.into_push_pull_output();
 
         (
-            Shared {
-                state: State::new(),
-            },
+            Shared {},
             Local {
                 display,
                 encoder,
@@ -253,23 +251,18 @@ mod app {
         }
     }
 
-    #[task(local = [], shared = [state], priority = 1)]
+    #[task(local = [], priority = 1)]
     async fn state(
-        mut ctx: state::Context,
+        _ctx: state::Context,
         mut command_receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
         mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
+        let mut state = State::new();
+
         while let Ok(command) = command_receiver.recv().await {
-            let state_change = ctx.shared.state.lock(|state| {
-                let state_change = state.handle_command(command);
-                if state_change != StateChange::None {
-                    state.handle_state_change(&state_change);
-                }
-
-                state_change
-            });
-
+            let state_change = state.handle_command(command);
             if state_change != StateChange::None {
+                state.handle_state_change(&state_change);
                 let _ = state_sender.send(state_change).await;
             }
         }
@@ -286,45 +279,36 @@ mod app {
         }
     }
 
-    #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
-    async fn tick(mut ctx: tick::Context) {
-        let (mut tick_duration, mut outputs) = ctx.shared.state.lock(|state| {
-            let tick_duration = ticks::duration(state.bpm.0 as f32);
-            let mut outputs = Outputs::new(4, ticks::resolution());
-
-            state
-                .gate_configs()
-                .iter()
-                .enumerate()
-                .for_each(|(index, config)| {
-                    outputs.set_pwm(index, config.pwm);
-                    outputs.set_rate(index, config.rate);
-                    outputs.set_prob(index, config.prob);
-                });
-
-            (tick_duration, outputs)
-        });
+    #[task(local = [gate_a, gate_b, gate_c, gate_d], priority = 2)]
+    async fn tick(
+        ctx: tick::Context,
+        mut state_receiver: Receiver<'static, StateChange, STATE_CHANGE_CAPACITY>,
+        mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
+    ) {
+        let mut state = State::new();
+        let mut outputs = Outputs::new(4, ticks::resolution());
 
         loop {
+            while let Ok(state_change) = state_receiver.try_recv() {
+                state.handle_state_change(&state_change);
+                let _ = state_sender.send(state_change).await;
+            }
+
             let tick = outputs.tick();
             let result = outputs.state();
 
-            tick_duration = ctx.shared.state.lock(|state| {
-                tick_duration = ticks::duration(state.bpm.0 as f32);
-                if tick.major {
-                    state
-                        .gate_configs()
-                        .iter()
-                        .enumerate()
-                        .for_each(|(index, config)| {
-                            outputs.set_pwm(index, config.pwm);
-                            outputs.set_rate(index, config.rate);
-                            outputs.set_prob(index, config.prob);
-                        });
-                }
-
-                tick_duration
-            });
+            let tick_duration = ticks::duration(state.bpm.0 as f32);
+            if tick.major {
+                state
+                    .gate_configs()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(index, config)| {
+                        outputs.set_pwm(index, config.pwm);
+                        outputs.set_rate(index, config.rate);
+                        outputs.set_prob(index, config.prob);
+                    });
+            }
 
             if result.outputs[0] {
                 _ = ctx.local.gate_a.set_high();
