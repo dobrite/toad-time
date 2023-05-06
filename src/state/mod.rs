@@ -28,10 +28,6 @@ mod state;
 mod state_change;
 mod sync;
 
-pub const MAX_MULT: u32 = 192;
-pub const PWM_PERCENT_INCREMENTS: u32 = 10;
-const SECONDS_IN_MINUTES: f32 = 60.0;
-
 pub type Gates = FnvIndexMap<Gate, GateState, 4>;
 
 trait Updatable {

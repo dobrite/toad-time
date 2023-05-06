@@ -5,6 +5,10 @@
 mod display;
 mod screens;
 mod state;
+mod ticks;
+
+const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
+pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
 
 #[rtic::app(
     device = rp_pico::hal::pac,
@@ -42,13 +46,12 @@ mod app {
         display::Display,
         screens::Screens,
         state::{Command, State, StateChange},
+        ticks, MicroSeconds,
     };
 
     const COMMAND_CAPACITY: usize = 4;
     const STATE_CHANGE_CAPACITY: usize = 4;
-    const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
 
-    pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
     type Encoder =
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
@@ -280,9 +283,8 @@ mod app {
     #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let (mut tick_duration, mut outputs) = ctx.shared.state.lock(|state| {
-            let tick_duration = state.tick_duration();
-            let resolution = state.resolution();
-            let mut outputs = Outputs::new(4, resolution);
+            let tick_duration = ticks::tick_duration(state.bpm.0 as f32);
+            let mut outputs = Outputs::new(4, ticks::resolution());
 
             state
                 .gate_configs()
@@ -302,7 +304,7 @@ mod app {
             let result = outputs.state();
 
             tick_duration = ctx.shared.state.lock(|state| {
-                tick_duration = state.tick_duration();
+                tick_duration = ticks::tick_duration(state.bpm.0 as f32);
                 if tick.major {
                     state
                         .gate_configs()

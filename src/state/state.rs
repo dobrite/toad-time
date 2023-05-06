@@ -1,7 +1,4 @@
-use fugit::RateExtU32;
-
 use super::*;
-use crate::app::MicroSeconds;
 
 pub struct State {
     pub bpm: Bpm,
@@ -36,19 +33,6 @@ impl State {
 
     pub fn gate_configs(&self) -> heapless::Vec<GateState, 4> {
         self.gates.values().copied().collect()
-    }
-
-    pub fn resolution(&self) -> u32 {
-        PWM_PERCENT_INCREMENTS * MAX_MULT
-    }
-
-    pub fn tick_duration(&self) -> MicroSeconds {
-        let bpm: f32 = self.bpm.0 as f32;
-        let bps = bpm / SECONDS_IN_MINUTES;
-        const MULTIPLYER: f32 = (PWM_PERCENT_INCREMENTS * MAX_MULT) as f32;
-        let hertz: u32 = (bps * MULTIPLYER) as u32;
-
-        hertz.Hz::<1, 1>().into_duration().into()
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
