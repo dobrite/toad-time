@@ -2,10 +2,11 @@ use defmt::Format;
 use heapless::FnvIndexMap;
 use seq::{Prob, Pwm, Rate};
 
+use self::element::Home;
 pub use self::{
     bpm::Bpm,
     command::Command,
-    element::{Element, Gate, Home},
+    element::{Element, Gate},
     gate_state::GateState,
     prob::ProbString,
     rate::RateString,
