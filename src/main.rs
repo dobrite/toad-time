@@ -296,8 +296,7 @@ mod app {
         let mut outputs = Outputs::new(4, ticks::resolution());
 
         loop {
-            let _tick = outputs.tick();
-            let result = outputs.state();
+            let result = outputs.tick();
 
             if result.outputs[0] {
                 _ = ctx.local.gate_a.set_high();
