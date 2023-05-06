@@ -41,12 +41,14 @@ mod app {
     use super::{
         display::Display,
         screens::Screens,
-        state::{
-            Command, MicroSeconds, State, StateChange, COMMAND_CAPACITY, MAX_MULT,
-            PWM_PERCENT_INCREMENTS, STATE_CHANGE_CAPACITY,
-        },
+        state::{Command, State, StateChange},
     };
 
+    const COMMAND_CAPACITY: usize = 4;
+    const STATE_CHANGE_CAPACITY: usize = 4;
+    const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
+
+    pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
     type Encoder =
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
@@ -277,11 +279,11 @@ mod app {
 
     #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
-        let resolution = PWM_PERCENT_INCREMENTS * MAX_MULT;
-        let mut outputs = Outputs::new(4, resolution);
-
-        let mut tick_duration = ctx.shared.state.lock(|state| {
+        let (mut tick_duration, mut outputs) = ctx.shared.state.lock(|state| {
             let tick_duration = state.tick_duration();
+            let resolution = state.resolution();
+            let mut outputs = Outputs::new(4, resolution);
+
             state
                 .gate_configs()
                 .iter()
@@ -292,7 +294,7 @@ mod app {
                     outputs.set_prob(index, config.prob);
                 });
 
-            tick_duration
+            (tick_duration, outputs)
         });
 
         loop {
