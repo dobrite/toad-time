@@ -51,8 +51,6 @@ mod app {
     type Encoder =
         RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
 
-    const BUTTON_UPDATE: MicroSeconds = MicroSeconds::from_ticks(50_000);
-
     #[shared]
     struct Shared {
         state: State,
@@ -230,6 +228,7 @@ mod app {
         <B as InputPin>::Error: core::fmt::Debug,
     {
         let mut armed = true;
+        let button_update_duration = MicroSeconds::from_ticks(50_000);
 
         loop {
             if armed && button.is_low().unwrap() {
@@ -239,7 +238,7 @@ mod app {
                 armed = true;
             }
 
-            Timer::delay(BUTTON_UPDATE).await
+            Timer::delay(button_update_duration).await
         }
     }
 
