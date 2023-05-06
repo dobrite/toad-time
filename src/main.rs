@@ -203,23 +203,6 @@ mod app {
         debounced_button(sender, ctx.local.encoder_button, Command::EncoderPress).await
     }
 
-    #[task(local = [], shared = [state], priority = 1)]
-    async fn state(
-        mut ctx: state::Context,
-        mut receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
-        mut sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
-    ) {
-        while let Ok(command) = receiver.recv().await {
-            let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
-            match state_change {
-                StateChange::None => {}
-                _ => {
-                    let _ = sender.send(state_change).await;
-                }
-            }
-        }
-    }
-
     async fn debounced_button<B: InputPin>(
         mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
         button: &B,
@@ -262,6 +245,23 @@ mod app {
                 Direction::None => {}
             }
             Timer::delay(update_duration).await
+        }
+    }
+
+    #[task(local = [], shared = [state], priority = 1)]
+    async fn state(
+        mut ctx: state::Context,
+        mut receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
+        mut sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
+    ) {
+        while let Ok(command) = receiver.recv().await {
+            let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
+            match state_change {
+                StateChange::None => {}
+                _ => {
+                    let _ = sender.send(state_change).await;
+                }
+            }
         }
     }
 
