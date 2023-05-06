@@ -10,7 +10,7 @@ use crate::{
 mod gate;
 mod home;
 
-const POINTER: &[u8; 630] = include_bytes!("../assets/icons/Pointer.bmp");
+const POINTER: &[u8; 630] = include_bytes!("assets/icons/Pointer.bmp");
 
 pub struct Screens {
     gate_a: GateScreen,
