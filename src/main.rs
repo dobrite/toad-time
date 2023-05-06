@@ -45,7 +45,7 @@ mod app {
     use super::{
         display::Display,
         screens::Screens,
-        state::{Command, State, StateChange},
+        state::{Command, Gate, PlayStatus, State, StateChange},
         ticks, MicroSeconds,
     };
 
@@ -296,26 +296,8 @@ mod app {
         let mut outputs = Outputs::new(4, ticks::resolution());
 
         loop {
-            while let Ok(state_change) = state_receiver.try_recv() {
-                state.handle_state_change(&state_change);
-                let _ = state_sender.send(state_change).await;
-            }
-
-            let tick = outputs.tick();
+            let _tick = outputs.tick();
             let result = outputs.state();
-
-            let tick_duration = ticks::duration(state.bpm.0 as f32);
-            if tick.major {
-                state
-                    .gate_configs()
-                    .iter()
-                    .enumerate()
-                    .for_each(|(index, config)| {
-                        outputs.set_pwm(index, config.pwm);
-                        outputs.set_rate(index, config.rate);
-                        outputs.set_prob(index, config.prob);
-                    });
-            }
 
             if result.outputs[0] {
                 _ = ctx.local.gate_a.set_high();
@@ -341,6 +323,41 @@ mod app {
                 _ = ctx.local.gate_d.set_low();
             }
 
+            while let Ok(state_change) = state_receiver.try_recv() {
+                state.handle_state_change(&state_change);
+                match state_change {
+                    StateChange::Rate(gate, rate) => match gate {
+                        Gate::A => outputs.set_rate(0, rate),
+                        Gate::B => outputs.set_rate(1, rate),
+                        Gate::C => outputs.set_rate(2, rate),
+                        Gate::D => outputs.set_rate(3, rate),
+                    },
+                    StateChange::Pwm(gate, pwm) => match gate {
+                        Gate::A => outputs.set_pwm(0, pwm),
+                        Gate::B => outputs.set_pwm(1, pwm),
+                        Gate::C => outputs.set_pwm(2, pwm),
+                        Gate::D => outputs.set_pwm(3, pwm),
+                    },
+                    StateChange::Prob(gate, prob) => match gate {
+                        Gate::A => outputs.set_prob(0, prob),
+                        Gate::B => outputs.set_prob(1, prob),
+                        Gate::C => outputs.set_prob(2, prob),
+                        Gate::D => outputs.set_prob(3, prob),
+                    },
+                    StateChange::PlayStatus(play_status) => match play_status {
+                        PlayStatus::Playing => { /* TODO: pause */ }
+                        PlayStatus::Paused => { /* TODO: reset then play */ }
+                    },
+                    StateChange::Bpm(_)
+                    | StateChange::NextPage(_)
+                    | StateChange::NextElement(_)
+                    | StateChange::None
+                    | StateChange::Sync(_) => {}
+                }
+                let _ = state_sender.send(state_change).await;
+            }
+
+            let tick_duration = ticks::duration(state.bpm.0 as f32);
             Timer::delay(tick_duration).await
         }
     }
