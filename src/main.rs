@@ -275,7 +275,7 @@ mod app {
         let display = ctx.local.display;
         let mut screens = Screens::new();
         let mut state = State::new();
-        screens.draw(&state, &StateChange::Initialize, display);
+        screens.draw_home(&state, display);
 
         while let Ok(state_change) = state_receiver.recv().await {
             match state_change {

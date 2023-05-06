@@ -1,7 +1,6 @@
 use super::{Bpm, Element, Gate, PlayStatus, Prob, Pwm, Rate, Sync};
 
 pub enum StateChange {
-    Initialize,
     Bpm(Bpm),
     Sync(Sync),
     Rate(Gate, Rate),

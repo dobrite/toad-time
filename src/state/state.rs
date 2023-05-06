@@ -37,7 +37,6 @@ impl State {
 
     pub fn handle_state_change(&mut self, state_change: &StateChange) {
         match state_change {
-            StateChange::Initialize => {}
             StateChange::Bpm(bpm) => self.bpm = *bpm,
             StateChange::Sync(sync) => self.sync = *sync,
             StateChange::Rate(gate, rate) => self.gates[gate].rate = *rate,

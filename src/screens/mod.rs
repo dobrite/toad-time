@@ -35,10 +35,9 @@ impl Screens {
 
     pub fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Bpm(_)
-            | StateChange::Initialize
-            | StateChange::PlayStatus(_)
-            | StateChange::Sync(_) => self.draw_home(state, display),
+            StateChange::Bpm(_) | StateChange::PlayStatus(_) | StateChange::Sync(_) => {
+                self.draw_home(state, display)
+            }
             StateChange::Rate(gate, _) | StateChange::Pwm(gate, _) | StateChange::Prob(gate, _) => {
                 self.draw_gate(gate, state, display)
             }
@@ -54,7 +53,7 @@ impl Screens {
         }
     }
 
-    fn draw_home(&mut self, state: &State, display: &mut Display) {
+    pub fn draw_home(&mut self, state: &State, display: &mut Display) {
         display.clear();
         self.home.draw(state, display);
         self.draw_pointer(state.current, display);
