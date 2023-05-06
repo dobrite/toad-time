@@ -35,9 +35,7 @@ impl Screens {
 
     pub fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Bpm(_) | StateChange::PlayStatus(_) | StateChange::Sync(_) => {
-                self.draw_home(state, display)
-            }
+            StateChange::Bpm(_) | StateChange::Sync(_) => self.draw_home(state, display),
             StateChange::Rate(gate, _) | StateChange::Pwm(gate, _) | StateChange::Prob(gate, _) => {
                 self.draw_gate(gate, state, display)
             }
@@ -48,6 +46,10 @@ impl Screens {
                 Element::Pwm(gate) | Element::Rate(gate) | Element::Prob(gate) => {
                     self.draw_gate(gate, state, display);
                 }
+            },
+            StateChange::PlayStatus(_) => match state.current {
+                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display),
+                Element::Prob(_) | Element::Pwm(_) | Element::Rate(_) => {}
             },
             StateChange::None => unreachable!(),
         }
