@@ -27,7 +27,7 @@ mod app {
         hal::{
             self, clocks,
             gpio::{
-                pin::{bank0::*, PullUp, PushPullOutput},
+                pin::{bank0::*, FunctionSpi, PullUp, PushPullOutput},
                 Input, Pin,
             },
             sio::Sio,
@@ -108,12 +108,8 @@ mod app {
         let display = {
             let oled_dc = pins.gpio16.into_push_pull_output();
             let oled_cs = pins.gpio17.into_push_pull_output();
-            let _ = pins
-                .gpio18
-                .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
-            let _ = pins
-                .gpio19
-                .into_mode::<rp_pico::hal::gpio::pin::FunctionSpi>();
+            let _ = pins.gpio18.into_mode::<FunctionSpi>();
+            let _ = pins.gpio19.into_mode::<FunctionSpi>();
             let mut oled_reset = pins.gpio20.into_push_pull_output();
 
             let spi = Spi::new(ctx.device.SPI0).init(

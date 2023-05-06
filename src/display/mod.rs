@@ -15,7 +15,11 @@ use rp_pico::hal::{
     pac,
     spi::{Enabled, Spi},
 };
-use ssd1306::Ssd1306;
+use ssd1306::{
+    mode::BufferedGraphicsMode,
+    prelude::{DisplaySize128x64, SPIInterface},
+    Ssd1306,
+};
 use tinybmp::Bmp as TinyBmp;
 
 pub use self::tile_grid::TileGrid;
@@ -27,13 +31,13 @@ const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf",
 
 pub type Bmp = TinyBmp<'static, BinaryColor>;
 pub type Ssd1306Display = Ssd1306<
-    ssd1306::prelude::SPIInterface<
+    SPIInterface<
         Spi<Enabled, pac::SPI0, 8>,
         Pin<Gpio16, Output<PushPull>>,
         Pin<Gpio17, Output<PushPull>>,
     >,
-    ssd1306::prelude::DisplaySize128x64,
-    ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
+    DisplaySize128x64,
+    BufferedGraphicsMode<DisplaySize128x64>,
 >;
 
 type Font = PcfTextStyle<'static, BinaryColor>;
