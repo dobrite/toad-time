@@ -6,6 +6,10 @@ use hash32::{Hash, Hasher};
 use heapless::{FnvIndexMap, String};
 use seq::{Prob, Pwm, Rate};
 
+pub use self::command::Command;
+
+mod command;
+
 pub const COMMAND_CAPACITY: usize = 4;
 pub const STATE_CHANGE_CAPACITY: usize = 4;
 pub const MAX_MULT: u32 = 192;
@@ -15,15 +19,6 @@ const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
 
 pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
 pub type Gates = FnvIndexMap<Gate, GateState, 4>;
-
-#[derive(Clone, Copy, Format)]
-pub enum Command {
-    EncoderRight,
-    EncoderLeft,
-    EncoderPress,
-    PagePress,
-    PlayPress,
-}
 
 const RATES: [Rate; 17] = [
     Rate::Div(64),
