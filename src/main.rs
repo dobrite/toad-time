@@ -279,7 +279,7 @@ mod app {
     #[task(local = [gate_a, gate_b, gate_c, gate_d], shared = [state], priority = 2)]
     async fn tick(mut ctx: tick::Context) {
         let (mut tick_duration, mut outputs) = ctx.shared.state.lock(|state| {
-            let tick_duration = ticks::tick_duration(state.bpm.0 as f32);
+            let tick_duration = ticks::duration(state.bpm.0 as f32);
             let mut outputs = Outputs::new(4, ticks::resolution());
 
             state
@@ -300,7 +300,7 @@ mod app {
             let result = outputs.state();
 
             tick_duration = ctx.shared.state.lock(|state| {
-                tick_duration = ticks::tick_duration(state.bpm.0 as f32);
+                tick_duration = ticks::duration(state.bpm.0 as f32);
                 if tick.major {
                     state
                         .gate_configs()

@@ -10,7 +10,7 @@ pub fn resolution() -> u32 {
     PWM_PERCENT_INCREMENTS * MAX_MULT
 }
 
-pub fn tick_duration(bpm: f32) -> MicroSeconds {
+pub fn duration(bpm: f32) -> MicroSeconds {
     let bps = bpm / SECONDS_IN_MINUTES;
     const MULTIPLYER: f32 = (PWM_PERCENT_INCREMENTS * MAX_MULT) as f32;
     let hertz: u32 = (bps * MULTIPLYER) as u32;
