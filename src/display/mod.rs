@@ -18,6 +18,10 @@ use rp_pico::hal::{
 use ssd1306::Ssd1306;
 use tinybmp::Bmp as TinyBmp;
 
+pub use self::tile_grid::TileGrid;
+
+mod tile_grid;
+
 const SMOL_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
 const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
 

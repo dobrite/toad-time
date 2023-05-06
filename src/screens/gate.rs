@@ -6,10 +6,9 @@ use seq::{Prob, Pwm, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{
-    display::Bmp,
+    display::{Bmp, TileGrid},
     screens::Display,
     state::{Gate, GateState, ProbString, RateString},
-    tile_grid::TileGrid,
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
