@@ -1,4 +1,3 @@
-use defmt::Format;
 use heapless::FnvIndexMap;
 use seq::{Prob, Pwm, Rate};
 
@@ -8,6 +7,7 @@ pub use self::{
     command::Command,
     element::{Element, Gate},
     gate_state::GateState,
+    play_status::PlayStatus,
     prob::ProbString,
     rate::RateString,
     state::State,
@@ -19,6 +19,7 @@ mod bpm;
 mod command;
 mod element;
 mod gate_state;
+mod play_status;
 mod prob;
 mod pwm;
 mod rate;
@@ -44,10 +45,4 @@ trait Updatable {
     fn prev(&mut self) -> Option<Self>
     where
         Self: Sized;
-}
-
-#[derive(Clone, Copy, PartialEq, Format)]
-pub enum PlayStatus {
-    Playing,
-    Paused,
 }
