@@ -4,21 +4,8 @@ use seq::Prob;
 use super::Updatable;
 
 impl Updatable for Prob {
-    fn next(&mut self) -> Option<Self> {
-        let next = match self {
-            Prob::P100 => Prob::P100,
-            Prob::P90 => Prob::P100,
-            Prob::P80 => Prob::P90,
-            Prob::P70 => Prob::P80,
-            Prob::P60 => Prob::P70,
-            Prob::P50 => Prob::P60,
-            Prob::P40 => Prob::P50,
-            Prob::P30 => Prob::P40,
-            Prob::P20 => Prob::P30,
-            Prob::P10 => Prob::P20,
-        };
-
-        let output = match self {
+    fn next(&self) -> Option<Self> {
+        match self {
             Prob::P100 => Option::None,
             Prob::P90 => Option::Some(Prob::P100),
             Prob::P80 => Option::Some(Prob::P90),
@@ -29,28 +16,11 @@ impl Updatable for Prob {
             Prob::P30 => Option::Some(Prob::P40),
             Prob::P20 => Option::Some(Prob::P30),
             Prob::P10 => Option::Some(Prob::P20),
-        };
-
-        *self = next;
-
-        output
+        }
     }
 
-    fn prev(&mut self) -> Option<Self> {
-        let prev = match self {
-            Prob::P10 => Prob::P10,
-            Prob::P20 => Prob::P10,
-            Prob::P30 => Prob::P20,
-            Prob::P40 => Prob::P30,
-            Prob::P50 => Prob::P40,
-            Prob::P60 => Prob::P50,
-            Prob::P70 => Prob::P60,
-            Prob::P80 => Prob::P70,
-            Prob::P90 => Prob::P80,
-            Prob::P100 => Prob::P90,
-        };
-
-        let output = match self {
+    fn prev(&self) -> Option<Self> {
+        match self {
             Prob::P10 => Option::None,
             Prob::P20 => Option::Some(Prob::P10),
             Prob::P30 => Option::Some(Prob::P20),
@@ -61,11 +31,7 @@ impl Updatable for Prob {
             Prob::P80 => Option::Some(Prob::P70),
             Prob::P90 => Option::Some(Prob::P80),
             Prob::P100 => Option::Some(Prob::P90),
-        };
-
-        *self = prev;
-
-        output
+        }
     }
 }
 

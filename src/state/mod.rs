@@ -31,10 +31,10 @@ mod sync;
 pub type Gates = FnvIndexMap<Gate, GateState, 4>;
 
 trait Updatable {
-    fn next(&mut self) -> Option<Self>
+    fn next(&self) -> Option<Self>
     where
         Self: Sized;
-    fn prev(&mut self) -> Option<Self>
+    fn prev(&self) -> Option<Self>
     where
         Self: Sized;
 }

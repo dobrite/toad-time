@@ -260,12 +260,17 @@ mod app {
         mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
         while let Ok(command) = command_receiver.recv().await {
-            let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
-            match state_change {
-                StateChange::None => {}
-                _ => {
-                    let _ = state_sender.send(state_change).await;
+            let state_change = ctx.shared.state.lock(|state| {
+                let state_change = state.handle_command(command);
+                if state_change != StateChange::None {
+                    state.handle_state_change(&state_change);
                 }
+
+                state_change
+            });
+
+            if state_change != StateChange::None {
+                let _ = state_sender.send(state_change).await;
             }
         }
     }

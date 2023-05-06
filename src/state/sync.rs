@@ -11,21 +11,19 @@ pub enum Sync {
 }
 
 impl Updatable for Sync {
-    fn next(&mut self) -> Option<Self> {
+    fn next(&self) -> Option<Self> {
         if *self == Sync::Int {
             Option::None
         } else {
-            *self = Sync::Int;
-            Option::Some(*self)
+            Option::Some(Sync::Int)
         }
     }
 
-    fn prev(&mut self) -> Option<Self> {
+    fn prev(&self) -> Option<Self> {
         if *self == Sync::Ext {
             Option::None
         } else {
-            *self = Sync::Ext;
-            Option::Some(*self)
+            Option::Some(Sync::Ext)
         }
     }
 }

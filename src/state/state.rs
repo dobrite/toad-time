@@ -35,20 +35,35 @@ impl State {
         self.gates.values().copied().collect()
     }
 
+    pub fn handle_state_change(&mut self, state_change: &StateChange) {
+        match state_change {
+            StateChange::Initialize => {}
+            StateChange::Bpm(bpm) => self.bpm = *bpm,
+            StateChange::Sync(sync) => self.sync = *sync,
+            StateChange::Rate(gate, rate) => self.gates[gate].rate = *rate,
+            StateChange::Pwm(gate, pwm) => self.gates[gate].pwm = *pwm,
+            StateChange::Prob(gate, prob) => self.gates[gate].prob = *prob,
+            StateChange::PlayStatus(play_status) => self.play_status = *play_status,
+            StateChange::NextPage(element) => self.current = *element,
+            StateChange::NextElement(element) => self.current = *element,
+            StateChange::None => {}
+        }
+    }
+
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         let current = self.current;
 
         match command {
             Command::EncoderRight => current.next(self),
             Command::EncoderLeft => current.prev(self),
-            Command::EncoderPress => StateChange::NextElement(self.next_element()),
-            Command::PagePress => StateChange::NextPage(self.next_page()),
+            Command::EncoderPress => self.next_element(),
+            Command::PagePress => self.next_page(),
             Command::PlayPress => self.toggle_play(),
         }
     }
 
-    fn next_page(&mut self) -> Element {
-        self.current = match self.current {
+    fn next_page(&mut self) -> StateChange {
+        let next_page = match self.current {
             Element::Bpm(_) => Element::Rate(Gate::A),
             Element::Sync(_) => Element::Rate(Gate::A),
             Element::Rate(Gate::A) => Element::Rate(Gate::B),
@@ -65,11 +80,11 @@ impl State {
             Element::Prob(Gate::D) => Element::Bpm(Home),
         };
 
-        self.current
+        StateChange::NextPage(next_page)
     }
 
-    fn next_element(&mut self) -> Element {
-        self.current = match self.current {
+    fn next_element(&mut self) -> StateChange {
+        let next_element = match self.current {
             Element::Bpm(_) => Element::Sync(Home),
             Element::Sync(_) => Element::Bpm(Home),
             Element::Rate(gate) => Element::Pwm(gate),
@@ -77,15 +92,15 @@ impl State {
             Element::Prob(gate) => Element::Rate(gate),
         };
 
-        self.current
+        StateChange::NextElement(next_element)
     }
 
-    fn toggle_play(&mut self) -> StateChange {
-        self.play_status = match self.play_status {
+    fn toggle_play(&self) -> StateChange {
+        let play_status = match self.play_status {
             PlayStatus::Playing => PlayStatus::Paused,
             PlayStatus::Paused => PlayStatus::Playing,
         };
 
-        StateChange::PlayStatus(self.play_status)
+        StateChange::PlayStatus(play_status)
     }
 }
