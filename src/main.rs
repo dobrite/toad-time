@@ -181,30 +181,35 @@ mod app {
     #[task(local = [play_button], priority = 1)]
     async fn update_play_button(
         ctx: update_play_button::Context,
-        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button(sender, ctx.local.play_button, Command::PlayPress).await
+        debounced_button(command_sender, ctx.local.play_button, Command::PlayPress).await
     }
 
     #[task(local = [page_button], priority = 1)]
     async fn update_page_button(
         ctx: update_page_button::Context,
 
-        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button(sender, ctx.local.page_button, Command::PagePress).await
+        debounced_button(command_sender, ctx.local.page_button, Command::PagePress).await
     }
 
     #[task(local = [encoder_button], priority = 1)]
     async fn update_encoder_button(
         ctx: update_encoder_button::Context,
-        sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
-        debounced_button(sender, ctx.local.encoder_button, Command::EncoderPress).await
+        debounced_button(
+            command_sender,
+            ctx.local.encoder_button,
+            Command::EncoderPress,
+        )
+        .await
     }
 
     async fn debounced_button<B: InputPin>(
-        mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        mut command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
         button: &B,
         command: Command,
     ) where
@@ -216,7 +221,7 @@ mod app {
         loop {
             if armed && button.is_low().unwrap() {
                 armed = false;
-                let _ = sender.send(command).await;
+                let _ = command_sender.send(command).await;
             } else if !armed && button.is_high().unwrap() {
                 armed = true;
             }
@@ -228,7 +233,7 @@ mod app {
     #[task(local = [encoder], priority = 1)]
     async fn update_encoder(
         ctx: update_encoder::Context,
-        mut sender: Sender<'static, Command, COMMAND_CAPACITY>,
+        mut command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
     ) {
         let encoder = ctx.local.encoder;
         let update_duration = MicroSeconds::from_ticks(1111);
@@ -237,10 +242,10 @@ mod app {
             encoder.update();
             match encoder.direction() {
                 Direction::Clockwise => {
-                    let _ = sender.send(Command::EncoderRight).await;
+                    let _ = command_sender.send(Command::EncoderRight).await;
                 }
                 Direction::Anticlockwise => {
-                    let _ = sender.send(Command::EncoderLeft).await;
+                    let _ = command_sender.send(Command::EncoderLeft).await;
                 }
                 Direction::None => {}
             }
@@ -251,27 +256,27 @@ mod app {
     #[task(local = [], shared = [state], priority = 1)]
     async fn state(
         mut ctx: state::Context,
-        mut receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
-        mut sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
+        mut command_receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
+        mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
-        while let Ok(command) = receiver.recv().await {
+        while let Ok(command) = command_receiver.recv().await {
             let state_change = ctx.shared.state.lock(|state| state.handle_command(command));
             match state_change {
                 StateChange::None => {}
                 _ => {
-                    let _ = sender.send(state_change).await;
+                    let _ = state_sender.send(state_change).await;
                 }
             }
         }
     }
 
     #[task(local = [display], priority = 1)]
-    async fn display(ctx: display::Context, mut receiver: Receiver<'static, StateChange, 4>) {
+    async fn display(ctx: display::Context, mut state_receiver: Receiver<'static, StateChange, 4>) {
         let display = ctx.local.display;
         let mut screens = Screens::new();
         screens.handle_state_change(StateChange::Initialize, display);
 
-        while let Ok(state_change) = receiver.recv().await {
+        while let Ok(state_change) = state_receiver.recv().await {
             screens.handle_state_change(state_change, display);
         }
     }
