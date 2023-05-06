@@ -39,7 +39,7 @@ mod app {
     use seq::Outputs;
     use ssd1306::{prelude::*, Ssd1306};
 
-    use crate::{
+    use super::{
         display::Display,
         screens::Screens,
         state::{
