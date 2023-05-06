@@ -18,9 +18,10 @@ use rp_pico::hal::{
 use ssd1306::Ssd1306;
 use tinybmp::Bmp as TinyBmp;
 
-type Font = PcfTextStyle<'static, BinaryColor>;
-pub type Bmp = TinyBmp<'static, BinaryColor>;
+const SMOL_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
+const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
 
+pub type Bmp = TinyBmp<'static, BinaryColor>;
 pub type Ssd1306Display = Ssd1306<
     ssd1306::prelude::SPIInterface<
         Spi<Enabled, pac::SPI0, 8>,
@@ -31,8 +32,7 @@ pub type Ssd1306Display = Ssd1306<
     ssd1306::mode::BufferedGraphicsMode<ssd1306::prelude::DisplaySize128x64>,
 >;
 
-const SMOL_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
-const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
+type Font = PcfTextStyle<'static, BinaryColor>;
 
 pub struct Display {
     display: Ssd1306Display,
