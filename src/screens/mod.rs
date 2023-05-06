@@ -63,11 +63,12 @@ impl Screens {
 
     fn draw_gate(&mut self, gate: &Gate, state: &State, display: &mut Display) {
         display.clear();
+        let gate_state = &state.gates[gate];
         match gate {
-            Gate::A => self.gate_a.draw(&state.gates[gate], display),
-            Gate::B => self.gate_b.draw(&state.gates[gate], display),
-            Gate::C => self.gate_c.draw(&state.gates[gate], display),
-            Gate::D => self.gate_d.draw(&state.gates[gate], display),
+            Gate::A => self.gate_a.draw(gate_state, display),
+            Gate::B => self.gate_b.draw(gate_state, display),
+            Gate::C => self.gate_c.draw(gate_state, display),
+            Gate::D => self.gate_d.draw(gate_state, display),
         }
         self.draw_pointer(state.current, display);
         display.flush();
