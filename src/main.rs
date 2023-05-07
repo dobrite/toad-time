@@ -17,7 +17,7 @@ pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
 mod app {
     use defmt_rtt as _;
     use embedded_hal::{
-        digital::v2::{InputPin, OutputPin},
+        digital::v2::{InputPin, OutputPin, ToggleableOutputPin},
         spi,
     };
     use fugit::RateExtU32;
@@ -148,10 +148,15 @@ mod app {
         update_page_button::spawn(command_sender.clone()).ok();
         update_play_button::spawn(command_sender).ok();
 
-        let gate_a = pins.gpio2.into_push_pull_output();
-        let gate_b = pins.gpio3.into_push_pull_output();
-        let gate_c = pins.gpio4.into_push_pull_output();
-        let gate_d = pins.gpio5.into_push_pull_output();
+        let mut gate_a = pins.gpio2.into_push_pull_output();
+        let mut gate_b = pins.gpio3.into_push_pull_output();
+        let mut gate_c = pins.gpio4.into_push_pull_output();
+        let mut gate_d = pins.gpio5.into_push_pull_output();
+
+        let _ = gate_a.set_high();
+        let _ = gate_b.set_high();
+        let _ = gate_c.set_high();
+        let _ = gate_d.set_high();
 
         (
             Shared {},
@@ -298,28 +303,20 @@ mod app {
         loop {
             let result = outputs.tick();
 
-            if result.outputs[0] {
-                _ = ctx.local.gate_a.set_high();
-            } else {
-                _ = ctx.local.gate_a.set_low();
+            if result.outputs[0].edge_change {
+                _ = ctx.local.gate_a.toggle();
             }
 
-            if result.outputs[1] {
-                _ = ctx.local.gate_b.set_high();
-            } else {
-                _ = ctx.local.gate_b.set_low();
+            if result.outputs[1].edge_change {
+                _ = ctx.local.gate_b.toggle();
             }
 
-            if result.outputs[2] {
-                _ = ctx.local.gate_c.set_high();
-            } else {
-                _ = ctx.local.gate_c.set_low();
+            if result.outputs[2].edge_change {
+                _ = ctx.local.gate_c.toggle();
             }
 
-            if result.outputs[3] {
-                _ = ctx.local.gate_d.set_high();
-            } else {
-                _ = ctx.local.gate_d.set_low();
+            if result.outputs[3].edge_change {
+                _ = ctx.local.gate_d.toggle();
             }
 
             while let Ok(state_change) = state_receiver.try_recv() {
