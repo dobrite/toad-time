@@ -39,7 +39,7 @@ mod app {
     };
     use rtic_monotonics::rp2040::{Timer, *};
     use rtic_sync::{channel::*, make_channel};
-    use seq::Outputs;
+    use seq::Seq;
     use ssd1306::{prelude::*, Ssd1306};
 
     use super::{
@@ -298,24 +298,24 @@ mod app {
         mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
         let mut state = State::new();
-        let mut outputs = Outputs::new(4, ticks::resolution());
+        let mut seq = Seq::new(4, ticks::resolution());
 
         loop {
-            let result = outputs.tick();
+            let result = seq.tick();
 
-            if result.outputs[0].edge_change {
+            if result[0].edge_change {
                 _ = ctx.local.gate_a.toggle();
             }
 
-            if result.outputs[1].edge_change {
+            if result[1].edge_change {
                 _ = ctx.local.gate_b.toggle();
             }
 
-            if result.outputs[2].edge_change {
+            if result[2].edge_change {
                 _ = ctx.local.gate_c.toggle();
             }
 
-            if result.outputs[3].edge_change {
+            if result[3].edge_change {
                 _ = ctx.local.gate_d.toggle();
             }
 
@@ -323,22 +323,22 @@ mod app {
                 state.handle_state_change(&state_change);
                 match state_change {
                     StateChange::Rate(gate, rate) => match gate {
-                        Gate::A => outputs.set_rate(0, rate),
-                        Gate::B => outputs.set_rate(1, rate),
-                        Gate::C => outputs.set_rate(2, rate),
-                        Gate::D => outputs.set_rate(3, rate),
+                        Gate::A => seq.set_rate(0, rate),
+                        Gate::B => seq.set_rate(1, rate),
+                        Gate::C => seq.set_rate(2, rate),
+                        Gate::D => seq.set_rate(3, rate),
                     },
                     StateChange::Pwm(gate, pwm) => match gate {
-                        Gate::A => outputs.set_pwm(0, pwm),
-                        Gate::B => outputs.set_pwm(1, pwm),
-                        Gate::C => outputs.set_pwm(2, pwm),
-                        Gate::D => outputs.set_pwm(3, pwm),
+                        Gate::A => seq.set_pwm(0, pwm),
+                        Gate::B => seq.set_pwm(1, pwm),
+                        Gate::C => seq.set_pwm(2, pwm),
+                        Gate::D => seq.set_pwm(3, pwm),
                     },
                     StateChange::Prob(gate, prob) => match gate {
-                        Gate::A => outputs.set_prob(0, prob),
-                        Gate::B => outputs.set_prob(1, prob),
-                        Gate::C => outputs.set_prob(2, prob),
-                        Gate::D => outputs.set_prob(3, prob),
+                        Gate::A => seq.set_prob(0, prob),
+                        Gate::B => seq.set_prob(1, prob),
+                        Gate::C => seq.set_prob(2, prob),
+                        Gate::D => seq.set_prob(3, prob),
                     },
                     StateChange::PlayStatus(play_status) => match play_status {
                         PlayStatus::Playing => { /* TODO: pause */ }
