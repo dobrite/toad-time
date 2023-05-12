@@ -5,7 +5,6 @@
 mod display;
 mod screens;
 mod state;
-mod ticks;
 
 const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
 pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
@@ -46,7 +45,7 @@ mod app {
         display::Display,
         screens::Screens,
         state::{Command, Gate, PlayStatus, State, StateChange},
-        ticks, MicroSeconds,
+        MicroSeconds,
     };
 
     const COMMAND_CAPACITY: usize = 4;
@@ -298,7 +297,7 @@ mod app {
         mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
     ) {
         let mut state = State::new();
-        let mut seq = Seq::new(4, ticks::resolution());
+        let mut seq = Seq::new(4);
 
         loop {
             let result = seq.tick();
@@ -353,7 +352,7 @@ mod app {
                 let _ = state_sender.send(state_change).await;
             }
 
-            let tick_duration = ticks::duration(state.bpm.0 as f32);
+            let tick_duration = seq::tick_duration(state.bpm.0 as f32);
             Timer::delay(tick_duration).await
         }
     }
