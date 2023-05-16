@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "state",
     "toad-time",
 ]
 

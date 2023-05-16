@@ -1,3 +1,5 @@
+#![no_std]
+
 use heapless::FnvIndexMap;
 use seq::{Prob, Pwm, Rate};
 
