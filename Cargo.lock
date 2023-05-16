@@ -633,31 +633,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rp2040-tmp"
-version = "0.1.0"
-dependencies = [
- "cortex-m",
- "cortex-m-rt",
- "defmt",
- "defmt-rtt",
- "eg-pcf",
- "embedded-graphics",
- "embedded-hal",
- "fugit",
- "hash32",
- "heapless",
- "panic-probe",
- "rotary-encoder-embedded",
- "rp-pico",
- "rtic",
- "rtic-monotonics",
- "rtic-sync",
- "seq",
- "ssd1306",
- "tinybmp",
-]
-
-[[package]]
 name = "rtic"
 version = "2.0.0-alpha.1"
 source = "git+https://github.com/rtic-rs/rtic#56bf829931cd3f8267ad435f6ff8f3ae200418b4"
@@ -861,6 +836,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e959c507975d768a226a08227d56791f6e60bddcf714ad7ef67ae2d20bae743"
 dependencies = [
  "embedded-graphics",
+]
+
+[[package]]
+name = "toad-time"
+version = "0.1.0"
+dependencies = [
+ "cortex-m",
+ "cortex-m-rt",
+ "defmt",
+ "defmt-rtt",
+ "eg-pcf",
+ "embedded-graphics",
+ "embedded-hal",
+ "fugit",
+ "hash32",
+ "heapless",
+ "panic-probe",
+ "rotary-encoder-embedded",
+ "rp-pico",
+ "rtic",
+ "rtic-monotonics",
+ "rtic-sync",
+ "seq",
+ "ssd1306",
+ "tinybmp",
 ]
 
 [[package]]
