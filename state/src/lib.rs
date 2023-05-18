@@ -3,24 +3,19 @@
 use heapless::FnvIndexMap;
 use seq::{Prob, Pwm, Rate};
 
-use self::element::Home;
+use self::home::Home;
 pub use self::{
-    bpm::Bpm,
-    command::Command,
-    element::{Element, Gate},
-    gate_state::GateState,
-    play_status::PlayStatus,
-    prob::ProbString,
-    rate::RateString,
-    state::State,
-    state_change::StateChange,
-    sync::Sync,
+    bpm::Bpm, command::Command, element::Element, gate::Gate, gate_state::GateState,
+    play_status::PlayStatus, prob::ProbString, rate::RateString, state::State,
+    state_change::StateChange, sync::Sync,
 };
 
 mod bpm;
 mod command;
 mod element;
+mod gate;
 mod gate_state;
+mod home;
 mod play_status;
 mod prob;
 mod pwm;
