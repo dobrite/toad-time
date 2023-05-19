@@ -33,36 +33,34 @@ impl Screens {
         }
     }
 
-    pub fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
+    pub async fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Bpm(_) | StateChange::Sync(_) => self.draw_home(state, display),
+            StateChange::Bpm(_) | StateChange::Sync(_) => self.draw_home(state, display).await,
             StateChange::Rate(gate, _) | StateChange::Pwm(gate, _) | StateChange::Prob(gate, _) => {
-                self.draw_gate(gate, state, display)
+                self.draw_gate(gate, state, display).await
             }
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
-                Element::Bpm(_) | Element::Sync(_) => {
-                    self.draw_home(state, display);
-                }
+                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
                 Element::Pwm(gate) | Element::Rate(gate) | Element::Prob(gate) => {
-                    self.draw_gate(gate, state, display);
+                    self.draw_gate(gate, state, display).await
                 }
             },
             StateChange::PlayStatus(_) => match state.current {
-                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display),
+                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
                 Element::Prob(_) | Element::Pwm(_) | Element::Rate(_) => {}
             },
             StateChange::None => unreachable!(),
         }
     }
 
-    pub fn draw_home(&mut self, state: &State, display: &mut Display) {
+    pub async fn draw_home(&mut self, state: &State, display: &mut Display) {
         display.clear();
         self.home.draw(state, display);
         self.draw_pointer(state.current, display);
-        display.flush();
+        display.flush().await;
     }
 
-    fn draw_gate(&mut self, gate: &Gate, state: &State, display: &mut Display) {
+    async fn draw_gate(&mut self, gate: &Gate, state: &State, display: &mut Display) {
         display.clear();
         let gate_state = &state.gates[gate];
         match gate {
@@ -72,7 +70,7 @@ impl Screens {
             Gate::D => self.gate_d.draw(gate_state, display),
         }
         self.draw_pointer(state.current, display);
-        display.flush();
+        display.flush().await;
     }
 
     fn draw_pointer(&mut self, current: Element, display: &mut Display) {

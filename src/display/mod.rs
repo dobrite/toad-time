@@ -1,4 +1,9 @@
 use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
+use embassy_rp::{
+    gpio::Output,
+    peripherals::{PIN_16, PIN_17, SPI0},
+    spi::Spi,
+};
 use embedded_graphics::{
     image::{Image, ImageDrawableExt},
     pixelcolor::BinaryColor,
@@ -7,16 +12,9 @@ use embedded_graphics::{
     text::Text,
     Drawable,
 };
-use rp_pico::hal::{
-    gpio::{
-        pin::{bank0::*, PushPull},
-        Output, Pin,
-    },
-    pac,
-    spi::{Enabled, Spi},
-};
-use ssd1306::{
-    mode::BufferedGraphicsMode,
+use embedded_hal_async::spi::ExclusiveDevice;
+use ssd1306_async::{
+    mode::{BufferedGraphicsMode, DisplayConfig},
     prelude::{DisplaySize128x64, SPIInterface},
     Ssd1306,
 };
@@ -32,9 +30,8 @@ const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf",
 pub type Bmp = TinyBmp<'static, BinaryColor>;
 pub type Ssd1306Display = Ssd1306<
     SPIInterface<
-        Spi<Enabled, pac::SPI0, 8>,
-        Pin<Gpio16, Output<PushPull>>,
-        Pin<Gpio17, Output<PushPull>>,
+        ExclusiveDevice<Spi<'static, SPI0, embassy_rp::spi::Async>, Output<'static, PIN_17>>,
+        Output<'static, PIN_16>,
     >,
     DisplaySize128x64,
     BufferedGraphicsMode<DisplaySize128x64>,
@@ -60,12 +57,16 @@ impl Display {
         }
     }
 
+    pub async fn init(&mut self) {
+        self.display.init().await.ok();
+    }
+
     pub fn clear(&mut self) {
         self.display.clear();
     }
 
-    pub fn flush(&mut self) {
-        self.display.flush().ok();
+    pub async fn flush(&mut self) {
+        self.display.flush().await.ok();
     }
 
     pub fn draw_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {

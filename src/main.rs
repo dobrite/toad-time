@@ -1,359 +1,258 @@
 #![no_std]
 #![no_main]
+#![deny(unused_must_use)]
 #![feature(type_alias_impl_trait)]
+
+use core::convert::Infallible;
+
+use defmt::*;
+use defmt_rtt as _;
+use embassy_executor::{Executor, _export::StaticCell};
+use embassy_rp::{
+    gpio::{Input, Level, Output, Pull},
+    multicore::{spawn_core1, Stack},
+    peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15, PIN_2, PIN_3, PIN_4, PIN_5},
+    spi::{Config, Spi},
+};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
+use embassy_time::{Delay, Duration, Timer};
+use embedded_hal::digital::v2::InputPin;
+use embedded_hal_async::spi::ExclusiveDevice;
+use panic_probe as _;
+use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
+use seq::Seq;
+use ssd1306_async::{prelude::*, Ssd1306};
+
+use crate::{
+    display::Display,
+    screens::Screens,
+    state::{Command, Gate, PlayStatus, State, StateChange},
+};
+
+static mut CORE1_STACK: Stack<65_536> = Stack::new();
+static EXECUTOR0: StaticCell<Executor> = StaticCell::new();
+static EXECUTOR1: StaticCell<Executor> = StaticCell::new();
+static COMMAND_CHANNEL: Channel<CriticalSectionRawMutex, Command, 8> = Channel::new();
+static TICK_STATE_CHANNEL: Channel<CriticalSectionRawMutex, StateChange, 8> = Channel::new();
+static DISPLAY_STATE_CHANNEL: Channel<CriticalSectionRawMutex, StateChange, 8> = Channel::new();
+
+type Encoder = RotaryEncoder<StandardMode, Input<'static, PIN_14>, Input<'static, PIN_15>>;
 
 mod display;
 mod screens;
 mod state;
 
-const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
-pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    let p = embassy_rp::init(Default::default());
 
-#[rtic::app(
-    device = rp_pico::hal::pac,
-    dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2]
-)]
-mod app {
-    use defmt_rtt as _;
-    use embedded_hal::{
-        digital::v2::{InputPin, OutputPin, ToggleableOutputPin},
-        spi,
-    };
-    use fugit::RateExtU32;
-    use panic_probe as _;
-    use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
-    use rp_pico::{
-        hal::{
-            self, clocks,
-            gpio::{
-                pin::{bank0::*, FunctionSpi, PullUp, PushPullOutput},
-                Input, Pin,
-            },
-            sio::Sio,
-            spi::Spi,
-            watchdog::Watchdog,
-            Clock,
-        },
-        XOSC_CRYSTAL_FREQ,
-    };
-    use rtic_monotonics::rp2040::{Timer, *};
-    use rtic_sync::{channel::*, make_channel};
-    use seq::Seq;
-    use ssd1306::{prelude::*, Ssd1306};
+    let oled_reset = p.PIN_20;
+    let oled_dc = p.PIN_16;
+    let oled_cs = p.PIN_17;
+    let clk = p.PIN_18;
+    let mosi = p.PIN_19;
 
-    use super::{
-        display::Display,
-        screens::Screens,
-        state::{Command, Gate, PlayStatus, State, StateChange},
-        MicroSeconds,
-    };
+    let spi = Spi::new_txonly(p.SPI0, clk, mosi, p.DMA_CH0, Config::default());
 
-    const COMMAND_CAPACITY: usize = 4;
-    const STATE_CHANGE_CAPACITY: usize = 4;
+    let cs = Output::new(oled_cs, Level::Low);
+    let device = ExclusiveDevice::new(spi, cs);
 
-    type Encoder =
-        RotaryEncoder<StandardMode, Pin<Gpio14, Input<PullUp>>, Pin<Gpio15, Input<PullUp>>>;
+    let dc = Output::new(oled_dc, Level::Low);
+    let interface = ssd1306_async::SPIInterface::new(device, dc);
 
-    #[shared]
-    struct Shared {}
-
-    #[local]
-    struct Local {
-        display: Display,
-        encoder: Encoder,
-        encoder_button: Pin<Gpio13, Input<PullUp>>,
-        gate_a: Pin<Gpio2, PushPullOutput>,
-        gate_b: Pin<Gpio3, PushPullOutput>,
-        gate_c: Pin<Gpio4, PushPullOutput>,
-        gate_d: Pin<Gpio5, PushPullOutput>,
-        play_button: Pin<Gpio11, Input<PullUp>>,
-        page_button: Pin<Gpio12, Input<PullUp>>,
-    }
-
-    #[init()]
-    fn init(mut ctx: init::Context) -> (Shared, Local) {
-        unsafe {
-            hal::sio::spinlock_reset();
-        }
-
-        let token = rtic_monotonics::create_rp2040_monotonic_token!();
-        Timer::start(ctx.device.TIMER, &mut ctx.device.RESETS, token);
-        let mut watchdog = Watchdog::new(ctx.device.WATCHDOG);
-        let clocks = clocks::init_clocks_and_plls(
-            XOSC_CRYSTAL_FREQ,
-            ctx.device.XOSC,
-            ctx.device.CLOCKS,
-            ctx.device.PLL_SYS,
-            ctx.device.PLL_USB,
-            &mut ctx.device.RESETS,
-            &mut watchdog,
-        )
-        .ok()
-        .unwrap();
-
-        let mut delay =
-            cortex_m::delay::Delay::new(ctx.core.SYST, clocks.system_clock.freq().to_Hz());
-
-        let sio = Sio::new(ctx.device.SIO);
-        let pins = rp_pico::Pins::new(
-            ctx.device.IO_BANK0,
-            ctx.device.PADS_BANK0,
-            sio.gpio_bank0,
-            &mut ctx.device.RESETS,
-        );
-
-        let display = {
-            let oled_dc = pins.gpio16.into_push_pull_output();
-            let oled_cs = pins.gpio17.into_push_pull_output();
-            let _ = pins.gpio18.into_mode::<FunctionSpi>();
-            let _ = pins.gpio19.into_mode::<FunctionSpi>();
-            let mut oled_reset = pins.gpio20.into_push_pull_output();
-
-            let spi = Spi::new(ctx.device.SPI0).init(
-                &mut ctx.device.RESETS,
-                125_000_000u32.Hz(),
-                1_000_000u32.Hz(),
-                &spi::MODE_0,
-            );
-
-            let interface = SPIInterface::new(spi, oled_dc, oled_cs);
-            let mut display_ctx =
-                Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
-                    .into_buffered_graphics_mode();
-
-            display_ctx.reset(&mut oled_reset, &mut delay).unwrap();
-            display_ctx.init().unwrap();
-
-            Display::new(display_ctx)
-        };
-
-        let play_button = pins.gpio11.into_pull_up_input();
-        let page_button = pins.gpio12.into_pull_up_input();
-        let encoder_button = pins.gpio13.into_pull_up_input();
-        let rotary_dt = pins.gpio14.into_pull_up_input();
-        let rotary_clk = pins.gpio15.into_pull_up_input();
-        let encoder = RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode();
-
-        let (command_sender, command_receiver) = make_channel!(Command, COMMAND_CAPACITY);
-        let (state_sender, tick_state_receiver) = make_channel!(StateChange, STATE_CHANGE_CAPACITY);
-        let (tick_state_sender, display_state_receiver) =
-            make_channel!(StateChange, STATE_CHANGE_CAPACITY);
-
-        tick::spawn(tick_state_receiver, tick_state_sender).ok();
-        state::spawn(command_receiver, state_sender).ok();
-        display::spawn(display_state_receiver).ok();
-        update_encoder::spawn(command_sender.clone()).ok();
-        update_encoder_button::spawn(command_sender.clone()).ok();
-        update_page_button::spawn(command_sender.clone()).ok();
-        update_play_button::spawn(command_sender).ok();
-
-        let mut gate_a = pins.gpio2.into_push_pull_output();
-        let mut gate_b = pins.gpio3.into_push_pull_output();
-        let mut gate_c = pins.gpio4.into_push_pull_output();
-        let mut gate_d = pins.gpio5.into_push_pull_output();
-
-        let _ = gate_a.set_high();
-        let _ = gate_b.set_high();
-        let _ = gate_c.set_high();
-        let _ = gate_d.set_high();
-
-        (
-            Shared {},
-            Local {
-                display,
-                encoder,
-                encoder_button,
-                gate_a,
-                gate_b,
-                gate_c,
-                gate_d,
-                page_button,
-                play_button,
-            },
-        )
-    }
-
-    #[idle(local = [])]
-    fn idle(_cx: idle::Context) -> ! {
-        loop {
-            cortex_m::asm::nop();
-        }
-    }
-
-    #[task(local = [play_button], priority = 1)]
-    async fn update_play_button(
-        ctx: update_play_button::Context,
-        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
-    ) {
-        debounced_button(command_sender, ctx.local.play_button, Command::PlayPress).await
-    }
-
-    #[task(local = [page_button], priority = 1)]
-    async fn update_page_button(
-        ctx: update_page_button::Context,
-
-        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
-    ) {
-        debounced_button(command_sender, ctx.local.page_button, Command::PagePress).await
-    }
-
-    #[task(local = [encoder_button], priority = 1)]
-    async fn update_encoder_button(
-        ctx: update_encoder_button::Context,
-        command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
-    ) {
-        debounced_button(
-            command_sender,
-            ctx.local.encoder_button,
-            Command::EncoderPress,
-        )
-        .await
-    }
-
-    async fn debounced_button<B: InputPin>(
-        mut command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
-        button: &B,
-        command: Command,
-    ) where
-        <B as InputPin>::Error: core::fmt::Debug,
+    let display_ctx = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+        .into_buffered_graphics_mode();
+    let mut rst = Output::new(oled_reset, Level::Low);
     {
-        let mut armed = true;
-        let button_update_duration = MicroSeconds::from_ticks(50_000);
-
-        loop {
-            if armed && button.is_low().unwrap() {
-                armed = false;
-                let _ = command_sender.send(command).await;
-            } else if !armed && button.is_high().unwrap() {
-                armed = true;
-            }
-
-            Timer::delay(button_update_duration).await
-        }
+        use cortex_m::prelude::_embedded_hal_blocking_delay_DelayMs;
+        Delay.delay_ms(1u8);
     }
+    rst.set_high();
 
-    #[task(local = [encoder], priority = 1)]
-    async fn update_encoder(
-        ctx: update_encoder::Context,
-        mut command_sender: Sender<'static, Command, COMMAND_CAPACITY>,
-    ) {
-        let encoder = ctx.local.encoder;
-        let update_duration = MicroSeconds::from_ticks(1111);
+    let display = Display::new(display_ctx);
 
-        loop {
-            encoder.update();
-            match encoder.direction() {
-                Direction::Clockwise => {
-                    let _ = command_sender.send(Command::EncoderRight).await;
-                }
-                Direction::Anticlockwise => {
-                    let _ = command_sender.send(Command::EncoderLeft).await;
-                }
-                Direction::None => {}
-            }
-            Timer::delay(update_duration).await
-        }
-    }
+    let gate_a = Output::new(p.PIN_2, Level::High);
+    let gate_b = Output::new(p.PIN_3, Level::High);
+    let gate_c = Output::new(p.PIN_4, Level::High);
+    let gate_d = Output::new(p.PIN_5, Level::High);
+    let play_button = Input::new(p.PIN_11, Pull::Up);
+    let page_button = Input::new(p.PIN_12, Pull::Up);
+    let encoder_button = Input::new(p.PIN_13, Pull::Up);
+    let encoder = {
+        let rotary_dt = Input::new(p.PIN_14, Pull::Up);
+        let rotary_clk = Input::new(p.PIN_15, Pull::Up);
 
-    #[task(local = [], priority = 1)]
-    async fn state(
-        _ctx: state::Context,
-        mut command_receiver: Receiver<'static, Command, COMMAND_CAPACITY>,
-        mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
-    ) {
-        let mut state = State::new();
+        RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode()
+    };
 
-        while let Ok(command) = command_receiver.recv().await {
-            match state.handle_command(command) {
-                StateChange::None => {}
-                state_change => {
-                    state.handle_state_change(&state_change);
-                    let _ = state_sender.send(state_change).await;
-                }
-            }
-        }
-    }
+    spawn_core1(p.CORE1, unsafe { &mut CORE1_STACK }, move || {
+        let executor1 = EXECUTOR1.init(Executor::new());
+        executor1.run(|spawner| {
+            let _ = spawner.spawn(core1_encoder_task(encoder));
+            let _ = spawner.spawn(core1_display_task(display));
+            let _ = spawner.spawn(core1_encoder_button_task(encoder_button));
+            let _ = spawner.spawn(core1_page_button_task(page_button));
+            let _ = spawner.spawn(core1_play_button_task(play_button));
+        });
+    });
 
-    #[task(local = [display], priority = 1)]
-    async fn display(ctx: display::Context, mut state_receiver: Receiver<'static, StateChange, 4>) {
-        let display = ctx.local.display;
-        let mut screens = Screens::new();
-        let mut state = State::new();
-        screens.draw_home(&state, display);
+    let executor0 = EXECUTOR0.init(Executor::new());
+    executor0.run(|spawner| {
+        let _ = spawner.spawn(core0_state_task());
+        let _ = spawner.spawn(core0_tick_task(gate_a, gate_b, gate_c, gate_d));
+    });
+}
 
-        while let Ok(state_change) = state_receiver.recv().await {
-            match state_change {
-                StateChange::None => {}
-                _ => state.handle_state_change(&state_change),
-            }
-            screens.draw(&state, &state_change, display);
-        }
-    }
+#[embassy_executor::task]
+async fn core0_state_task() {
+    let mut state = State::new();
 
-    #[task(local = [gate_a, gate_b, gate_c, gate_d], priority = 2)]
-    async fn tick(
-        ctx: tick::Context,
-        mut state_receiver: Receiver<'static, StateChange, STATE_CHANGE_CAPACITY>,
-        mut state_sender: Sender<'static, StateChange, STATE_CHANGE_CAPACITY>,
-    ) {
-        let mut state = State::new();
-        let mut seq = Seq::new(4);
-
-        loop {
-            let result = seq.tick();
-
-            if result[0].edge_change {
-                _ = ctx.local.gate_a.toggle();
-            }
-
-            if result[1].edge_change {
-                _ = ctx.local.gate_b.toggle();
-            }
-
-            if result[2].edge_change {
-                _ = ctx.local.gate_c.toggle();
-            }
-
-            if result[3].edge_change {
-                _ = ctx.local.gate_d.toggle();
-            }
-
-            while let Ok(state_change) = state_receiver.try_recv() {
+    loop {
+        let command = COMMAND_CHANNEL.recv().await;
+        match state.handle_command(command) {
+            StateChange::None => {}
+            state_change => {
                 state.handle_state_change(&state_change);
-                match state_change {
-                    StateChange::Rate(gate, rate) => match gate {
-                        Gate::A => seq.set_rate(0, rate),
-                        Gate::B => seq.set_rate(1, rate),
-                        Gate::C => seq.set_rate(2, rate),
-                        Gate::D => seq.set_rate(3, rate),
-                    },
-                    StateChange::Pwm(gate, pwm) => match gate {
-                        Gate::A => seq.set_pwm(0, pwm),
-                        Gate::B => seq.set_pwm(1, pwm),
-                        Gate::C => seq.set_pwm(2, pwm),
-                        Gate::D => seq.set_pwm(3, pwm),
-                    },
-                    StateChange::Prob(gate, prob) => match gate {
-                        Gate::A => seq.set_prob(0, prob),
-                        Gate::B => seq.set_prob(1, prob),
-                        Gate::C => seq.set_prob(2, prob),
-                        Gate::D => seq.set_prob(3, prob),
-                    },
-                    StateChange::PlayStatus(play_status) => match play_status {
-                        PlayStatus::Playing => { /* TODO: pause */ }
-                        PlayStatus::Paused => { /* TODO: reset then play */ }
-                    },
-                    StateChange::Bpm(_)
-                    | StateChange::NextPage(_)
-                    | StateChange::NextElement(_)
-                    | StateChange::None
-                    | StateChange::Sync(_) => {}
-                }
-                let _ = state_sender.send(state_change).await;
+                let _ = TICK_STATE_CHANNEL.send(state_change).await;
             }
-
-            let tick_duration = seq::tick_duration(state.bpm.0 as f32);
-            Timer::delay(tick_duration).await
         }
+    }
+}
+
+#[embassy_executor::task]
+async fn core0_tick_task(
+    mut gate_a: Output<'static, PIN_2>,
+    mut gate_b: Output<'static, PIN_3>,
+    mut gate_c: Output<'static, PIN_4>,
+    mut gate_d: Output<'static, PIN_5>,
+) {
+    let mut state = State::new();
+    let mut seq = Seq::new(4);
+
+    loop {
+        let result = seq.tick();
+
+        if result[0].edge_change {
+            gate_a.toggle();
+        }
+
+        if result[1].edge_change {
+            gate_b.toggle();
+        }
+
+        if result[2].edge_change {
+            gate_c.toggle();
+        }
+
+        if result[3].edge_change {
+            gate_d.toggle();
+        }
+
+        while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
+            state.handle_state_change(&state_change);
+            match state_change {
+                StateChange::Rate(gate, rate) => match gate {
+                    Gate::A => seq.set_rate(0, rate),
+                    Gate::B => seq.set_rate(1, rate),
+                    Gate::C => seq.set_rate(2, rate),
+                    Gate::D => seq.set_rate(3, rate),
+                },
+                StateChange::Pwm(gate, pwm) => match gate {
+                    Gate::A => seq.set_pwm(0, pwm),
+                    Gate::B => seq.set_pwm(1, pwm),
+                    Gate::C => seq.set_pwm(2, pwm),
+                    Gate::D => seq.set_pwm(3, pwm),
+                },
+                StateChange::Prob(gate, prob) => match gate {
+                    Gate::A => seq.set_prob(0, prob),
+                    Gate::B => seq.set_prob(1, prob),
+                    Gate::C => seq.set_prob(2, prob),
+                    Gate::D => seq.set_prob(3, prob),
+                },
+                StateChange::PlayStatus(play_status) => match play_status {
+                    PlayStatus::Playing => { /* TODO: pause */ }
+                    PlayStatus::Paused => { /* TODO: reset then play */ }
+                },
+                StateChange::Bpm(_)
+                | StateChange::NextPage(_)
+                | StateChange::NextElement(_)
+                | StateChange::None
+                | StateChange::Sync(_) => {}
+            }
+            let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
+        }
+
+        // TODO just return a u64?
+        let tick_duration = seq::tick_duration(state.bpm.0 as f32);
+        Timer::after(Duration::from_micros(tick_duration.to_micros())).await
+    }
+}
+
+#[embassy_executor::task]
+async fn core1_encoder_button_task(encoder_button: Input<'static, PIN_13>) {
+    debounced_button(encoder_button, Command::EncoderPress).await
+}
+
+#[embassy_executor::task]
+async fn core1_page_button_task(page_button: Input<'static, PIN_12>) {
+    debounced_button(page_button, Command::PagePress).await
+}
+
+#[embassy_executor::task]
+async fn core1_play_button_task(play_button: Input<'static, PIN_11>) {
+    debounced_button(play_button, Command::PlayPress).await
+}
+
+async fn debounced_button<B: InputPin>(button: B, command: Command)
+where
+    B: InputPin<Error = Infallible>,
+{
+    let mut armed = true;
+    let button_update_duration = Duration::from_micros(50_000);
+
+    loop {
+        if armed && button.is_low().unwrap() {
+            armed = false;
+            let _ = COMMAND_CHANNEL.send(command).await;
+        } else if !armed && button.is_high().unwrap() {
+            armed = true;
+        }
+
+        Timer::after(button_update_duration).await
+    }
+}
+
+#[embassy_executor::task]
+async fn core1_encoder_task(mut encoder: Encoder) {
+    loop {
+        encoder.update();
+        match encoder.direction() {
+            Direction::Clockwise => {
+                let _ = COMMAND_CHANNEL.send(Command::EncoderRight).await;
+            }
+            Direction::Anticlockwise => {
+                let _ = COMMAND_CHANNEL.send(Command::EncoderLeft).await;
+            }
+            Direction::None => {}
+        }
+
+        Timer::after(Duration::from_micros(1111)).await
+    }
+}
+
+#[embassy_executor::task]
+async fn core1_display_task(mut display: Display) {
+    display.init().await;
+    let mut screens = Screens::new();
+    let mut state = State::new();
+    screens.draw_home(&state, &mut display).await;
+
+    loop {
+        let state_change = DISPLAY_STATE_CHANNEL.recv().await;
+        match state_change {
+            StateChange::None => {}
+            _ => state.handle_state_change(&state_change),
+        }
+        screens.draw(&state, &state_change, &mut display).await;
     }
 }

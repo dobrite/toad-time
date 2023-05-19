@@ -4,24 +4,27 @@ name = "toad-time"
 version = "0.1.0"
 
 [dependencies]
-cortex-m = { version = "0.7.7" }
+cortex-m = { version = "0.7.7", features = ["inline-asm"] }
 cortex-m-rt = "0.7.3"
+embedded-graphics = "0.7.1"
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
+embedded-hal-async = "=0.2.0-alpha.1"
 rotary-encoder-embedded = { version = "0.2.0", features = ["standard"] }
-rp-pico = "0.7"
-rtic = { git = "https://github.com/rtic-rs/rtic", features = ["thumbv6-backend"] }
-rtic-monotonics = { git = "https://github.com/rtic-rs/rtic", features = ["rp2040"] }
-rtic-sync = { git = "https://github.com/rtic-rs/rtic" }
+
+embassy-embedded-hal = { version = "0.1.0", git = "https://github.com/embassy-rs/embassy", branch = "master", features = ["defmt"] }
+embassy-executor = { version = "0.2.0", git = "https://github.com/embassy-rs/embassy", branch = "master", features = ["arch-cortex-m", "executor-thread", "executor-interrupt", "defmt", "integrated-timers"] }
+embassy-futures = { version = "0.1.0", git = "https://github.com/embassy-rs/embassy", branch = "master"}
+embassy-rp = { version = "0.1.0", git = "https://github.com/embassy-rs/embassy", branch = "master", features = ["defmt", "unstable-traits", "nightly", "unstable-pac", "time-driver", "critical-section-impl"] }
+embassy-sync = { version = "0.2.0", git = "https://github.com/embassy-rs/embassy", branch = "master", features = ["defmt"] }
+embassy-time = { version = "0.1.0", git = "https://github.com/embassy-rs/embassy", branch = "master", features = ["nightly", "unstable-traits", "defmt", "defmt-timestamp-uptime"] }
 
 defmt = "0.3.4"
 defmt-rtt = "0.4.0"
 panic-probe = { version = "0.3.1", features = ["print-defmt"] }
 
-embedded-graphics = "0.7.1"
-fugit = "0.3.6"
 hash32 = "0.2.1"
 heapless = { version = "0.7", features = ["cas", "defmt-impl"] }
-ssd1306 = "0.7.1"
+ssd1306-async = { git = "https://github.com/kalkyl/ssd1306-async", branch = "main" }
 tinybmp = "0.4.0"
 
 eg-pcf = { git = "https://github.com/dobrite/pcf.git" }
