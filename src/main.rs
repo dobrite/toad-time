@@ -2,10 +2,9 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use state;
-
 mod display;
 mod screens;
+mod state;
 
 const MICRO_SECONDS_PER_SECOND: u32 = 1_000_000;
 pub type MicroSeconds = fugit::Duration<u64, 1, MICRO_SECONDS_PER_SECOND>;
