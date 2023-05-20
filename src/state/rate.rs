@@ -1,26 +1,26 @@
 use heapless::String;
-use seq::Rate;
+use seq::{Frac, Rate};
 
 use super::Updatable;
 
 const RATES: [Rate; 17] = [
-    Rate::Div(64.0),
-    Rate::Div(32.0),
-    Rate::Div(16.0),
-    Rate::Div(8.0),
-    Rate::Div(5.0),
-    Rate::Div(4.0),
-    Rate::Div(3.0),
-    Rate::Div(2.0),
+    Rate::Div(64, Frac::Zero),
+    Rate::Div(32, Frac::Zero),
+    Rate::Div(16, Frac::Zero),
+    Rate::Div(8, Frac::Zero),
+    Rate::Div(5, Frac::Zero),
+    Rate::Div(4, Frac::Zero),
+    Rate::Div(3, Frac::Zero),
+    Rate::Div(2, Frac::Zero),
     Rate::Unity,
-    Rate::Mult(2.0),
-    Rate::Mult(3.0),
-    Rate::Mult(4.0),
-    Rate::Mult(5.0),
-    Rate::Mult(8.0),
-    Rate::Mult(16.0),
-    Rate::Mult(32.0),
-    Rate::Mult(64.0),
+    Rate::Mult(2, Frac::Zero),
+    Rate::Mult(3, Frac::Zero),
+    Rate::Mult(4, Frac::Zero),
+    Rate::Mult(5, Frac::Zero),
+    Rate::Mult(8, Frac::Zero),
+    Rate::Mult(16, Frac::Zero),
+    Rate::Mult(32, Frac::Zero),
+    Rate::Mult(64, Frac::Zero),
 ];
 
 impl Updatable for Rate {
@@ -49,23 +49,23 @@ impl From<Rate> for RateString {
     #[allow(illegal_floating_point_literal_pattern)]
     fn from(val: Rate) -> Self {
         let rate_string = match val {
-            Rate::Div(64.0) => "/64",
-            Rate::Div(32.0) => "/32",
-            Rate::Div(16.0) => "/16",
-            Rate::Div(8.0) => "/8",
-            Rate::Div(5.0) => "/5",
-            Rate::Div(4.0) => "/4",
-            Rate::Div(3.0) => "/3",
-            Rate::Div(2.0) => "/2",
+            Rate::Div(64, Frac::Zero) => "/64",
+            Rate::Div(32, Frac::Zero) => "/32",
+            Rate::Div(16, Frac::Zero) => "/16",
+            Rate::Div(8, Frac::Zero) => "/8",
+            Rate::Div(5, Frac::Zero) => "/5",
+            Rate::Div(4, Frac::Zero) => "/4",
+            Rate::Div(3, Frac::Zero) => "/3",
+            Rate::Div(2, Frac::Zero) => "/2",
             Rate::Unity => "x1",
-            Rate::Mult(2.0) => "x2",
-            Rate::Mult(3.0) => "x3",
-            Rate::Mult(4.0) => "x4",
-            Rate::Mult(5.0) => "x5",
-            Rate::Mult(8.0) => "x8",
-            Rate::Mult(16.0) => "x16",
-            Rate::Mult(32.0) => "x32",
-            Rate::Mult(64.0) => "x64",
+            Rate::Mult(2, Frac::Zero) => "x2",
+            Rate::Mult(3, Frac::Zero) => "x3",
+            Rate::Mult(4, Frac::Zero) => "x4",
+            Rate::Mult(5, Frac::Zero) => "x5",
+            Rate::Mult(8, Frac::Zero) => "x8",
+            Rate::Mult(16, Frac::Zero) => "x16",
+            Rate::Mult(32, Frac::Zero) => "x32",
+            Rate::Mult(64, Frac::Zero) => "x64",
             _ => unreachable!(),
         };
 
