@@ -31,10 +31,6 @@ impl State {
         }
     }
 
-    pub fn gate_configs(&self) -> heapless::Vec<GateState, 4> {
-        self.gates.values().copied().collect()
-    }
-
     pub fn handle_state_change(&mut self, state_change: &StateChange) {
         match state_change {
             StateChange::Bpm(bpm) => self.bpm = *bpm,

@@ -5,7 +5,6 @@
 
 use core::convert::Infallible;
 
-use defmt::*;
 use defmt_rtt as _;
 use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
