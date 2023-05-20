@@ -39,7 +39,7 @@ impl Screens {
                     self.draw_gate(output, state, display).await
                 }
             },
-            StateChange::PlayStatus(_) => match state.current {
+            StateChange::PlayStatus(_) => match state.current_element {
                 Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
                 Element::Prob(_) | Element::Pwm(_) | Element::Rate(_) => {}
             },
@@ -50,7 +50,7 @@ impl Screens {
     pub async fn draw_home(&mut self, state: &State, display: &mut Display) {
         display.clear();
         self.home.draw(state, display);
-        self.draw_pointer(state.current, display);
+        self.draw_pointer(state.current_element, display);
         display.flush().await;
     }
 
@@ -58,7 +58,7 @@ impl Screens {
         display.clear();
         let gate_state = &state.outputs[output];
         self.gate.draw(output, gate_state, display);
-        self.draw_pointer(state.current, display);
+        self.draw_pointer(state.current_element, display);
         display.flush().await;
     }
 

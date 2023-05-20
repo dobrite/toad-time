@@ -5,7 +5,7 @@ pub struct State {
     pub bpm: Bpm,
     pub sync: Sync,
     pub play_status: PlayStatus,
-    pub current: Element,
+    pub current_element: Element,
     pub outputs: Outputs,
 }
 
@@ -27,7 +27,7 @@ impl State {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
-            current: Element::Bpm(Home),
+            current_element: Element::Bpm(Home),
             outputs,
         }
     }
@@ -40,14 +40,14 @@ impl State {
             StateChange::Pwm(output, pwm) => self.outputs[output].pwm = *pwm,
             StateChange::Prob(output, prob) => self.outputs[output].prob = *prob,
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
-            StateChange::NextPage(element) => self.current = *element,
-            StateChange::NextElement(element) => self.current = *element,
+            StateChange::NextPage(element) => self.current_element = *element,
+            StateChange::NextElement(element) => self.current_element = *element,
             StateChange::None => {}
         }
     }
 
     pub fn handle_command(&mut self, command: Command) -> StateChange {
-        let current = self.current;
+        let current = self.current_element;
 
         match command {
             Command::EncoderRight => current.next(self),
@@ -59,7 +59,7 @@ impl State {
     }
 
     fn next_page(&mut self) -> StateChange {
-        let next_page = match self.current {
+        let next_page = match self.current_element {
             Element::Bpm(_) => Element::Rate(Output::A),
             Element::Sync(_) => Element::Rate(Output::A),
             Element::Rate(Output::A) => Element::Rate(Output::B),
@@ -80,7 +80,7 @@ impl State {
     }
 
     fn next_element(&mut self) -> StateChange {
-        let next_element = match self.current {
+        let next_element = match self.current_element {
             Element::Bpm(_) => Element::Sync(Home),
             Element::Sync(_) => Element::Bpm(Home),
             Element::Rate(output) => Element::Pwm(output),
