@@ -13,10 +13,7 @@ mod home;
 const POINTER: &[u8; 630] = include_bytes!("../assets/icons/Pointer.bmp");
 
 pub struct Screens {
-    gate_a: GateScreen,
-    gate_b: GateScreen,
-    gate_c: GateScreen,
-    gate_d: GateScreen,
+    gate: GateScreen,
     home: HomeScreen,
     pointer: Bmp,
 }
@@ -24,10 +21,7 @@ pub struct Screens {
 impl Screens {
     pub fn new() -> Self {
         Self {
-            gate_a: GateScreen::new(Output::A),
-            gate_b: GateScreen::new(Output::B),
-            gate_c: GateScreen::new(Output::C),
-            gate_d: GateScreen::new(Output::D),
+            gate: GateScreen::new(),
             home: HomeScreen::new(),
             pointer: TinyBmp::from_slice(POINTER).unwrap(),
         }
@@ -63,12 +57,7 @@ impl Screens {
     async fn draw_gate(&mut self, output: &Output, state: &State, display: &mut Display) {
         display.clear();
         let gate_state = &state.outputs[output];
-        match output {
-            Output::A => self.gate_a.draw(gate_state, display),
-            Output::B => self.gate_b.draw(gate_state, display),
-            Output::C => self.gate_c.draw(gate_state, display),
-            Output::D => self.gate_d.draw(gate_state, display),
-        }
+        self.gate.draw(output, gate_state, display);
         self.draw_pointer(state.current, display);
         display.flush().await;
     }
