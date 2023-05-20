@@ -30,7 +30,7 @@ impl Screens {
     pub async fn draw(&mut self, state: &State, display: &mut Display) {
         match state.current_element {
             Element::Prob(output) | Element::Pwm(output) | Element::Rate(output) => {
-                self.draw_gate(&output, state, display).await
+                self.draw_output(&output, state, display).await
             }
             Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
         }
@@ -43,7 +43,7 @@ impl Screens {
         display.flush().await;
     }
 
-    async fn draw_gate(&mut self, output: &Output, state: &State, display: &mut Display) {
+    async fn draw_output(&mut self, output: &Output, state: &State, display: &mut Display) {
         display.clear();
         let gate_state = &state.outputs[output];
         self.gate.draw(output, gate_state, display);
