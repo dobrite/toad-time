@@ -1,5 +1,7 @@
 use super::*;
 
+type Outputs = FnvIndexMap<Output, GateState, 4>;
+
 #[derive(Clone)]
 pub struct State {
     pub bpm: Bpm,

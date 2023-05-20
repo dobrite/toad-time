@@ -23,8 +23,6 @@ mod state;
 mod state_change;
 mod sync;
 
-pub type Outputs = FnvIndexMap<Output, GateState, 4>;
-
 trait Updatable {
     fn next(&self) -> Option<Self>
     where
