@@ -4,7 +4,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::{Bmp, Display},
     screens::{gate::GateScreen, home::HomeScreen},
-    state::{Element, Output, State, StateChange},
+    state::{Element, Output, State},
 };
 
 mod gate;
@@ -27,23 +27,12 @@ impl Screens {
         }
     }
 
-    pub async fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
-        match state_change {
-            StateChange::Bpm(_) | StateChange::Sync(_) => self.draw_home(state, display).await,
-            StateChange::Rate(output, _)
-            | StateChange::Pwm(output, _)
-            | StateChange::Prob(output, _) => self.draw_gate(output, state, display).await,
-            StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
-                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
-                Element::Pwm(output) | Element::Rate(output) | Element::Prob(output) => {
-                    self.draw_gate(output, state, display).await
-                }
-            },
-            StateChange::PlayStatus(_) => match state.current_element {
-                Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
-                Element::Prob(_) | Element::Pwm(_) | Element::Rate(_) => {}
-            },
-            StateChange::None => unreachable!(),
+    pub async fn draw(&mut self, state: &State, display: &mut Display) {
+        match state.current_element {
+            Element::Prob(output) | Element::Pwm(output) | Element::Rate(output) => {
+                self.draw_gate(&output, state, display).await
+            }
+            Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
         }
     }
 

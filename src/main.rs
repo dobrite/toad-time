@@ -258,6 +258,6 @@ async fn core1_display_task(mut state: State, mut display: Display) {
             StateChange::None => {}
             _ => state.handle_state_change(&state_change),
         }
-        screens.draw(&state, &state_change, &mut display).await;
+        screens.draw(&state, &mut display).await;
     }
 }
