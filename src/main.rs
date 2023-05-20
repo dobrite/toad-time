@@ -69,6 +69,9 @@ fn main() -> ! {
     rst.set_high();
 
     let display = Display::new(display_ctx);
+    let initial_state = State::new();
+    let initial_state1 = initial_state.clone();
+    let initial_state2 = initial_state.clone();
 
     let gate_a = Output::new(p.PIN_2, Level::High);
     let gate_b = Output::new(p.PIN_3, Level::High);
@@ -88,7 +91,7 @@ fn main() -> ! {
         let executor1 = EXECUTOR1.init(Executor::new());
         executor1.run(|spawner| {
             let _ = spawner.spawn(core1_encoder_task(encoder));
-            let _ = spawner.spawn(core1_display_task(display));
+            let _ = spawner.spawn(core1_display_task(initial_state, display));
             let _ = spawner.spawn(core1_encoder_button_task(encoder_button));
             let _ = spawner.spawn(core1_page_button_task(page_button));
             let _ = spawner.spawn(core1_play_button_task(play_button));
@@ -97,15 +100,19 @@ fn main() -> ! {
 
     let executor0 = EXECUTOR0.init(Executor::new());
     executor0.run(|spawner| {
-        let _ = spawner.spawn(core0_state_task());
-        let _ = spawner.spawn(core0_tick_task(gate_a, gate_b, gate_c, gate_d));
+        let _ = spawner.spawn(core0_state_task(initial_state1));
+        let _ = spawner.spawn(core0_tick_task(
+            initial_state2,
+            gate_a,
+            gate_b,
+            gate_c,
+            gate_d,
+        ));
     });
 }
 
 #[embassy_executor::task]
-async fn core0_state_task() {
-    let mut state = State::new();
-
+async fn core0_state_task(mut state: State) {
     loop {
         let command = COMMAND_CHANNEL.recv().await;
         match state.handle_command(command) {
@@ -120,12 +127,12 @@ async fn core0_state_task() {
 
 #[embassy_executor::task]
 async fn core0_tick_task(
+    mut state: State,
     mut gate_a: Output<'static, PIN_2>,
     mut gate_b: Output<'static, PIN_3>,
     mut gate_c: Output<'static, PIN_4>,
     mut gate_d: Output<'static, PIN_5>,
 ) {
-    let mut state = State::new();
     let mut seq = Seq::new(4);
 
     loop {
@@ -240,10 +247,9 @@ async fn core1_encoder_task(mut encoder: Encoder) {
 }
 
 #[embassy_executor::task]
-async fn core1_display_task(mut display: Display) {
+async fn core1_display_task(mut state: State, mut display: Display) {
     display.init().await;
     let mut screens = Screens::new();
-    let mut state = State::new();
     screens.draw_home(&state, &mut display).await;
 
     loop {

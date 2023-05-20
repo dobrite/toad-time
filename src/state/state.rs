@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Clone)]
 pub struct State {
     pub bpm: Bpm,
     pub sync: Sync,
