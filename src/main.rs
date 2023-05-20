@@ -8,7 +8,7 @@ use core::convert::Infallible;
 use defmt_rtt as _;
 use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
-    gpio::{Input, Level, Output, Pull},
+    gpio::{Input, Level, Output as GpioOutput, Pull},
     multicore::{spawn_core1, Stack},
     peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15, PIN_2, PIN_3, PIN_4, PIN_5},
     spi::{Config, Spi},
@@ -25,7 +25,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Gate, PlayStatus, State, StateChange},
+    state::{Command, Output, PlayStatus, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -53,15 +53,15 @@ fn main() -> ! {
 
     let spi = Spi::new_txonly(p.SPI0, clk, mosi, p.DMA_CH0, Config::default());
 
-    let cs = Output::new(oled_cs, Level::Low);
+    let cs = GpioOutput::new(oled_cs, Level::Low);
     let device = ExclusiveDevice::new(spi, cs);
 
-    let dc = Output::new(oled_dc, Level::Low);
+    let dc = GpioOutput::new(oled_dc, Level::Low);
     let interface = ssd1306_async::SPIInterface::new(device, dc);
 
     let display_ctx = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
-    let mut rst = Output::new(oled_reset, Level::Low);
+    let mut rst = GpioOutput::new(oled_reset, Level::Low);
     {
         use cortex_m::prelude::_embedded_hal_blocking_delay_DelayMs;
         Delay.delay_ms(1u8);
@@ -73,10 +73,10 @@ fn main() -> ! {
     let initial_state1 = initial_state.clone();
     let initial_state2 = initial_state.clone();
 
-    let gate_a = Output::new(p.PIN_2, Level::High);
-    let gate_b = Output::new(p.PIN_3, Level::High);
-    let gate_c = Output::new(p.PIN_4, Level::High);
-    let gate_d = Output::new(p.PIN_5, Level::High);
+    let output_a = GpioOutput::new(p.PIN_2, Level::High);
+    let output_b = GpioOutput::new(p.PIN_3, Level::High);
+    let output_c = GpioOutput::new(p.PIN_4, Level::High);
+    let output_d = GpioOutput::new(p.PIN_5, Level::High);
     let play_button = Input::new(p.PIN_11, Pull::Up);
     let page_button = Input::new(p.PIN_12, Pull::Up);
     let encoder_button = Input::new(p.PIN_13, Pull::Up);
@@ -103,10 +103,10 @@ fn main() -> ! {
         let _ = spawner.spawn(core0_state_task(initial_state1));
         let _ = spawner.spawn(core0_tick_task(
             initial_state2,
-            gate_a,
-            gate_b,
-            gate_c,
-            gate_d,
+            output_a,
+            output_b,
+            output_c,
+            output_d,
         ));
     });
 }
@@ -128,10 +128,10 @@ async fn core0_state_task(mut state: State) {
 #[embassy_executor::task]
 async fn core0_tick_task(
     mut state: State,
-    mut gate_a: Output<'static, PIN_2>,
-    mut gate_b: Output<'static, PIN_3>,
-    mut gate_c: Output<'static, PIN_4>,
-    mut gate_d: Output<'static, PIN_5>,
+    mut output_a: GpioOutput<'static, PIN_2>,
+    mut output_b: GpioOutput<'static, PIN_3>,
+    mut output_c: GpioOutput<'static, PIN_4>,
+    mut output_d: GpioOutput<'static, PIN_5>,
 ) {
     let mut seq = Seq::new(4);
 
@@ -139,41 +139,41 @@ async fn core0_tick_task(
         let result = seq.tick();
 
         if result[0].edge_change {
-            gate_a.toggle();
+            output_a.toggle();
         }
 
         if result[1].edge_change {
-            gate_b.toggle();
+            output_b.toggle();
         }
 
         if result[2].edge_change {
-            gate_c.toggle();
+            output_c.toggle();
         }
 
         if result[3].edge_change {
-            gate_d.toggle();
+            output_d.toggle();
         }
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             state.handle_state_change(&state_change);
             match state_change {
-                StateChange::Rate(gate, rate) => match gate {
-                    Gate::A => seq.set_rate(0, rate),
-                    Gate::B => seq.set_rate(1, rate),
-                    Gate::C => seq.set_rate(2, rate),
-                    Gate::D => seq.set_rate(3, rate),
+                StateChange::Rate(output, rate) => match output {
+                    Output::A => seq.set_rate(0, rate),
+                    Output::B => seq.set_rate(1, rate),
+                    Output::C => seq.set_rate(2, rate),
+                    Output::D => seq.set_rate(3, rate),
                 },
-                StateChange::Pwm(gate, pwm) => match gate {
-                    Gate::A => seq.set_pwm(0, pwm),
-                    Gate::B => seq.set_pwm(1, pwm),
-                    Gate::C => seq.set_pwm(2, pwm),
-                    Gate::D => seq.set_pwm(3, pwm),
+                StateChange::Pwm(output, pwm) => match output {
+                    Output::A => seq.set_pwm(0, pwm),
+                    Output::B => seq.set_pwm(1, pwm),
+                    Output::C => seq.set_pwm(2, pwm),
+                    Output::D => seq.set_pwm(3, pwm),
                 },
-                StateChange::Prob(gate, prob) => match gate {
-                    Gate::A => seq.set_prob(0, prob),
-                    Gate::B => seq.set_prob(1, prob),
-                    Gate::C => seq.set_prob(2, prob),
-                    Gate::D => seq.set_prob(3, prob),
+                StateChange::Prob(output, prob) => match output {
+                    Output::A => seq.set_prob(0, prob),
+                    Output::B => seq.set_prob(1, prob),
+                    Output::C => seq.set_prob(2, prob),
+                    Output::D => seq.set_prob(3, prob),
                 },
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }

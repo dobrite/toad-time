@@ -4,7 +4,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::{Bmp, Display},
     screens::{gate::GateScreen, home::HomeScreen},
-    state::{Element, Gate, State, StateChange},
+    state::{Element, Output, State, StateChange},
 };
 
 mod gate;
@@ -24,10 +24,10 @@ pub struct Screens {
 impl Screens {
     pub fn new() -> Self {
         Self {
-            gate_a: GateScreen::new(Gate::A),
-            gate_b: GateScreen::new(Gate::B),
-            gate_c: GateScreen::new(Gate::C),
-            gate_d: GateScreen::new(Gate::D),
+            gate_a: GateScreen::new(Output::A),
+            gate_b: GateScreen::new(Output::B),
+            gate_c: GateScreen::new(Output::C),
+            gate_d: GateScreen::new(Output::D),
             home: HomeScreen::new(),
             pointer: TinyBmp::from_slice(POINTER).unwrap(),
         }
@@ -36,13 +36,13 @@ impl Screens {
     pub async fn draw(&mut self, state: &State, state_change: &StateChange, display: &mut Display) {
         match state_change {
             StateChange::Bpm(_) | StateChange::Sync(_) => self.draw_home(state, display).await,
-            StateChange::Rate(gate, _) | StateChange::Pwm(gate, _) | StateChange::Prob(gate, _) => {
-                self.draw_gate(gate, state, display).await
-            }
+            StateChange::Rate(output, _)
+            | StateChange::Pwm(output, _)
+            | StateChange::Prob(output, _) => self.draw_gate(output, state, display).await,
             StateChange::NextPage(element) | StateChange::NextElement(element) => match element {
                 Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
-                Element::Pwm(gate) | Element::Rate(gate) | Element::Prob(gate) => {
-                    self.draw_gate(gate, state, display).await
+                Element::Pwm(output) | Element::Rate(output) | Element::Prob(output) => {
+                    self.draw_gate(output, state, display).await
                 }
             },
             StateChange::PlayStatus(_) => match state.current {
@@ -60,14 +60,14 @@ impl Screens {
         display.flush().await;
     }
 
-    async fn draw_gate(&mut self, gate: &Gate, state: &State, display: &mut Display) {
+    async fn draw_gate(&mut self, output: &Output, state: &State, display: &mut Display) {
         display.clear();
-        let gate_state = &state.gates[gate];
-        match gate {
-            Gate::A => self.gate_a.draw(gate_state, display),
-            Gate::B => self.gate_b.draw(gate_state, display),
-            Gate::C => self.gate_c.draw(gate_state, display),
-            Gate::D => self.gate_d.draw(gate_state, display),
+        let gate_state = &state.outputs[output];
+        match output {
+            Output::A => self.gate_a.draw(gate_state, display),
+            Output::B => self.gate_b.draw(gate_state, display),
+            Output::C => self.gate_c.draw(gate_state, display),
+            Output::D => self.gate_d.draw(gate_state, display),
         }
         self.draw_pointer(state.current, display);
         display.flush().await;

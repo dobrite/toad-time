@@ -4,25 +4,25 @@ use defmt::Format;
 use hash32::{Hash, Hasher};
 
 #[derive(Clone, Copy, Eq, Format, PartialEq)]
-pub enum Gate {
+pub enum Output {
     A,
     B,
     C,
     D,
 }
 
-impl Hash for Gate {
+impl Hash for Output {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
-            Gate::A => state.write(&[0]),
-            Gate::B => state.write(&[1]),
-            Gate::C => state.write(&[2]),
-            Gate::D => state.write(&[3]),
+            Output::A => state.write(&[0]),
+            Output::B => state.write(&[1]),
+            Output::C => state.write(&[2]),
+            Output::D => state.write(&[3]),
         }
     }
 }
 
-impl fmt::Display for Gate {
+impl fmt::Display for Output {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::A => write!(f, "A"),

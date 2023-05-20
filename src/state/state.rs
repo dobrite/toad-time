@@ -6,7 +6,7 @@ pub struct State {
     pub sync: Sync,
     pub play_status: PlayStatus,
     pub current: Element,
-    pub gates: Gates,
+    pub outputs: Outputs,
 }
 
 impl Default for State {
@@ -17,18 +17,18 @@ impl Default for State {
 
 impl State {
     pub fn new() -> Self {
-        let mut gates = Gates::new();
-        gates.insert(Gate::A, GateState::new()).ok();
-        gates.insert(Gate::B, GateState::new()).ok();
-        gates.insert(Gate::C, GateState::new()).ok();
-        gates.insert(Gate::D, GateState::new()).ok();
+        let mut outputs = Outputs::new();
+        outputs.insert(Output::A, GateState::new()).ok();
+        outputs.insert(Output::B, GateState::new()).ok();
+        outputs.insert(Output::C, GateState::new()).ok();
+        outputs.insert(Output::D, GateState::new()).ok();
 
         Self {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current: Element::Bpm(Home),
-            gates,
+            outputs,
         }
     }
 
@@ -36,9 +36,9 @@ impl State {
         match state_change {
             StateChange::Bpm(bpm) => self.bpm = *bpm,
             StateChange::Sync(sync) => self.sync = *sync,
-            StateChange::Rate(gate, rate) => self.gates[gate].rate = *rate,
-            StateChange::Pwm(gate, pwm) => self.gates[gate].pwm = *pwm,
-            StateChange::Prob(gate, prob) => self.gates[gate].prob = *prob,
+            StateChange::Rate(output, rate) => self.outputs[output].rate = *rate,
+            StateChange::Pwm(output, pwm) => self.outputs[output].pwm = *pwm,
+            StateChange::Prob(output, prob) => self.outputs[output].prob = *prob,
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
             StateChange::NextPage(element) => self.current = *element,
             StateChange::NextElement(element) => self.current = *element,
@@ -60,20 +60,20 @@ impl State {
 
     fn next_page(&mut self) -> StateChange {
         let next_page = match self.current {
-            Element::Bpm(_) => Element::Rate(Gate::A),
-            Element::Sync(_) => Element::Rate(Gate::A),
-            Element::Rate(Gate::A) => Element::Rate(Gate::B),
-            Element::Pwm(Gate::A) => Element::Rate(Gate::B),
-            Element::Prob(Gate::A) => Element::Rate(Gate::B),
-            Element::Rate(Gate::B) => Element::Rate(Gate::C),
-            Element::Pwm(Gate::B) => Element::Rate(Gate::C),
-            Element::Prob(Gate::B) => Element::Rate(Gate::C),
-            Element::Rate(Gate::C) => Element::Rate(Gate::D),
-            Element::Pwm(Gate::C) => Element::Rate(Gate::D),
-            Element::Prob(Gate::C) => Element::Rate(Gate::D),
-            Element::Rate(Gate::D) => Element::Bpm(Home),
-            Element::Pwm(Gate::D) => Element::Bpm(Home),
-            Element::Prob(Gate::D) => Element::Bpm(Home),
+            Element::Bpm(_) => Element::Rate(Output::A),
+            Element::Sync(_) => Element::Rate(Output::A),
+            Element::Rate(Output::A) => Element::Rate(Output::B),
+            Element::Pwm(Output::A) => Element::Rate(Output::B),
+            Element::Prob(Output::A) => Element::Rate(Output::B),
+            Element::Rate(Output::B) => Element::Rate(Output::C),
+            Element::Pwm(Output::B) => Element::Rate(Output::C),
+            Element::Prob(Output::B) => Element::Rate(Output::C),
+            Element::Rate(Output::C) => Element::Rate(Output::D),
+            Element::Pwm(Output::C) => Element::Rate(Output::D),
+            Element::Prob(Output::C) => Element::Rate(Output::D),
+            Element::Rate(Output::D) => Element::Bpm(Home),
+            Element::Pwm(Output::D) => Element::Bpm(Home),
+            Element::Prob(Output::D) => Element::Bpm(Home),
         };
 
         StateChange::NextPage(next_page)
@@ -83,9 +83,9 @@ impl State {
         let next_element = match self.current {
             Element::Bpm(_) => Element::Sync(Home),
             Element::Sync(_) => Element::Bpm(Home),
-            Element::Rate(gate) => Element::Pwm(gate),
-            Element::Pwm(gate) => Element::Prob(gate),
-            Element::Prob(gate) => Element::Rate(gate),
+            Element::Rate(output) => Element::Pwm(output),
+            Element::Pwm(output) => Element::Prob(output),
+            Element::Prob(output) => Element::Rate(output),
         };
 
         StateChange::NextElement(next_element)

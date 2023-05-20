@@ -1,11 +1,11 @@
-use super::{Bpm, Element, Gate, PlayStatus, Prob, Pwm, Rate, Sync};
+use super::{Bpm, Element, Output, PlayStatus, Prob, Pwm, Rate, Sync};
 
 pub enum StateChange {
     Bpm(Bpm),
     Sync(Sync),
-    Rate(Gate, Rate),
-    Pwm(Gate, Pwm),
-    Prob(Gate, Prob),
+    Rate(Output, Rate),
+    Pwm(Output, Pwm),
+    Prob(Output, Prob),
     PlayStatus(PlayStatus),
     NextPage(Element),
     NextElement(Element),

@@ -8,7 +8,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::{Bmp, TileGrid},
     screens::Display,
-    state::{Gate, GateState, ProbString, RateString},
+    state::{GateState, Output, ProbString, RateString},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -24,9 +24,9 @@ pub struct GateScreen {
 }
 
 impl GateScreen {
-    pub fn new(gate: Gate) -> Self {
+    pub fn new(output: Output) -> Self {
         let mut name = String::new();
-        write!(name, "{}", gate).unwrap();
+        write!(name, "{}", output).unwrap();
 
         let clock = TinyBmp::from_slice(CLOCK).unwrap();
         let dice = TinyBmp::from_slice(DICE).unwrap();

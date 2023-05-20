@@ -1,10 +1,10 @@
-use super::{Gate, Home, State, StateChange, Updatable};
+use super::{Home, Output, State, StateChange, Updatable};
 
 #[derive(Clone, Copy)]
 pub enum Element {
-    Rate(Gate),
-    Pwm(Gate),
-    Prob(Gate),
+    Rate(Output),
+    Pwm(Output),
+    Prob(Output),
     Bpm(Home),
     Sync(Home),
 }
@@ -14,16 +14,16 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.next().into(),
             Element::Sync(Home) => state.sync.next().into(),
-            Element::Rate(gate) => match state.gates[gate].rate.next() {
-                Option::Some(rate) => StateChange::Rate(*gate, rate),
+            Element::Rate(output) => match state.outputs[output].rate.next() {
+                Option::Some(rate) => StateChange::Rate(*output, rate),
                 Option::None => StateChange::None,
             },
-            Element::Pwm(gate) => match state.gates[gate].pwm.next() {
-                Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
+            Element::Pwm(output) => match state.outputs[output].pwm.next() {
+                Option::Some(pwm) => StateChange::Pwm(*output, pwm),
                 Option::None => StateChange::None,
             },
-            Element::Prob(gate) => match state.gates[gate].prob.next() {
-                Option::Some(prob) => StateChange::Prob(*gate, prob),
+            Element::Prob(output) => match state.outputs[output].prob.next() {
+                Option::Some(prob) => StateChange::Prob(*output, prob),
                 Option::None => StateChange::None,
             },
         }
@@ -33,16 +33,16 @@ impl Element {
         match self {
             Element::Bpm(Home) => state.bpm.prev().into(),
             Element::Sync(Home) => state.sync.prev().into(),
-            Element::Rate(gate) => match state.gates[gate].rate.prev() {
-                Option::Some(rate) => StateChange::Rate(*gate, rate),
+            Element::Rate(output) => match state.outputs[output].rate.prev() {
+                Option::Some(rate) => StateChange::Rate(*output, rate),
                 Option::None => StateChange::None,
             },
-            Element::Pwm(gate) => match state.gates[gate].pwm.prev() {
-                Option::Some(pwm) => StateChange::Pwm(*gate, pwm),
+            Element::Pwm(output) => match state.outputs[output].pwm.prev() {
+                Option::Some(pwm) => StateChange::Pwm(*output, pwm),
                 Option::None => StateChange::None,
             },
-            Element::Prob(gate) => match state.gates[gate].prob.prev() {
-                Option::Some(prob) => StateChange::Prob(*gate, prob),
+            Element::Prob(output) => match state.outputs[output].prob.prev() {
+                Option::Some(prob) => StateChange::Prob(*output, prob),
                 Option::None => StateChange::None,
             },
         }
