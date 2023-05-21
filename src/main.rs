@@ -25,7 +25,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, PlayStatus, State, StateChange},
+    state::{Command, Output, OutputConfig, Outputs, PlayStatus, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -69,7 +69,14 @@ fn main() -> ! {
     rst.set_high();
 
     let display = Display::new(display_ctx);
-    let initial_state = State::new();
+
+    let mut outputs = Outputs::new();
+    outputs.insert(Output::A, OutputConfig::new()).ok();
+    outputs.insert(Output::B, OutputConfig::new()).ok();
+    outputs.insert(Output::C, OutputConfig::new()).ok();
+    outputs.insert(Output::D, OutputConfig::new()).ok();
+
+    let initial_state = State::new(outputs);
     let initial_state1 = initial_state.clone();
     let initial_state2 = initial_state.clone();
 

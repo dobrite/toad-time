@@ -1,5 +1,6 @@
 use heapless::FnvIndexMap;
-use seq::{LaneConfig as OutputConfig, Prob, Pwm, Rate};
+pub use seq::LaneConfig as OutputConfig;
+use seq::{Prob, Pwm, Rate};
 
 use self::home::Home;
 pub use self::{
@@ -20,6 +21,8 @@ mod rate;
 mod state;
 mod state_change;
 mod sync;
+
+pub type Outputs = FnvIndexMap<Output, OutputConfig, 4>;
 
 trait Updatable {
     fn next(&self) -> Option<Self>

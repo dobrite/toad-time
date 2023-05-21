@@ -1,7 +1,5 @@
 use super::*;
 
-type Outputs = FnvIndexMap<Output, OutputConfig, 4>;
-
 #[derive(Clone)]
 pub struct State {
     pub bpm: Bpm,
@@ -13,18 +11,18 @@ pub struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl State {
-    pub fn new() -> Self {
         let mut outputs = Outputs::new();
         outputs.insert(Output::A, OutputConfig::new()).ok();
         outputs.insert(Output::B, OutputConfig::new()).ok();
         outputs.insert(Output::C, OutputConfig::new()).ok();
         outputs.insert(Output::D, OutputConfig::new()).ok();
 
+        Self::new(outputs)
+    }
+}
+
+impl State {
+    pub fn new(outputs: Outputs) -> Self {
         Self {
             bpm: Bpm(120),
             sync: Sync::Ext,
