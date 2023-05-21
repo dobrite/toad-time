@@ -1,6 +1,6 @@
 use super::*;
 
-type Outputs = FnvIndexMap<Output, GateState, 4>;
+type Outputs = FnvIndexMap<Output, OutputConfig, 4>;
 
 #[derive(Clone)]
 pub struct State {
@@ -20,10 +20,10 @@ impl Default for State {
 impl State {
     pub fn new() -> Self {
         let mut outputs = Outputs::new();
-        outputs.insert(Output::A, GateState::new()).ok();
-        outputs.insert(Output::B, GateState::new()).ok();
-        outputs.insert(Output::C, GateState::new()).ok();
-        outputs.insert(Output::D, GateState::new()).ok();
+        outputs.insert(Output::A, OutputConfig::new()).ok();
+        outputs.insert(Output::B, OutputConfig::new()).ok();
+        outputs.insert(Output::C, OutputConfig::new()).ok();
+        outputs.insert(Output::D, OutputConfig::new()).ok();
 
         Self {
             bpm: Bpm(120),

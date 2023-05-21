@@ -1,17 +1,15 @@
 use heapless::FnvIndexMap;
-use seq::{Prob, Pwm, Rate};
+use seq::{LaneConfig as OutputConfig, Prob, Pwm, Rate};
 
 use self::home::Home;
 pub use self::{
-    bpm::Bpm, command::Command, element::Element, gate_state::GateState, output::Output,
-    play_status::PlayStatus, prob::ProbString, rate::RateString, state::State,
-    state_change::StateChange, sync::Sync,
+    bpm::Bpm, command::Command, element::Element, output::Output, play_status::PlayStatus,
+    prob::ProbString, rate::RateString, state::State, state_change::StateChange, sync::Sync,
 };
 
 mod bpm;
 mod command;
 mod element;
-mod gate_state;
 mod home;
 mod output;
 mod play_status;
