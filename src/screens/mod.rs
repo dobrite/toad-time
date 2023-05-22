@@ -45,8 +45,8 @@ impl Screens {
 
     async fn draw_output(&mut self, output: &Output, state: &State, display: &mut Display) {
         display.clear();
-        let gate_config = &state.outputs[output];
-        self.gate.draw(output, gate_config, display);
+        let output_config = &state.outputs[output];
+        self.gate.draw(output, output_config, display);
         self.draw_pointer(state.current_element, display);
         display.flush().await;
     }
