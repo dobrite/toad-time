@@ -19,13 +19,13 @@ use embedded_hal::digital::v2::InputPin;
 use embedded_hal_async::spi::ExclusiveDevice;
 use panic_probe as _;
 use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
-use seq::Seq;
+use seq::{OutputConfig, Seq};
 use ssd1306_async::{prelude::*, Ssd1306};
 
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, OutputConfig, Outputs, PlayStatus, State, StateChange},
+    state::{Command, Output, Outputs, PlayStatus, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
