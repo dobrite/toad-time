@@ -2,7 +2,7 @@ use core::fmt::Write;
 
 use embedded_graphics::prelude::{Point, Size};
 use heapless::String;
-use seq::{LaneConfig as OutputConfig, Prob, Pwm, Rate};
+use seq::{OutputConfig, Prob, Pwm, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{

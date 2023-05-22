@@ -1,5 +1,5 @@
 use heapless::FnvIndexMap;
-pub use seq::LaneConfig as OutputConfig;
+pub use seq::OutputConfig;
 use seq::{Prob, Pwm, Rate};
 
 use self::home::Home;
