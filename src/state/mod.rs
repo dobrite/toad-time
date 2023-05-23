@@ -1,5 +1,5 @@
 use heapless::FnvIndexMap;
-use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
+use seq::OutputConfig;
 
 use self::home::Home;
 pub use self::{

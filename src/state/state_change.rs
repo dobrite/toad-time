@@ -1,4 +1,6 @@
-use super::{Bpm, Element, Output, OutputType, PlayStatus, Prob, Pwm, Rate, Sync};
+use seq::{OutputType, Prob, Pwm, Rate};
+
+use super::{Bpm, Element, Output, PlayStatus, Sync};
 
 pub enum StateChange {
     Bpm(Bpm),
