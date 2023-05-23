@@ -9,8 +9,10 @@ pub use self::{
 
 mod bpm;
 mod command;
+mod density;
 mod element;
 mod home;
+mod length;
 mod output;
 mod output_type;
 mod play_status;

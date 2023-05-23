@@ -5,6 +5,8 @@ pub enum Element {
     Rate,
     Pwm,
     Prob,
+    Length,
+    Density,
     OutputType,
     Bpm,
     Sync,
@@ -42,6 +44,26 @@ impl Element {
                 };
                 match state.outputs[&output].prob.next() {
                     Option::Some(prob) => StateChange::Prob(output, prob),
+                    Option::None => StateChange::None,
+                }
+            }
+            Element::Length => {
+                let output = match state.current_screen {
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
+                };
+                match state.outputs[&output].length.next() {
+                    Option::Some(length) => StateChange::Length(output, length),
+                    Option::None => StateChange::None,
+                }
+            }
+            Element::Density => {
+                let output = match state.current_screen {
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
+                };
+                match state.outputs[&output].density.next() {
+                    Option::Some(density) => StateChange::Density(output, density),
                     Option::None => StateChange::None,
                 }
             }
@@ -89,6 +111,26 @@ impl Element {
                 };
                 match state.outputs[&output].prob.prev() {
                     Option::Some(prob) => StateChange::Prob(output, prob),
+                    Option::None => StateChange::None,
+                }
+            }
+            Element::Length => {
+                let output = match state.current_screen {
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
+                };
+                match state.outputs[&output].length.prev() {
+                    Option::Some(length) => StateChange::Length(output, length),
+                    Option::None => StateChange::None,
+                }
+            }
+            Element::Density => {
+                let output = match state.current_screen {
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
+                };
+                match state.outputs[&output].density.prev() {
+                    Option::Some(density) => StateChange::Density(output, density),
                     Option::None => StateChange::None,
                 }
             }

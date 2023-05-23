@@ -19,7 +19,7 @@ use embedded_hal::digital::v2::InputPin;
 use embedded_hal_async::spi::ExclusiveDevice;
 use panic_probe as _;
 use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
-use seq::{OutputConfig, Seq};
+use seq::{OutputConfig, OutputType, Seq};
 use ssd1306_async::{prelude::*, Ssd1306};
 
 use crate::{
@@ -71,7 +71,9 @@ fn main() -> ! {
     let display = Display::new(display_ctx);
 
     let mut outputs = Outputs::new();
-    outputs.insert(Output::A, OutputConfig::new()).ok();
+    let mut gate_a_config = OutputConfig::new();
+    gate_a_config.output_type = OutputType::Euclid;
+    outputs.insert(Output::A, gate_a_config).ok();
     outputs.insert(Output::B, OutputConfig::new()).ok();
     outputs.insert(Output::C, OutputConfig::new()).ok();
     outputs.insert(Output::D, OutputConfig::new()).ok();
@@ -183,6 +185,18 @@ async fn core0_tick_task(
                     Output::C => seq.set_prob(2, prob),
                     Output::D => seq.set_prob(3, prob),
                 },
+                StateChange::Length(_output, _length) => {} //match output {
+                //Output::A => seq.set_length(0, length),
+                //Output::B => seq.set_length(1, length),
+                //Output::C => seq.set_length(2, length),
+                //Output::D => seq.set_length(3, length),
+                //},
+                StateChange::Density(_output, _density) => {} //match output {
+                //Output::A => seq.set_density(0, density),
+                //Output::B => seq.set_density(1, density),
+                //Output::C => seq.set_density(2, density),
+                //Output::D => seq.set_density(3, density),
+                //},
                 StateChange::OutputType(_output, _output_type) => todo!(),
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
