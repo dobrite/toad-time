@@ -28,7 +28,7 @@ impl State {
             bpm: Bpm(120),
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
-            current_element: Element::Bpm(Home),
+            current_element: Element::Bpm,
             current_screen: Screen::Home,
             outputs,
         }
@@ -48,8 +48,8 @@ impl State {
             StateChange::NextScreen(screen) => {
                 self.current_screen = *screen;
                 self.current_element = match screen {
-                    Screen::Home => Element::Bpm(Home),
-                    Screen::Output(output, _) => Element::Rate(*output),
+                    Screen::Home => Element::Bpm,
+                    Screen::Output(_, _) => Element::Rate,
                 };
             }
             StateChange::NextElement(element) => self.current_element = *element,
@@ -89,12 +89,12 @@ impl State {
 
     fn next_element(&mut self) -> StateChange {
         let next_element = match self.current_element {
-            Element::Bpm(_) => Element::Sync(Home),
-            Element::Sync(_) => Element::Bpm(Home),
-            Element::Rate(output) => Element::Pwm(output),
-            Element::Pwm(output) => Element::Prob(output),
-            Element::Prob(output) => Element::OutputType(output),
-            Element::OutputType(output) => Element::Rate(output),
+            Element::Bpm => Element::Sync,
+            Element::Sync => Element::Bpm,
+            Element::Rate => Element::Pwm,
+            Element::Pwm => Element::Prob,
+            Element::Prob => Element::OutputType,
+            Element::OutputType => Element::Rate,
         };
 
         StateChange::NextElement(next_element)

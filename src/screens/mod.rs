@@ -58,12 +58,12 @@ impl Screens {
 
     fn draw_pointer(&mut self, current: Element, display: &mut Display) {
         let point = match current {
-            Element::Rate(_) => Point::new(36, 10),
-            Element::Pwm(_) => Point::new(36, 28),
-            Element::Prob(_) => Point::new(36, 46),
-            Element::Bpm(_) => Point::new(4, 8),
-            Element::Sync(_) => Point::new(4, 32),
-            Element::OutputType(_) => todo!(),
+            Element::Rate => Point::new(36, 10),
+            Element::Pwm => Point::new(36, 28),
+            Element::Prob => Point::new(36, 46),
+            Element::Bpm => Point::new(4, 8),
+            Element::Sync => Point::new(4, 32),
+            Element::OutputType => todo!(),
         };
         display.draw_bmp(&self.pointer, point);
     }
