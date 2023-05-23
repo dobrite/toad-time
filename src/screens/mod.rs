@@ -5,7 +5,7 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::{Bmp, Display},
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
-    state::{Element, Output, State},
+    state::{Element, Output, Screen, State},
 };
 
 mod euclid;
@@ -32,12 +32,9 @@ impl Screens {
     }
 
     pub async fn draw(&mut self, state: &State, display: &mut Display) {
-        match state.current_element {
-            Element::Prob(output)
-            | Element::Pwm(output)
-            | Element::Rate(output)
-            | Element::OutputType(output) => self.draw_output(&output, state, display).await,
-            Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
+        match state.current_screen {
+            Screen::Home => self.draw_home(state, display).await,
+            Screen::Output(output, _) => self.draw_output(&output, state, display).await,
         }
     }
 
