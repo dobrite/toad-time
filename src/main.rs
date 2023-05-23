@@ -185,18 +185,18 @@ async fn core0_tick_task(
                     Output::C => seq.set_prob(2, prob),
                     Output::D => seq.set_prob(3, prob),
                 },
-                StateChange::Length(_output, _length) => {} //match output {
-                //Output::A => seq.set_length(0, length),
-                //Output::B => seq.set_length(1, length),
-                //Output::C => seq.set_length(2, length),
-                //Output::D => seq.set_length(3, length),
-                //},
-                StateChange::Density(_output, _density) => {} //match output {
-                //Output::A => seq.set_density(0, density),
-                //Output::B => seq.set_density(1, density),
-                //Output::C => seq.set_density(2, density),
-                //Output::D => seq.set_density(3, density),
-                //},
+                StateChange::Length(output, length) => match output {
+                    Output::A => seq.set_length(0, length),
+                    Output::B => seq.set_length(1, length),
+                    Output::C => seq.set_length(2, length),
+                    Output::D => seq.set_length(3, length),
+                },
+                StateChange::Density(output, density) => match output {
+                    Output::A => seq.set_density(0, density),
+                    Output::B => seq.set_density(1, density),
+                    Output::C => seq.set_density(2, density),
+                    Output::D => seq.set_density(3, density),
+                },
                 StateChange::OutputType(_output, _output_type) => todo!(),
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
