@@ -189,8 +189,8 @@ async fn core0_tick_task(
                     PlayStatus::Paused => { /* TODO: reset then play */ }
                 },
                 StateChange::Bpm(_)
-                | StateChange::NextPage(_)
                 | StateChange::NextElement(_)
+                | StateChange::NextScreen(_)
                 | StateChange::None
                 | StateChange::Sync(_) => {}
             }

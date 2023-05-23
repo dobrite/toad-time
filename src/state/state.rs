@@ -6,6 +6,7 @@ pub struct State {
     pub sync: Sync,
     pub play_status: PlayStatus,
     pub current_element: Element,
+    pub current_screen: Screen,
     pub outputs: Outputs,
 }
 
@@ -28,6 +29,7 @@ impl State {
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current_element: Element::Bpm(Home),
+            current_screen: Screen::Home,
             outputs,
         }
     }
@@ -43,7 +45,13 @@ impl State {
                 self.outputs[output].output_type = *output_type
             }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
-            StateChange::NextPage(element) => self.current_element = *element,
+            StateChange::NextScreen(screen) => {
+                self.current_screen = *screen;
+                self.current_element = match screen {
+                    Screen::Home => Element::Bpm(Home),
+                    Screen::Output(output, _) => Element::Rate(*output),
+                };
+            }
             StateChange::NextElement(element) => self.current_element = *element,
             StateChange::None => {}
         }
@@ -56,34 +64,27 @@ impl State {
             Command::EncoderRight => current.next(self),
             Command::EncoderLeft => current.prev(self),
             Command::EncoderPress => self.next_element(),
-            Command::PagePress => self.next_page(),
+            Command::PagePress => self.next_screen(),
             Command::PlayPress => self.toggle_play(),
         }
     }
 
-    fn next_page(&mut self) -> StateChange {
-        let next_page = match self.current_element {
-            Element::Bpm(_) => Element::Rate(Output::A),
-            Element::Sync(_) => Element::Rate(Output::A),
-            Element::Rate(Output::A) => Element::Rate(Output::B),
-            Element::Pwm(Output::A) => Element::Rate(Output::B),
-            Element::Prob(Output::A) => Element::Rate(Output::B),
-            Element::OutputType(Output::A) => Element::Rate(Output::B),
-            Element::Rate(Output::B) => Element::Rate(Output::C),
-            Element::Pwm(Output::B) => Element::Rate(Output::C),
-            Element::Prob(Output::B) => Element::Rate(Output::C),
-            Element::OutputType(Output::B) => Element::Rate(Output::C),
-            Element::Rate(Output::C) => Element::Rate(Output::D),
-            Element::Pwm(Output::C) => Element::Rate(Output::D),
-            Element::Prob(Output::C) => Element::Rate(Output::D),
-            Element::OutputType(Output::C) => Element::Rate(Output::D),
-            Element::Rate(Output::D) => Element::Bpm(Home),
-            Element::Pwm(Output::D) => Element::Bpm(Home),
-            Element::Prob(Output::D) => Element::Bpm(Home),
-            Element::OutputType(Output::D) => Element::Bpm(Home),
+    fn next_screen(&mut self) -> StateChange {
+        let next_screen = match self.current_screen {
+            Screen::Home => Screen::Output(Output::A, self.outputs[&Output::A].output_type),
+            Screen::Output(Output::A, _) => {
+                Screen::Output(Output::B, self.outputs[&Output::B].output_type)
+            }
+            Screen::Output(Output::B, _) => {
+                Screen::Output(Output::C, self.outputs[&Output::C].output_type)
+            }
+            Screen::Output(Output::C, _) => {
+                Screen::Output(Output::D, self.outputs[&Output::D].output_type)
+            }
+            Screen::Output(Output::D, _) => Screen::Home,
         };
 
-        StateChange::NextPage(next_page)
+        StateChange::NextScreen(next_screen)
     }
 
     fn next_element(&mut self) -> StateChange {
