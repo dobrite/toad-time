@@ -5,6 +5,7 @@ pub enum Element {
     Rate(Output),
     Pwm(Output),
     Prob(Output),
+    OutputType(Output),
     Bpm(Home),
     Sync(Home),
 }
@@ -26,6 +27,10 @@ impl Element {
                 Option::Some(prob) => StateChange::Prob(*output, prob),
                 Option::None => StateChange::None,
             },
+            Element::OutputType(output) => match state.outputs[output].output_type.next() {
+                Option::Some(output_type) => StateChange::OutputType(*output, output_type),
+                Option::None => StateChange::None,
+            },
         }
     }
 
@@ -43,6 +48,10 @@ impl Element {
             },
             Element::Prob(output) => match state.outputs[output].prob.prev() {
                 Option::Some(prob) => StateChange::Prob(*output, prob),
+                Option::None => StateChange::None,
+            },
+            Element::OutputType(output) => match state.outputs[output].output_type.prev() {
+                Option::Some(output_type) => StateChange::OutputType(*output, output_type),
                 Option::None => StateChange::None,
             },
         }

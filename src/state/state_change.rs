@@ -1,4 +1,4 @@
-use super::{Bpm, Element, Output, PlayStatus, Prob, Pwm, Rate, Sync};
+use super::{Bpm, Element, Output, OutputType, PlayStatus, Prob, Pwm, Rate, Sync};
 
 pub enum StateChange {
     Bpm(Bpm),
@@ -6,6 +6,7 @@ pub enum StateChange {
     Rate(Output, Rate),
     Pwm(Output, Pwm),
     Prob(Output, Prob),
+    OutputType(Output, OutputType),
     PlayStatus(PlayStatus),
     NextPage(Element),
     NextElement(Element),

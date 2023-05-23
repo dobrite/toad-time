@@ -39,6 +39,9 @@ impl State {
             StateChange::Rate(output, rate) => self.outputs[output].rate = *rate,
             StateChange::Pwm(output, pwm) => self.outputs[output].pwm = *pwm,
             StateChange::Prob(output, prob) => self.outputs[output].prob = *prob,
+            StateChange::OutputType(output, output_type) => {
+                self.outputs[output].output_type = *output_type
+            }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
             StateChange::NextPage(element) => self.current_element = *element,
             StateChange::NextElement(element) => self.current_element = *element,
@@ -65,15 +68,19 @@ impl State {
             Element::Rate(Output::A) => Element::Rate(Output::B),
             Element::Pwm(Output::A) => Element::Rate(Output::B),
             Element::Prob(Output::A) => Element::Rate(Output::B),
+            Element::OutputType(Output::A) => Element::Rate(Output::B),
             Element::Rate(Output::B) => Element::Rate(Output::C),
             Element::Pwm(Output::B) => Element::Rate(Output::C),
             Element::Prob(Output::B) => Element::Rate(Output::C),
+            Element::OutputType(Output::B) => Element::Rate(Output::C),
             Element::Rate(Output::C) => Element::Rate(Output::D),
             Element::Pwm(Output::C) => Element::Rate(Output::D),
             Element::Prob(Output::C) => Element::Rate(Output::D),
+            Element::OutputType(Output::C) => Element::Rate(Output::D),
             Element::Rate(Output::D) => Element::Bpm(Home),
             Element::Pwm(Output::D) => Element::Bpm(Home),
             Element::Prob(Output::D) => Element::Bpm(Home),
+            Element::OutputType(Output::D) => Element::Bpm(Home),
         };
 
         StateChange::NextPage(next_page)
@@ -85,7 +92,8 @@ impl State {
             Element::Sync(_) => Element::Bpm(Home),
             Element::Rate(output) => Element::Pwm(output),
             Element::Pwm(output) => Element::Prob(output),
-            Element::Prob(output) => Element::Rate(output),
+            Element::Prob(output) => Element::OutputType(output),
+            Element::OutputType(output) => Element::Rate(output),
         };
 
         StateChange::NextElement(next_element)

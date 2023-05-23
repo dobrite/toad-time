@@ -29,9 +29,10 @@ impl Screens {
 
     pub async fn draw(&mut self, state: &State, display: &mut Display) {
         match state.current_element {
-            Element::Prob(output) | Element::Pwm(output) | Element::Rate(output) => {
-                self.draw_output(&output, state, display).await
-            }
+            Element::Prob(output)
+            | Element::Pwm(output)
+            | Element::Rate(output)
+            | Element::OutputType(output) => self.draw_output(&output, state, display).await,
             Element::Bpm(_) | Element::Sync(_) => self.draw_home(state, display).await,
         }
     }
@@ -58,6 +59,7 @@ impl Screens {
             Element::Prob(_) => Point::new(36, 46),
             Element::Bpm(_) => Point::new(4, 8),
             Element::Sync(_) => Point::new(4, 32),
+            Element::OutputType(_) => todo!(),
         };
         display.draw_bmp(&self.pointer, point);
     }

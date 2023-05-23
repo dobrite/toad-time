@@ -183,6 +183,7 @@ async fn core0_tick_task(
                     Output::C => seq.set_prob(2, prob),
                     Output::D => seq.set_prob(3, prob),
                 },
+                StateChange::OutputType(_output, _output_type) => todo!(),
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
