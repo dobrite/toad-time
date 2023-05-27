@@ -14,7 +14,7 @@ use embassy_rp::{
     spi::{Config, Spi},
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
-use embassy_time::{Delay, Duration, Timer};
+use embassy_time::{Delay, Duration, Ticker, Timer};
 use embedded_hal::digital::v2::InputPin;
 use embedded_hal_async::spi::ExclusiveDevice;
 use panic_probe as _;
@@ -145,6 +145,9 @@ async fn core0_tick_task(
     let configs = state.outputs.iter().map(|(_k, v)| *v).collect();
     let mut seq = Seq::new(configs);
 
+    let tick_duration = seq::tick_duration_micros(state.bpm.0 as f32);
+    let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
+
     loop {
         let result = seq.tick();
 
@@ -202,8 +205,11 @@ async fn core0_tick_task(
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
                 },
-                StateChange::Bpm(_)
-                | StateChange::NextElement(_)
+                StateChange::Bpm(bpm) => {
+                    let tick_duration = seq::tick_duration_micros(bpm.0 as f32);
+                    ticker = Ticker::every(Duration::from_micros(tick_duration));
+                }
+                StateChange::NextElement(_)
                 | StateChange::NextScreen(_)
                 | StateChange::None
                 | StateChange::Sync(_) => {}
@@ -211,8 +217,7 @@ async fn core0_tick_task(
             let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
         }
 
-        let tick_duration = seq::tick_duration_micros(state.bpm.0 as f32);
-        Timer::after(Duration::from_micros(tick_duration)).await
+        ticker.next().await
     }
 }
 
