@@ -211,9 +211,8 @@ async fn core0_tick_task(
             let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
         }
 
-        // TODO just return a u64?
-        let tick_duration = seq::tick_duration(state.bpm.0 as f32);
-        Timer::after(Duration::from_micros(tick_duration.to_micros())).await
+        let tick_duration = seq::tick_duration_micros(state.bpm.0 as f32);
+        Timer::after(Duration::from_micros(tick_duration)).await
     }
 }
 
