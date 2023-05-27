@@ -46,7 +46,6 @@ impl Updatable for Rate {
 pub struct RateString(pub String<3>);
 
 impl From<Rate> for RateString {
-    #[allow(illegal_floating_point_literal_pattern)]
     fn from(val: Rate) -> Self {
         let rate_string = match val {
             Rate::Div(64, Frac::Zero) => "/64",
