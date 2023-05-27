@@ -1262,7 +1262,7 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 [[package]]
 name = "seq"
 version = "0.1.0"
-source = "git+https://github.com/dobrite/seq.git#44936be3592ee61cc3f482d7e8b85b40c7b4da0b"
+source = "git+https://github.com/dobrite/seq.git#45e290cfe394207ea2f7c19d91aa6cc43947b0ec"
 dependencies = [
  "fugit",
  "heapless",

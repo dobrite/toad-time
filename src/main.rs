@@ -82,10 +82,10 @@ fn main() -> ! {
     let initial_state1 = initial_state.clone();
     let initial_state2 = initial_state.clone();
 
-    let output_a = GpioOutput::new(p.PIN_2, Level::High);
-    let output_b = GpioOutput::new(p.PIN_3, Level::High);
-    let output_c = GpioOutput::new(p.PIN_4, Level::High);
-    let output_d = GpioOutput::new(p.PIN_5, Level::High);
+    let output_a = GpioOutput::new(p.PIN_2, Level::Low);
+    let output_b = GpioOutput::new(p.PIN_3, Level::Low);
+    let output_c = GpioOutput::new(p.PIN_4, Level::Low);
+    let output_d = GpioOutput::new(p.PIN_5, Level::Low);
     let play_button = Input::new(p.PIN_11, Pull::Up);
     let page_button = Input::new(p.PIN_12, Pull::Up);
     let encoder_button = Input::new(p.PIN_13, Pull::Up);
