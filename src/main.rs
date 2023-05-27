@@ -143,9 +143,9 @@ async fn core0_tick_task(
     mut output_d: GpioOutput<'static, PIN_5>,
 ) {
     let configs = state.outputs.iter().map(|(_k, v)| *v).collect();
-    let mut seq = Seq::new(configs);
+    let mut seq = Seq::new(120, configs);
 
-    let tick_duration = seq::tick_duration_micros(state.bpm.0 as f32);
+    let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
 
     loop {
@@ -206,7 +206,8 @@ async fn core0_tick_task(
                     PlayStatus::Paused => { /* TODO: reset then play */ }
                 },
                 StateChange::Bpm(bpm) => {
-                    let tick_duration = seq::tick_duration_micros(bpm.0 as f32);
+                    seq.set_bpm(bpm.0);
+                    let tick_duration = seq.tick_duration_micros();
                     ticker = Ticker::every(Duration::from_micros(tick_duration));
                 }
                 StateChange::NextElement(_)
