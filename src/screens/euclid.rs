@@ -2,13 +2,13 @@ use core::fmt::Write;
 
 use embedded_graphics::prelude::Point;
 use heapless::String;
-use seq::{Density, Length, OutputConfig, Rate};
+use seq::{Density, Length, OutputConfig, OutputType, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::Bmp,
     screens::Display,
-    state::{Output, RateString},
+    state::{Output, OutputTypeString, RateString},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -34,6 +34,7 @@ impl EuclidScreen {
         self.draw_rate(config.rate, display);
         self.draw_length(config.length, display);
         self.draw_density(config.density, display);
+        self.draw_output_type(config.output_type, display);
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {
@@ -59,5 +60,9 @@ impl EuclidScreen {
     fn draw_density(&mut self, density: Density, display: &mut Display) {
         let s: String<3> = String::from(density.0);
         display.draw_smol_text(&s, Point::new(74, 60));
+    }
+
+    fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
+        display.draw_bigge_text(&OutputTypeString::from(output_type).0, Point::new(0, 50));
     }
 }

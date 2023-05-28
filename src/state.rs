@@ -2,9 +2,9 @@ use heapless::FnvIndexMap;
 use seq::OutputConfig;
 
 pub use self::{
-    bpm::Bpm, command::Command, element::Element, output::Output, play_status::PlayStatus,
-    prob::ProbString, rate::RateString, screen::Screen, state::State, state_change::StateChange,
-    sync::Sync,
+    bpm::Bpm, command::Command, element::Element, output::Output, output_type::OutputTypeString,
+    play_status::PlayStatus, prob::ProbString, rate::RateString, screen::Screen, state::State,
+    state_change::StateChange, sync::Sync,
 };
 
 mod bpm;

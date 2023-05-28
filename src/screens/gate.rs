@@ -2,13 +2,13 @@ use core::fmt::Write;
 
 use embedded_graphics::prelude::{Point, Size};
 use heapless::String;
-use seq::{OutputConfig, Prob, Pwm, Rate};
+use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{
     display::{Bmp, TileGrid},
     screens::Display,
-    state::{Output, ProbString, RateString},
+    state::{Output, OutputTypeString, ProbString, RateString},
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
@@ -46,6 +46,7 @@ impl GateScreen {
         self.draw_rate(config.rate, display);
         self.draw_prob(config.prob, display);
         self.draw_pwm(config.pwm, display); // 65x16 (13x8)
+        self.draw_output_type(config.output_type, display);
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {
@@ -74,5 +75,9 @@ impl GateScreen {
     fn draw_pwm(&mut self, pwm: Pwm, display: &mut Display) {
         let rectangle = self.pwm_tile_grid.get_rect(pwm.index());
         display.draw_sub_bmp(&self.pwm, &rectangle, Point::new(70, 30));
+    }
+
+    fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
+        display.draw_bigge_text(&OutputTypeString::from(output_type).0, Point::new(0, 50));
     }
 }
