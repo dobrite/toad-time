@@ -65,7 +65,7 @@ impl Screens {
             Element::Sync => Point::new(4, 32),
             Element::Length => Point::new(36, 28),
             Element::Density => Point::new(36, 46),
-            Element::OutputType => todo!(),
+            Element::OutputType => Point::new(20, 25),
         };
         display.draw_bmp(&self.pointer, point);
     }
