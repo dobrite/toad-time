@@ -200,7 +200,12 @@ async fn core0_tick_task(
                     Output::C => seq.set_density(2, density),
                     Output::D => seq.set_density(3, density),
                 },
-                StateChange::OutputType(_output, _output_type) => todo!(),
+                StateChange::OutputType(output, output_type) => match output {
+                    Output::A => seq.set_output_type(0, output_type),
+                    Output::B => seq.set_output_type(1, output_type),
+                    Output::C => seq.set_output_type(2, output_type),
+                    Output::D => seq.set_output_type(3, output_type),
+                },
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }

@@ -46,7 +46,8 @@ impl State {
             StateChange::Length(output, length) => self.outputs[output].length = *length,
             StateChange::Density(output, density) => self.outputs[output].density = *density,
             StateChange::OutputType(output, output_type) => {
-                self.outputs[output].output_type = *output_type
+                self.outputs[output].output_type = *output_type;
+                self.current_screen = Screen::Output(*output, *output_type);
             }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
             StateChange::NextScreen(screen) => {
