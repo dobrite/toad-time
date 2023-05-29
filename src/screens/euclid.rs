@@ -12,19 +12,31 @@ use crate::{
 };
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
+const CARET: &[u8; 78] = include_bytes!("../assets/icons/caret.bmp");
+const STEP_ON: &[u8; 134] = include_bytes!("../assets/icons/step-on.bmp");
+const STEP_OFF: &[u8; 134] = include_bytes!("../assets/icons/step-off.bmp");
 
 pub struct EuclidScreen {
+    caret: Bmp,
     clock: Bmp,
     name_str: String<3>,
+    step_on: Bmp,
+    step_off: Bmp,
 }
 
 impl EuclidScreen {
     pub fn new() -> Self {
+        let caret = TinyBmp::from_slice(CARET).unwrap();
         let clock = TinyBmp::from_slice(CLOCK).unwrap();
+        let step_on = TinyBmp::from_slice(STEP_ON).unwrap();
+        let step_off = TinyBmp::from_slice(STEP_OFF).unwrap();
 
         Self {
+            caret,
             clock,
             name_str: String::new(),
+            step_on,
+            step_off,
         }
     }
 
