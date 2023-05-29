@@ -12,13 +12,20 @@ mod euclid;
 mod gate;
 mod home;
 
-const POINTER: &[u8; 630] = include_bytes!("assets/icons/Pointer.bmp");
+const POINTER_LEFT: &[u8; 630] = include_bytes!("assets/icons/PointerLeft.bmp");
+const POINTER_RIGHT: &[u8; 630] = include_bytes!("assets/icons/PointerRight.bmp");
+
+enum Direction {
+    Right,
+    Left,
+}
 
 pub struct Screens {
     euclid: EuclidScreen,
     gate: GateScreen,
     home: HomeScreen,
-    pointer: Bmp,
+    pointer_left: Bmp,
+    pointer_right: Bmp,
 }
 
 impl Screens {
@@ -27,7 +34,8 @@ impl Screens {
             euclid: EuclidScreen::new(),
             gate: GateScreen::new(),
             home: HomeScreen::new(),
-            pointer: TinyBmp::from_slice(POINTER).unwrap(),
+            pointer_left: TinyBmp::from_slice(POINTER_LEFT).unwrap(),
+            pointer_right: TinyBmp::from_slice(POINTER_RIGHT).unwrap(),
         }
     }
 
@@ -57,16 +65,20 @@ impl Screens {
     }
 
     fn draw_pointer(&mut self, current: Element, display: &mut Display) {
-        let point = match current {
-            Element::Rate => Point::new(36, 10),
-            Element::Pwm => Point::new(36, 28),
-            Element::Prob => Point::new(36, 46),
-            Element::Bpm => Point::new(4, 8),
-            Element::Sync => Point::new(4, 32),
-            Element::Length => Point::new(36, 28),
-            Element::Density => Point::new(36, 46),
-            Element::OutputType => Point::new(20, 25),
+        let (point, dir) = match current {
+            Element::Rate => (Point::new(36, 10), Direction::Right),
+            Element::Pwm => (Point::new(36, 28), Direction::Right),
+            Element::Prob => (Point::new(36, 46), Direction::Right),
+            Element::Bpm => (Point::new(4, 8), Direction::Right),
+            Element::Sync => (Point::new(4, 32), Direction::Right),
+            Element::Length => (Point::new(36, 28), Direction::Right),
+            Element::Density => (Point::new(36, 46), Direction::Right),
+            Element::OutputType => (Point::new(20, 25), Direction::Left),
         };
-        display.draw_bmp(&self.pointer, point);
+        let pointer = match dir {
+            Direction::Right => self.pointer_right,
+            Direction::Left => self.pointer_left,
+        };
+        display.draw_bmp(&pointer, point);
     }
 }
