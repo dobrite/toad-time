@@ -142,7 +142,11 @@ async fn core0_tick_task(
     mut output_c: GpioOutput<'static, PIN_4>,
     mut output_d: GpioOutput<'static, PIN_5>,
 ) {
-    let configs = state.outputs.iter().map(|(_k, v)| *v).collect();
+    let configs = state
+        .outputs
+        .iter()
+        .map(|(_output, config)| config.clone())
+        .collect();
     let mut seq = Seq::new(120, configs);
 
     let tick_duration = seq.tick_duration_micros();
