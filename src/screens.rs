@@ -12,8 +12,8 @@ mod euclid;
 mod gate;
 mod home;
 
-const POINTER_LEFT: &[u8; 630] = include_bytes!("assets/icons/PointerLeft.bmp");
-const POINTER_RIGHT: &[u8; 630] = include_bytes!("assets/icons/PointerRight.bmp");
+const POINTER_LEFT: &[u8; 630] = include_bytes!("assets/icons/pointer-left.bmp");
+const POINTER_RIGHT: &[u8; 630] = include_bytes!("assets/icons/pointer-right.bmp");
 
 enum Direction {
     Right,

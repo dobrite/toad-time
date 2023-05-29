@@ -11,7 +11,7 @@ use crate::{
     state::{Output, OutputTypeString, RateString},
 };
 
-const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
+const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
 
 pub struct EuclidScreen {
     clock: Bmp,

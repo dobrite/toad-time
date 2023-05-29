@@ -11,9 +11,9 @@ use crate::{
     state::{Output, OutputTypeString, ProbString, RateString},
 };
 
-const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/Clock.bmp");
-const DICE: &[u8; 1334] = include_bytes!("../assets/icons/Dice.bmp");
-const PWM: &[u8; 2166] = include_bytes!("../assets/icons/PWMSpritesheetSmol.bmp");
+const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
+const DICE: &[u8; 1334] = include_bytes!("../assets/icons/die.bmp");
+const PWM: &[u8; 2166] = include_bytes!("../assets/icons/pwm-sprite-sheet-smol.bmp");
 
 pub struct GateScreen {
     clock: Bmp,

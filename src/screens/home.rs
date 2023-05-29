@@ -13,8 +13,8 @@ use crate::{
     state::{Bpm, PlayStatus, State, Sync},
 };
 
-const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/SpinSpritesheet.bmp"); // 88x44
-const PLAY_PAUSE: &[u8; 1590] = include_bytes!("../assets/icons/PlayPause.bmp");
+const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/spin-sprite-sheet.bmp"); // 88x44
+const PLAY_PAUSE: &[u8; 1590] = include_bytes!("../assets/icons/play-pause.bmp");
 
 pub struct HomeScreen {
     bpm_label: String<3>,
