@@ -11,6 +11,17 @@ pub enum Output {
     D,
 }
 
+impl From<Output> for usize {
+    fn from(val: Output) -> Self {
+        match val {
+            Output::A => 0,
+            Output::B => 1,
+            Output::C => 2,
+            Output::D => 3,
+        }
+    }
+}
+
 impl Hash for Output {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {

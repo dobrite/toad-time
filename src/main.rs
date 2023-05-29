@@ -174,42 +174,14 @@ async fn core0_tick_task(
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             state.handle_state_change(&state_change);
             match state_change {
-                StateChange::Rate(output, rate) => match output {
-                    Output::A => seq.set_rate(0, rate),
-                    Output::B => seq.set_rate(1, rate),
-                    Output::C => seq.set_rate(2, rate),
-                    Output::D => seq.set_rate(3, rate),
-                },
-                StateChange::Pwm(output, pwm) => match output {
-                    Output::A => seq.set_pwm(0, pwm),
-                    Output::B => seq.set_pwm(1, pwm),
-                    Output::C => seq.set_pwm(2, pwm),
-                    Output::D => seq.set_pwm(3, pwm),
-                },
-                StateChange::Prob(output, prob) => match output {
-                    Output::A => seq.set_prob(0, prob),
-                    Output::B => seq.set_prob(1, prob),
-                    Output::C => seq.set_prob(2, prob),
-                    Output::D => seq.set_prob(3, prob),
-                },
-                StateChange::Length(output, length) => match output {
-                    Output::A => seq.set_length(0, length),
-                    Output::B => seq.set_length(1, length),
-                    Output::C => seq.set_length(2, length),
-                    Output::D => seq.set_length(3, length),
-                },
-                StateChange::Density(output, density) => match output {
-                    Output::A => seq.set_density(0, density),
-                    Output::B => seq.set_density(1, density),
-                    Output::C => seq.set_density(2, density),
-                    Output::D => seq.set_density(3, density),
-                },
-                StateChange::OutputType(output, output_type) => match output {
-                    Output::A => seq.set_output_type(0, output_type),
-                    Output::B => seq.set_output_type(1, output_type),
-                    Output::C => seq.set_output_type(2, output_type),
-                    Output::D => seq.set_output_type(3, output_type),
-                },
+                StateChange::Rate(output, rate) => seq.set_rate(output.into(), rate),
+                StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
+                StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
+                StateChange::Length(output, length) => seq.set_length(output.into(), length),
+                StateChange::Density(output, density) => seq.set_density(output.into(), density),
+                StateChange::OutputType(output, output_type) => {
+                    seq.set_output_type(output.into(), output_type)
+                }
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
