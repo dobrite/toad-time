@@ -289,8 +289,10 @@ async fn core1_display_task(mut state: State, mut display: Display) {
         let state_change = DISPLAY_STATE_CHANNEL.recv().await;
         match state_change {
             StateChange::None => {}
-            _ => state.handle_state_change(&state_change),
+            _ => {
+                state.handle_state_change(&state_change);
+                screens.draw(&state, &mut display).await;
+            }
         }
-        screens.draw(&state, &mut display).await;
     }
 }
