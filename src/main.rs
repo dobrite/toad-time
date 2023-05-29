@@ -151,19 +151,19 @@ async fn core0_tick_task(
     loop {
         let result = seq.tick();
 
-        if result[0].edge_change {
+        if result[0].on_change {
             output_a.toggle();
         }
 
-        if result[1].edge_change {
+        if result[1].on_change {
             output_b.toggle();
         }
 
-        if result[2].edge_change {
+        if result[2].on_change {
             output_c.toggle();
         }
 
-        if result[3].edge_change {
+        if result[3].on_change {
             output_d.toggle();
         }
 

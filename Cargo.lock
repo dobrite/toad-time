@@ -1241,7 +1241,7 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 [[package]]
 name = "seq"
 version = "0.1.0"
-source = "git+https://github.com/dobrite/seq.git#d17acc66bcc0a2b618b03daafb90384fe50072a8"
+source = "git+https://github.com/dobrite/seq.git#c8ae640f83e558eb96c903dcf505995b8b45934d"
 dependencies = [
  "heapless",
  "oorandom",
