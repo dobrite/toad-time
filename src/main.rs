@@ -72,7 +72,7 @@ fn main() -> ! {
 
     let mut outputs = Outputs::new();
     let mut gate_a_config = OutputConfig::new();
-    gate_a_config.output_type = OutputType::Euclid;
+    gate_a_config.set_output_type(OutputType::Euclid);
     outputs.insert(Output::A, gate_a_config).ok();
     outputs.insert(Output::B, OutputConfig::new()).ok();
     outputs.insert(Output::C, OutputConfig::new()).ok();
