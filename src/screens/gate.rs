@@ -13,7 +13,7 @@ use crate::{
 
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
 const DICE: &[u8; 1334] = include_bytes!("../assets/icons/die.bmp");
-const PWM: &[u8; 2166] = include_bytes!("../assets/icons/pwm-sprite-sheet-smol.bmp");
+const PWM: &[u8; 12_598] = include_bytes!("../assets/icons/pwm-sprite-sheet.bmp");
 
 pub struct GateScreen {
     clock: Bmp,
@@ -28,7 +28,7 @@ impl GateScreen {
         let clock = TinyBmp::from_slice(CLOCK).unwrap();
         let dice = TinyBmp::from_slice(DICE).unwrap();
         let pwm = TinyBmp::from_slice(PWM).unwrap();
-        let pwm_tile_grid = TileGrid::new(Size::new(5, 2), Size::new(13, 8));
+        let pwm_tile_grid = TileGrid::new(Size::new(5, 2), Size::new(26, 16));
 
         Self {
             clock,
@@ -74,7 +74,7 @@ impl GateScreen {
 
     fn draw_pwm(&mut self, pwm: Pwm, display: &mut Display) {
         let rectangle = self.pwm_tile_grid.get_rect(pwm.index());
-        display.draw_sub_bmp(&self.pwm, &rectangle, Point::new(70, 30));
+        display.draw_sub_bmp(&self.pwm, &rectangle, Point::new(55, 26));
     }
 
     fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
