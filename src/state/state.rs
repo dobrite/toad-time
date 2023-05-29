@@ -99,14 +99,14 @@ impl State {
             Element::Rate => match self.current_screen {
                 Screen::Home => unreachable!(),
                 Screen::Output(_, output_type) => match output_type {
-                    OutputType::Gate => Element::Pwm,
+                    OutputType::Gate => Element::Prob,
                     OutputType::Euclid => Element::Length,
                 },
             },
             Element::Length => Element::Density,
             Element::Density => Element::OutputType,
-            Element::Pwm => Element::Prob,
-            Element::Prob => Element::OutputType,
+            Element::Prob => Element::Pwm,
+            Element::Pwm => Element::OutputType,
             Element::OutputType => Element::Rate,
         };
 

@@ -67,8 +67,8 @@ impl Screens {
     fn draw_pointer(&mut self, current: Element, display: &mut Display) {
         let (point, dir) = match current {
             Element::Rate => (Point::new(36, 10), Direction::Right),
-            Element::Pwm => (Point::new(36, 28), Direction::Right),
-            Element::Prob => (Point::new(36, 46), Direction::Right),
+            Element::Prob => (Point::new(36, 28), Direction::Right),
+            Element::Pwm => (Point::new(36, 46), Direction::Right),
             Element::Bpm => (Point::new(4, 8), Direction::Right),
             Element::Sync => (Point::new(4, 32), Direction::Right),
             Element::Length => (Point::new(36, 28), Direction::Right),

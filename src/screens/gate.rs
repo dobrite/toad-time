@@ -61,7 +61,7 @@ impl GateScreen {
     }
 
     fn draw_dice(&mut self, display: &mut Display) {
-        display.draw_bmp(&self.dice, Point::new(54, 46));
+        display.draw_bmp(&self.dice, Point::new(54, 26));
     }
 
     fn draw_rate(&mut self, rate: Rate, display: &mut Display) {
@@ -69,12 +69,12 @@ impl GateScreen {
     }
 
     fn draw_prob(&mut self, prob: Prob, display: &mut Display) {
-        display.draw_smol_text(&ProbString::from(prob).0, Point::new(74, 66));
+        display.draw_smol_text(&ProbString::from(prob).0, Point::new(74, 46));
     }
 
     fn draw_pwm(&mut self, pwm: Pwm, display: &mut Display) {
         let rectangle = self.pwm_tile_grid.get_rect(pwm.index());
-        display.draw_sub_bmp(&self.pwm, &rectangle, Point::new(55, 26));
+        display.draw_sub_bmp(&self.pwm, &rectangle, Point::new(55, 46));
     }
 
     fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
