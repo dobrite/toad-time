@@ -40,13 +40,13 @@ impl State {
         match state_change {
             StateChange::Bpm(bpm) => self.bpm = *bpm,
             StateChange::Sync(sync) => self.sync = *sync,
-            StateChange::Rate(output, rate) => self.outputs[output].rate = *rate,
-            StateChange::Pwm(output, pwm) => self.outputs[output].pwm = *pwm,
-            StateChange::Prob(output, prob) => self.outputs[output].prob = *prob,
-            StateChange::Length(output, length) => self.outputs[output].length = *length,
-            StateChange::Density(output, density) => self.outputs[output].density = *density,
+            StateChange::Rate(output, rate) => self.outputs[output].set_rate(*rate),
+            StateChange::Pwm(output, pwm) => self.outputs[output].set_pwm(*pwm),
+            StateChange::Prob(output, prob) => self.outputs[output].set_prob(*prob),
+            StateChange::Length(output, length) => self.outputs[output].set_length(*length),
+            StateChange::Density(output, density) => self.outputs[output].set_density(*density),
             StateChange::OutputType(output, output_type) => {
-                self.outputs[output].output_type = *output_type;
+                self.outputs[output].set_output_type(*output_type);
                 self.current_screen = Screen::Output(*output, *output_type);
             }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
@@ -76,15 +76,15 @@ impl State {
 
     fn next_screen(&mut self) -> StateChange {
         let next_screen = match self.current_screen {
-            Screen::Home => Screen::Output(Output::A, self.outputs[&Output::A].output_type),
+            Screen::Home => Screen::Output(Output::A, self.outputs[&Output::A].output_type()),
             Screen::Output(Output::A, _) => {
-                Screen::Output(Output::B, self.outputs[&Output::B].output_type)
+                Screen::Output(Output::B, self.outputs[&Output::B].output_type())
             }
             Screen::Output(Output::B, _) => {
-                Screen::Output(Output::C, self.outputs[&Output::C].output_type)
+                Screen::Output(Output::C, self.outputs[&Output::C].output_type())
             }
             Screen::Output(Output::C, _) => {
-                Screen::Output(Output::D, self.outputs[&Output::D].output_type)
+                Screen::Output(Output::D, self.outputs[&Output::D].output_type())
             }
             Screen::Output(Output::D, _) => Screen::Home,
         };

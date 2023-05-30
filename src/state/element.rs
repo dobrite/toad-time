@@ -22,7 +22,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].rate.next() {
+                match state.outputs[&output].rate().next() {
                     Option::Some(rate) => StateChange::Rate(output, rate),
                     Option::None => StateChange::None,
                 }
@@ -32,7 +32,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].pwm.next() {
+                match state.outputs[&output].pwm().next() {
                     Option::Some(pwm) => StateChange::Pwm(output, pwm),
                     Option::None => StateChange::None,
                 }
@@ -42,7 +42,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].prob.next() {
+                match state.outputs[&output].prob().next() {
                     Option::Some(prob) => StateChange::Prob(output, prob),
                     Option::None => StateChange::None,
                 }
@@ -52,7 +52,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].length.next() {
+                match state.outputs[&output].length().next() {
                     Option::Some(length) => StateChange::Length(output, length),
                     Option::None => StateChange::None,
                 }
@@ -62,7 +62,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].density.next() {
+                match state.outputs[&output].density().next() {
                     Option::Some(density) => StateChange::Density(output, density),
                     Option::None => StateChange::None,
                 }
@@ -72,7 +72,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].output_type.next() {
+                match state.outputs[&output].output_type().next() {
                     Option::Some(output_type) => StateChange::OutputType(output, output_type),
                     Option::None => StateChange::None,
                 }
@@ -89,7 +89,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].rate.prev() {
+                match state.outputs[&output].rate().prev() {
                     Option::Some(rate) => StateChange::Rate(output, rate),
                     Option::None => StateChange::None,
                 }
@@ -99,7 +99,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].pwm.prev() {
+                match state.outputs[&output].pwm().prev() {
                     Option::Some(pwm) => StateChange::Pwm(output, pwm),
                     Option::None => StateChange::None,
                 }
@@ -109,7 +109,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].prob.prev() {
+                match state.outputs[&output].prob().prev() {
                     Option::Some(prob) => StateChange::Prob(output, prob),
                     Option::None => StateChange::None,
                 }
@@ -119,7 +119,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].length.prev() {
+                match state.outputs[&output].length().prev() {
                     Option::Some(length) => StateChange::Length(output, length),
                     Option::None => StateChange::None,
                 }
@@ -129,7 +129,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].density.prev() {
+                match state.outputs[&output].density().prev() {
                     Option::Some(density) => StateChange::Density(output, density),
                     Option::None => StateChange::None,
                 }
@@ -139,7 +139,7 @@ impl Element {
                     Screen::Home => unreachable!(),
                     Screen::Output(output, _) => output,
                 };
-                match state.outputs[&output].output_type.prev() {
+                match state.outputs[&output].output_type().prev() {
                     Option::Some(output_type) => StateChange::OutputType(output, output_type),
                     Option::None => StateChange::None,
                 }

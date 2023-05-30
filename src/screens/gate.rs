@@ -43,10 +43,10 @@ impl GateScreen {
         self.draw_name(name, display);
         self.draw_clock(display);
         self.draw_dice(display);
-        self.draw_rate(config.rate, display);
-        self.draw_prob(config.prob, display);
-        self.draw_pwm(config.pwm, display); // 65x16 (13x8)
-        self.draw_output_type(config.output_type, display);
+        self.draw_rate(config.rate(), display);
+        self.draw_prob(config.prob(), display);
+        self.draw_pwm(config.pwm(), display); // 65x16 (13x8)
+        self.draw_output_type(config.output_type(), display);
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {

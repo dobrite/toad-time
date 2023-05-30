@@ -43,10 +43,10 @@ impl EuclidScreen {
     pub fn draw(&mut self, name: &Output, config: &OutputConfig, display: &mut Display) {
         self.draw_name(name, display);
         self.draw_clock(display);
-        self.draw_rate(config.rate, display);
-        self.draw_length(config.length, display);
-        self.draw_density(config.density, display);
-        self.draw_output_type(config.output_type, display);
+        self.draw_rate(config.rate(), display);
+        self.draw_length(config.length(), display);
+        self.draw_density(config.density(), display);
+        self.draw_output_type(config.output_type(), display);
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {
