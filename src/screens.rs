@@ -55,7 +55,7 @@ impl Screens {
 
     async fn draw_output(&mut self, output: &Output, state: &State, display: &mut Display) {
         display.clear();
-        let output_config = &state.outputs[output];
+        let output_config = &state.outputs[usize::from(*output)];
         match output_config.output_type() {
             OutputType::Euclid => self.euclid.draw(output, output_config, display),
             OutputType::Gate => self.gate.draw(output, output_config, display),

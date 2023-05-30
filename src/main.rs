@@ -17,6 +17,7 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Delay, Duration, Ticker, Timer};
 use embedded_hal::digital::v2::InputPin;
 use embedded_hal_async::spi::ExclusiveDevice;
+use heapless::Vec;
 use panic_probe as _;
 use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
 use seq::{OutputConfig, OutputType, Seq};
@@ -25,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, Outputs, PlayStatus, State, StateChange},
+    state::{Command, PlayStatus, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -70,13 +71,13 @@ fn main() -> ! {
 
     let display = Display::new(display_ctx);
 
-    let mut outputs = Outputs::new();
+    let mut outputs = Vec::new();
     let mut gate_a_config = OutputConfig::new();
     gate_a_config.set_output_type(OutputType::Euclid);
-    outputs.insert(Output::A, gate_a_config).ok();
-    outputs.insert(Output::B, OutputConfig::new()).ok();
-    outputs.insert(Output::C, OutputConfig::new()).ok();
-    outputs.insert(Output::D, OutputConfig::new()).ok();
+    outputs.push(gate_a_config).ok();
+    outputs.push(OutputConfig::new()).ok();
+    outputs.push(OutputConfig::new()).ok();
+    outputs.push(OutputConfig::new()).ok();
 
     let initial_state = State::new(outputs);
     let initial_state1 = initial_state.clone();
@@ -142,12 +143,7 @@ async fn core0_tick_task(
     mut output_c: GpioOutput<'static, PIN_4>,
     mut output_d: GpioOutput<'static, PIN_5>,
 ) {
-    let configs = state
-        .outputs
-        .iter()
-        .map(|(_output, config)| config.clone())
-        .collect();
-    let mut seq = Seq::new(120, configs);
+    let mut seq = Seq::new(120, state.outputs.clone());
 
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));

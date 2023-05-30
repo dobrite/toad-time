@@ -1,3 +1,4 @@
+use heapless::Vec;
 use seq::OutputType;
 
 use super::*;
@@ -9,23 +10,23 @@ pub struct State {
     pub play_status: PlayStatus,
     pub current_element: Element,
     pub current_screen: Screen,
-    pub outputs: Outputs,
+    pub outputs: Vec<OutputConfig, 4>,
 }
 
 impl Default for State {
     fn default() -> Self {
-        let mut outputs = Outputs::new();
-        outputs.insert(Output::A, OutputConfig::new()).ok();
-        outputs.insert(Output::B, OutputConfig::new()).ok();
-        outputs.insert(Output::C, OutputConfig::new()).ok();
-        outputs.insert(Output::D, OutputConfig::new()).ok();
+        let mut outputs = Vec::new();
+        outputs.push(OutputConfig::new()).ok();
+        outputs.push(OutputConfig::new()).ok();
+        outputs.push(OutputConfig::new()).ok();
+        outputs.push(OutputConfig::new()).ok();
 
         Self::new(outputs)
     }
 }
 
 impl State {
-    pub fn new(outputs: Outputs) -> Self {
+    pub fn new(outputs: Vec<OutputConfig, 4>) -> Self {
         Self {
             bpm: Bpm(120),
             sync: Sync::Ext,
@@ -40,13 +41,17 @@ impl State {
         match state_change {
             StateChange::Bpm(bpm) => self.bpm = *bpm,
             StateChange::Sync(sync) => self.sync = *sync,
-            StateChange::Rate(output, rate) => self.outputs[output].set_rate(*rate),
-            StateChange::Pwm(output, pwm) => self.outputs[output].set_pwm(*pwm),
-            StateChange::Prob(output, prob) => self.outputs[output].set_prob(*prob),
-            StateChange::Length(output, length) => self.outputs[output].set_length(*length),
-            StateChange::Density(output, density) => self.outputs[output].set_density(*density),
+            StateChange::Rate(output, rate) => self.outputs[usize::from(*output)].set_rate(*rate),
+            StateChange::Pwm(output, pwm) => self.outputs[usize::from(*output)].set_pwm(*pwm),
+            StateChange::Prob(output, prob) => self.outputs[usize::from(*output)].set_prob(*prob),
+            StateChange::Length(output, length) => {
+                self.outputs[usize::from(*output)].set_length(*length)
+            }
+            StateChange::Density(output, density) => {
+                self.outputs[usize::from(*output)].set_density(*density)
+            }
             StateChange::OutputType(output, output_type) => {
-                self.outputs[output].set_output_type(*output_type);
+                self.outputs[usize::from(*output)].set_output_type(*output_type);
                 self.current_screen = Screen::Output(*output, *output_type);
             }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
@@ -76,16 +81,22 @@ impl State {
 
     fn next_screen(&mut self) -> StateChange {
         let next_screen = match self.current_screen {
-            Screen::Home => Screen::Output(Output::A, self.outputs[&Output::A].output_type()),
-            Screen::Output(Output::A, _) => {
-                Screen::Output(Output::B, self.outputs[&Output::B].output_type())
-            }
-            Screen::Output(Output::B, _) => {
-                Screen::Output(Output::C, self.outputs[&Output::C].output_type())
-            }
-            Screen::Output(Output::C, _) => {
-                Screen::Output(Output::D, self.outputs[&Output::D].output_type())
-            }
+            Screen::Home => Screen::Output(
+                Output::A,
+                self.outputs[usize::from(Output::A)].output_type(),
+            ),
+            Screen::Output(Output::A, _) => Screen::Output(
+                Output::B,
+                self.outputs[usize::from(Output::B)].output_type(),
+            ),
+            Screen::Output(Output::B, _) => Screen::Output(
+                Output::C,
+                self.outputs[usize::from(Output::C)].output_type(),
+            ),
+            Screen::Output(Output::C, _) => Screen::Output(
+                Output::D,
+                self.outputs[usize::from(Output::D)].output_type(),
+            ),
             Screen::Output(Output::D, _) => Screen::Home,
         };
 

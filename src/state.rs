@@ -1,4 +1,3 @@
-use heapless::FnvIndexMap;
 use seq::OutputConfig;
 
 pub use self::{
@@ -24,8 +23,6 @@ mod screen;
 mod state;
 mod state_change;
 mod sync;
-
-pub type Outputs = FnvIndexMap<Output, OutputConfig, 4>;
 
 trait Updatable {
     fn next(&self) -> Option<Self>

@@ -22,7 +22,6 @@ defmt = "0.3.4"
 defmt-rtt = "0.4.0"
 panic-probe = { version = "0.3.1", features = ["print-defmt"] }
 
-hash32 = "0.2.1"
 heapless = { version = "0.7", features = ["cas", "defmt-impl"] }
 ssd1306-async = { git = "https://github.com/kalkyl/ssd1306-async", branch = "main" }
 tinybmp = "0.4.0"

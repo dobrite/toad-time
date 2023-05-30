@@ -1412,7 +1412,6 @@ dependencies = [
  "embedded-graphics",
  "embedded-hal 0.2.7",
  "embedded-hal-async",
- "hash32",
  "heapless",
  "panic-probe",
  "rotary-encoder-embedded",

@@ -1,7 +1,6 @@
 use core::fmt;
 
 use defmt::Format;
-use hash32::{Hash, Hasher};
 
 #[derive(Clone, Copy, Eq, Format, PartialEq)]
 pub enum Output {
@@ -18,17 +17,6 @@ impl From<Output> for usize {
             Output::B => 1,
             Output::C => 2,
             Output::D => 3,
-        }
-    }
-}
-
-impl Hash for Output {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        match self {
-            Output::A => state.write(&[0]),
-            Output::B => state.write(&[1]),
-            Output::C => state.write(&[2]),
-            Output::D => state.write(&[3]),
         }
     }
 }
