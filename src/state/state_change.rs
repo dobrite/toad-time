@@ -14,6 +14,7 @@ pub enum StateChange {
     PlayStatus(PlayStatus),
     NextScreen(Screen),
     NextElement(Element),
+    Index(Output, u32),
     None,
 }
 

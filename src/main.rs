@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, PlayStatus, State, StateChange},
+    state::{Command, PlayStatus, Screen, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -167,6 +167,21 @@ async fn core0_tick_task(
             output_d.toggle();
         }
 
+        match state.current_screen {
+            Screen::Home => {}
+            Screen::Output(output, output_type) => match output_type {
+                OutputType::Gate => {}
+                OutputType::Euclid => {
+                    let index_change = result[usize::from(output)].index_change;
+                    if index_change {
+                        let index = result[usize::from(output)].index;
+                        let state_change = StateChange::Index(output, index);
+                        let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
+                    }
+                }
+            },
+        };
+
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             state.handle_state_change(&state_change);
             match state_change {
@@ -187,7 +202,8 @@ async fn core0_tick_task(
                     let tick_duration = seq.tick_duration_micros();
                     ticker = Ticker::every(Duration::from_micros(tick_duration));
                 }
-                StateChange::NextElement(_)
+                StateChange::Index(..)
+                | StateChange::NextElement(_)
                 | StateChange::NextScreen(_)
                 | StateChange::None
                 | StateChange::Sync(_) => {}

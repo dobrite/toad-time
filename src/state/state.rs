@@ -54,6 +54,9 @@ impl State {
                 self.outputs[usize::from(*output)].set_output_type(*output_type);
                 self.current_screen = Screen::Output(*output, *output_type);
             }
+            StateChange::Index(output, index) => {
+                self.outputs[usize::from(*output)].set_index(*index)
+            }
             StateChange::PlayStatus(play_status) => self.play_status = *play_status,
             StateChange::NextScreen(screen) => {
                 self.current_screen = *screen;

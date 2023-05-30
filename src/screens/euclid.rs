@@ -1,8 +1,8 @@
 use core::fmt::Write;
 
 use embedded_graphics::prelude::Point;
-use heapless::String;
-use seq::{Density, Length, OutputConfig, OutputType, Rate};
+use heapless::{String, Vec};
+use seq::{Length, OutputConfig, OutputType, Rate};
 use tinybmp::Bmp as TinyBmp;
 
 use crate::{
@@ -11,6 +11,8 @@ use crate::{
     state::{Output, OutputTypeString, RateString},
 };
 
+const GRID_START_X: usize = 54;
+const GRID_START_Y: usize = 46;
 const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
 const CARET: &[u8; 78] = include_bytes!("../assets/icons/caret.bmp");
 const STEP_ON: &[u8; 134] = include_bytes!("../assets/icons/step-on.bmp");
@@ -45,7 +47,7 @@ impl EuclidScreen {
         self.draw_clock(display);
         self.draw_rate(config.rate(), display);
         self.draw_length(config.length(), display);
-        self.draw_density(config.density(), display);
+        self.draw_grid(config.index(), config.sequence(), display);
         self.draw_output_type(config.output_type(), display);
     }
 
@@ -69,9 +71,21 @@ impl EuclidScreen {
         display.draw_smol_text(&s, Point::new(74, 45));
     }
 
-    fn draw_density(&mut self, density: Density, display: &mut Display) {
-        let s: String<3> = String::from(density.0);
-        display.draw_smol_text(&s, Point::new(74, 60));
+    fn draw_grid(&mut self, index: u32, sequence: &Vec<bool, 16>, display: &mut Display) {
+        let len = sequence.len();
+        for idx in 0..len {
+            let x = idx % len % 8;
+            let y = idx / 8;
+            let step_on = sequence[idx];
+            let step_bmp = if step_on { self.step_on } else { self.step_off };
+            let p_x = (GRID_START_X + x * 7) as i32;
+            let p_y = (GRID_START_Y + y * 10) as i32;
+            if idx == index as usize {
+                display.draw_bmp(&self.caret, Point::new(p_x + 1, p_y - 3));
+            }
+
+            display.draw_bmp(&step_bmp, Point::new(p_x, p_y));
+        }
     }
 
     fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
