@@ -8,7 +8,7 @@ use core::convert::Infallible;
 use defmt_rtt as _;
 use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
-    gpio::{Input, Level, Output as GpioOutput, Pull},
+    gpio::{Input, Level, Output, Pull},
     multicore::{spawn_core1, Stack},
     peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15, PIN_2, PIN_3, PIN_4, PIN_5},
     spi::{Config, Spi},
@@ -54,15 +54,15 @@ fn main() -> ! {
 
     let spi = Spi::new_txonly(p.SPI0, clk, mosi, p.DMA_CH0, Config::default());
 
-    let cs = GpioOutput::new(oled_cs, Level::Low);
+    let cs = Output::new(oled_cs, Level::Low);
     let device = ExclusiveDevice::new(spi, cs);
 
-    let dc = GpioOutput::new(oled_dc, Level::Low);
+    let dc = Output::new(oled_dc, Level::Low);
     let interface = ssd1306_async::SPIInterface::new(device, dc);
 
     let display_ctx = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
-    let mut rst = GpioOutput::new(oled_reset, Level::Low);
+    let mut rst = Output::new(oled_reset, Level::Low);
     {
         use cortex_m::prelude::_embedded_hal_blocking_delay_DelayMs;
         Delay.delay_ms(1u8);
@@ -83,10 +83,10 @@ fn main() -> ! {
     let initial_state1 = initial_state.clone();
     let initial_state2 = initial_state.clone();
 
-    let output_a = GpioOutput::new(p.PIN_2, Level::Low);
-    let output_b = GpioOutput::new(p.PIN_3, Level::Low);
-    let output_c = GpioOutput::new(p.PIN_4, Level::Low);
-    let output_d = GpioOutput::new(p.PIN_5, Level::Low);
+    let output_a = Output::new(p.PIN_2, Level::Low);
+    let output_b = Output::new(p.PIN_3, Level::Low);
+    let output_c = Output::new(p.PIN_4, Level::Low);
+    let output_d = Output::new(p.PIN_5, Level::Low);
     let play_button = Input::new(p.PIN_11, Pull::Up);
     let page_button = Input::new(p.PIN_12, Pull::Up);
     let encoder_button = Input::new(p.PIN_13, Pull::Up);
@@ -138,10 +138,10 @@ async fn core0_state_task(mut state: State) {
 #[embassy_executor::task]
 async fn core0_tick_task(
     mut state: State,
-    mut output_a: GpioOutput<'static, PIN_2>,
-    mut output_b: GpioOutput<'static, PIN_3>,
-    mut output_c: GpioOutput<'static, PIN_4>,
-    mut output_d: GpioOutput<'static, PIN_5>,
+    mut output_a: Output<'static, PIN_2>,
+    mut output_b: Output<'static, PIN_3>,
+    mut output_c: Output<'static, PIN_4>,
+    mut output_d: Output<'static, PIN_5>,
 ) {
     let mut seq = Seq::new(120, state.outputs.clone());
 
