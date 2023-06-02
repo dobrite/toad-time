@@ -8,9 +8,9 @@ use core::convert::Infallible;
 use defmt_rtt as _;
 use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
-    gpio::{Input, Level, Output, Pull},
+    gpio::{AnyPin, Input, Level, Output, Pin, Pull},
     multicore::{spawn_core1, Stack},
-    peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15, PIN_2, PIN_3, PIN_4, PIN_5},
+    peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15},
     spi::{Config, Spi},
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
@@ -83,10 +83,19 @@ fn main() -> ! {
     let initial_state1 = initial_state.clone();
     let initial_state2 = initial_state.clone();
 
-    let output_a = Output::new(p.PIN_2, Level::Low);
-    let output_b = Output::new(p.PIN_3, Level::Low);
-    let output_c = Output::new(p.PIN_4, Level::Low);
-    let output_d = Output::new(p.PIN_5, Level::Low);
+    let outputs = {
+        let mut outputs: Vec<Output<'static, AnyPin>, 4> = Vec::new();
+        let output_a = Output::new(p.PIN_2.degrade(), Level::Low);
+        outputs.push(output_a).ok();
+        let output_b = Output::new(p.PIN_3.degrade(), Level::Low);
+        outputs.push(output_b).ok();
+        let output_c = Output::new(p.PIN_4.degrade(), Level::Low);
+        outputs.push(output_c).ok();
+        let output_d = Output::new(p.PIN_5.degrade(), Level::Low);
+        outputs.push(output_d).ok();
+        outputs
+    };
+
     let play_button = Input::new(p.PIN_11, Pull::Up);
     let page_button = Input::new(p.PIN_12, Pull::Up);
     let encoder_button = Input::new(p.PIN_13, Pull::Up);
@@ -111,13 +120,7 @@ fn main() -> ! {
     let executor0 = EXECUTOR0.init(Executor::new());
     executor0.run(|spawner| {
         let _ = spawner.spawn(core0_state_task(initial_state1));
-        let _ = spawner.spawn(core0_tick_task(
-            initial_state2,
-            output_a,
-            output_b,
-            output_c,
-            output_d,
-        ));
+        let _ = spawner.spawn(core0_tick_task(initial_state2, outputs));
     });
 }
 
@@ -136,13 +139,7 @@ async fn core0_state_task(mut state: State) {
 }
 
 #[embassy_executor::task]
-async fn core0_tick_task(
-    mut state: State,
-    mut output_a: Output<'static, PIN_2>,
-    mut output_b: Output<'static, PIN_3>,
-    mut output_c: Output<'static, PIN_4>,
-    mut output_d: Output<'static, PIN_5>,
-) {
+async fn core0_tick_task(mut state: State, mut outputs: Vec<Output<'static, AnyPin>, 4>) {
     let mut seq = Seq::new(120, state.outputs.clone());
 
     let tick_duration = seq.tick_duration_micros();
@@ -150,22 +147,11 @@ async fn core0_tick_task(
 
     loop {
         let result = seq.tick();
-
-        if result[0].on_change {
-            output_a.toggle();
-        }
-
-        if result[1].on_change {
-            output_b.toggle();
-        }
-
-        if result[2].on_change {
-            output_c.toggle();
-        }
-
-        if result[3].on_change {
-            output_d.toggle();
-        }
+        outputs
+            .iter_mut()
+            .zip(result.iter())
+            .filter(|(_, result)| result.on_change)
+            .for_each(|(output, _)| output.toggle());
 
         match state.current_screen {
             Screen::Home => {}
