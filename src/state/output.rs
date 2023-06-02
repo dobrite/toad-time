@@ -10,6 +10,18 @@ pub enum Output {
     D,
 }
 
+impl Output {
+    pub fn into_output(idx: usize) -> Output {
+        match idx {
+            0 => Output::A,
+            1 => Output::B,
+            2 => Output::C,
+            3 => Output::D,
+            _ => unreachable!(),
+        }
+    }
+}
+
 impl From<Output> for usize {
     fn from(val: Output) -> Self {
         match val {

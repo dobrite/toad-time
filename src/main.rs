@@ -8,7 +8,7 @@ use core::convert::Infallible;
 use defmt_rtt as _;
 use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
-    gpio::{AnyPin, Input, Level, Output, Pin, Pull},
+    gpio::{AnyPin, Input, Level, Output as EmbassyOutput, Pin, Pull},
     multicore::{spawn_core1, Stack},
     peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15},
     spi::{Config, Spi},
@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, PlayStatus, Screen, State, StateChange},
+    state::{Command, Output, PlayStatus, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -54,15 +54,15 @@ fn main() -> ! {
 
     let spi = Spi::new_txonly(p.SPI0, clk, mosi, p.DMA_CH0, Config::default());
 
-    let cs = Output::new(oled_cs, Level::Low);
+    let cs = EmbassyOutput::new(oled_cs, Level::Low);
     let device = ExclusiveDevice::new(spi, cs);
 
-    let dc = Output::new(oled_dc, Level::Low);
+    let dc = EmbassyOutput::new(oled_dc, Level::Low);
     let interface = ssd1306_async::SPIInterface::new(device, dc);
 
     let display_ctx = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
-    let mut rst = Output::new(oled_reset, Level::Low);
+    let mut rst = EmbassyOutput::new(oled_reset, Level::Low);
     {
         use cortex_m::prelude::_embedded_hal_blocking_delay_DelayMs;
         Delay.delay_ms(1u8);
@@ -84,14 +84,14 @@ fn main() -> ! {
     let initial_state2 = initial_state.clone();
 
     let outputs = {
-        let mut outputs: Vec<Output<'static, AnyPin>, 4> = Vec::new();
-        let output_a = Output::new(p.PIN_2.degrade(), Level::Low);
+        let mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4> = Vec::new();
+        let output_a = EmbassyOutput::new(p.PIN_2.degrade(), Level::Low);
         outputs.push(output_a).ok();
-        let output_b = Output::new(p.PIN_3.degrade(), Level::Low);
+        let output_b = EmbassyOutput::new(p.PIN_3.degrade(), Level::Low);
         outputs.push(output_b).ok();
-        let output_c = Output::new(p.PIN_4.degrade(), Level::Low);
+        let output_c = EmbassyOutput::new(p.PIN_4.degrade(), Level::Low);
         outputs.push(output_c).ok();
-        let output_d = Output::new(p.PIN_5.degrade(), Level::Low);
+        let output_d = EmbassyOutput::new(p.PIN_5.degrade(), Level::Low);
         outputs.push(output_d).ok();
         outputs
     };
@@ -139,34 +139,29 @@ async fn core0_state_task(mut state: State) {
 }
 
 #[embassy_executor::task]
-async fn core0_tick_task(mut state: State, mut outputs: Vec<Output<'static, AnyPin>, 4>) {
+async fn core0_tick_task(mut state: State, mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>) {
     let mut seq = Seq::new(120, state.outputs.clone());
 
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
+    let mut state_changes: Vec<StateChange, 4> = Vec::new();
 
     loop {
         let result = seq.tick();
         outputs
             .iter_mut()
             .zip(result.iter())
-            .filter(|(_, result)| result.on_change)
-            .for_each(|(output, _)| output.toggle());
-
-        match state.current_screen {
-            Screen::Home => {}
-            Screen::Output(output, output_type) => match output_type {
-                OutputType::Gate => {}
-                OutputType::Euclid => {
-                    let index_change = result[usize::from(output)].index_change;
-                    if index_change {
-                        let index = result[usize::from(output)].index;
-                        let state_change = StateChange::Index(output, index);
-                        let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
-                    }
+            .enumerate()
+            .for_each(|(idx, (output, result))| {
+                if result.on_change {
+                    output.toggle()
+                };
+                if result.index_change {
+                    let output = Output::into_output(idx);
+                    let state_change = StateChange::Index(output, result.index);
+                    state_changes.push(state_change).ok();
                 }
-            },
-        };
+            });
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             state.handle_state_change(&state_change);
@@ -194,7 +189,18 @@ async fn core0_tick_task(mut state: State, mut outputs: Vec<Output<'static, AnyP
                 | StateChange::None
                 | StateChange::Sync(_) => {}
             }
-            let _ = DISPLAY_STATE_CHANNEL.send(state_change).await;
+
+            DISPLAY_STATE_CHANNEL
+                .try_send(state_change)
+                .map_err(|_| panic!("display state channel full; state change"))
+                .ok();
+        }
+
+        while let Option::Some(state_change) = state_changes.pop() {
+            DISPLAY_STATE_CHANNEL
+                .try_send(state_change)
+                .map_err(|_| panic!("display state channel full; index change"))
+                .ok();
         }
 
         ticker.next().await
