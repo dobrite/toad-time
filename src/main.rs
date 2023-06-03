@@ -174,8 +174,8 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                 StateChange::Rate(output, rate) => seq.set_rate(output.into(), rate),
                 StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
                 StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
-                StateChange::Length(output, length) => seq.set_length(output.into(), length),
-                StateChange::Density(output, density) => seq.set_density(output.into(), density),
+                StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
+                StateChange::Density(output, _, density) => seq.set_density(output.into(), density),
                 StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
                     seq.set_output_type(output.into(), config.output_type())
                 }

@@ -52,8 +52,9 @@ impl Element {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].length().next() {
-                    Option::Some(length) => StateChange::Length(output, length),
+                let config = &state.outputs[usize::from(output)];
+                match config.length().next() {
+                    Option::Some(length) => StateChange::Length(output, length, config.density()),
                     Option::None => StateChange::None,
                 }
             }
@@ -62,8 +63,9 @@ impl Element {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].density().next() {
-                    Option::Some(density) => StateChange::Density(output, density),
+                let config = &state.outputs[usize::from(output)];
+                match config.density().next() {
+                    Option::Some(density) => StateChange::Density(output, config.length(), density),
                     Option::None => StateChange::None,
                 }
             }
@@ -123,8 +125,9 @@ impl Element {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].length().prev() {
-                    Option::Some(length) => StateChange::Length(output, length),
+                let config = &state.outputs[usize::from(output)];
+                match config.length().prev() {
+                    Option::Some(length) => StateChange::Length(output, length, config.density()),
                     Option::None => StateChange::None,
                 }
             }
@@ -133,8 +136,9 @@ impl Element {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].density().prev() {
-                    Option::Some(density) => StateChange::Density(output, density),
+                let config = &state.outputs[usize::from(output)];
+                match config.density().prev() {
+                    Option::Some(density) => StateChange::Density(output, config.length(), density),
                     Option::None => StateChange::None,
                 }
             }

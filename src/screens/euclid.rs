@@ -39,7 +39,7 @@ impl EuclidScreen {
                 self.clear_rate(display);
                 self.draw_rate(display, rate);
             }
-            StateChange::Length(_, length) => {
+            StateChange::Length(_, length, _) => {
                 self.clear_length(display);
                 self.draw_length(display, length);
                 self.clear_grid(display);
@@ -48,7 +48,7 @@ impl EuclidScreen {
             StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
-            StateChange::Density(_, _) => {
+            StateChange::Density(_, _, _) => {
                 self.clear_grid(display);
                 self.draw_grid(display, config.sequence());
             }
