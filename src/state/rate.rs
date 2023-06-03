@@ -22,21 +22,23 @@ const RATES: [Rate; 15] = [
 ];
 
 impl Updatable for Rate {
-    fn next(&self) -> Option<Self> {
+    fn next(&mut self) -> Option<Self> {
         if self == RATES.last().unwrap() {
             Option::None
         } else {
             let index = RATES.iter().position(|r| r == self).unwrap() + 1;
-            Option::Some(RATES[index])
+            *self = RATES[index];
+            Option::Some(*self)
         }
     }
 
-    fn prev(&self) -> Option<Self> {
+    fn prev(&mut self) -> Option<Self> {
         if self == RATES.first().unwrap() {
             Option::None
         } else {
             let index = RATES.iter().position(|r| r == self).unwrap() - 1;
-            Option::Some(RATES[index])
+            *self = RATES[index];
+            Option::Some(*self)
         }
     }
 }

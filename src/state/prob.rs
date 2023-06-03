@@ -4,8 +4,8 @@ use seq::Prob;
 use super::Updatable;
 
 impl Updatable for Prob {
-    fn next(&self) -> Option<Self> {
-        match self {
+    fn next(&mut self) -> Option<Self> {
+        let prob = match self {
             Prob::P100 => Option::None,
             Prob::P90 => Option::Some(Prob::P100),
             Prob::P80 => Option::Some(Prob::P90),
@@ -16,11 +16,17 @@ impl Updatable for Prob {
             Prob::P30 => Option::Some(Prob::P40),
             Prob::P20 => Option::Some(Prob::P30),
             Prob::P10 => Option::Some(Prob::P20),
-        }
+        };
+
+        if let Option::Some(prob) = prob {
+            *self = prob;
+        };
+
+        prob
     }
 
-    fn prev(&self) -> Option<Self> {
-        match self {
+    fn prev(&mut self) -> Option<Self> {
+        let prob = match self {
             Prob::P10 => Option::None,
             Prob::P20 => Option::Some(Prob::P10),
             Prob::P30 => Option::Some(Prob::P20),
@@ -31,7 +37,13 @@ impl Updatable for Prob {
             Prob::P80 => Option::Some(Prob::P70),
             Prob::P90 => Option::Some(Prob::P80),
             Prob::P100 => Option::Some(Prob::P90),
-        }
+        };
+
+        if let Option::Some(prob) = prob {
+            *self = prob;
+        };
+
+        prob
     }
 }
 
