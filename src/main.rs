@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, PlayStatus, State, StateChange},
+    state::{Command, Output, PlayStatus, Screen, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -275,9 +275,12 @@ async fn core1_encoder_task(mut encoder: Encoder) {
 
 #[embassy_executor::task]
 async fn core1_display_task(mut state: State, mut display: Display) {
-    display.init().await;
     let mut screens = Screens::new();
-    screens.draw_home(&state, &mut display).await;
+
+    display.init().await;
+    let next_screen = StateChange::NextScreen(Screen::Home);
+    screens.draw(next_screen, &state, &mut display);
+    display.flush().await;
 
     loop {
         let state_change = DISPLAY_STATE_CHANNEL.recv().await;
@@ -285,7 +288,8 @@ async fn core1_display_task(mut state: State, mut display: Display) {
             StateChange::None => {}
             _ => {
                 state.handle_state_change(&state_change);
-                screens.draw(&state, &mut display).await;
+                screens.draw(state_change, &state, &mut display);
+                display.flush().await
             }
         }
     }
