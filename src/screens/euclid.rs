@@ -71,7 +71,7 @@ impl EuclidScreen {
         display.draw_smol_text(&s, Point::new(74, 45));
     }
 
-    fn draw_grid(&mut self, index: u32, sequence: &Vec<bool, 16>, display: &mut Display) {
+    fn draw_grid(&mut self, index: usize, sequence: &Vec<bool, 16>, display: &mut Display) {
         let len = sequence.len();
         for idx in 0..len {
             let x = idx % len % 8;
@@ -80,7 +80,7 @@ impl EuclidScreen {
             let step_bmp = if step_on { self.step_on } else { self.step_off };
             let p_x = (GRID_START_X + x * 7) as i32;
             let p_y = (GRID_START_Y + y * 10) as i32;
-            if idx == index as usize {
+            if idx == index {
                 display.draw_bmp(&self.caret, Point::new(p_x + 1, p_y - 3));
             }
 
