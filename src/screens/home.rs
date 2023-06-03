@@ -3,7 +3,7 @@ use heapless::String;
 
 use crate::{
     screens::Display,
-    state::{Bpm, PlayStatus, State, Sync},
+    state::{Bpm, Element, PlayStatus, State, Sync},
     StateChange,
 };
 
@@ -43,6 +43,9 @@ impl HomeScreen {
                 self.draw_sync(display, sync);
             }
             StateChange::PlayStatus(play_status) => self.draw_play_pause(display, play_status),
+            StateChange::NextElement(element) => {
+                self.draw_pointer(display, element);
+            }
             StateChange::NextScreen(_) => {
                 display.clear();
                 self.draw_bpm_label(display);
@@ -50,6 +53,7 @@ impl HomeScreen {
                 self.draw_frogge(display);
                 self.draw_sync(display, &state.sync);
                 self.draw_play_pause(display, &state.play_status);
+                self.draw_pointer(display, &Element::Bpm);
             }
             _ => {}
         }
@@ -90,5 +94,13 @@ impl HomeScreen {
         };
         display.clear_play_pause(point);
         display.draw_play_pause(index, point);
+    }
+
+    fn draw_pointer(&mut self, display: &mut Display, element: &Element) {
+        match element {
+            Element::Bpm => display.draw_pointer_right(Point::new(4, 8)),
+            Element::Sync => display.draw_pointer_right(Point::new(4, 32)),
+            _ => {}
+        };
     }
 }

@@ -4,7 +4,7 @@ use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
 
 use crate::{
     screens::Display,
-    state::{Output, OutputTypeString, ProbString, RateString, Screen},
+    state::{Element, Output, OutputTypeString, ProbString, RateString, Screen},
     StateChange,
 };
 
@@ -46,10 +46,15 @@ impl GateScreen {
             StateChange::OutputType(output, _) => {
                 display.clear();
                 self.draw_screen(display, output, config);
+                self.draw_pointer(display, &Element::OutputType);
+            }
+            StateChange::NextElement(element) => {
+                self.draw_pointer(display, element);
             }
             StateChange::NextScreen(Screen::Output(output, _)) => {
                 display.clear();
                 self.draw_screen(display, output, config);
+                self.draw_pointer(display, &Element::Rate);
             }
             _ => {}
         }
@@ -104,5 +109,15 @@ impl GateScreen {
     fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
         let str = OutputTypeString::from(output_type).0;
         display.draw_bigge_text(&mut self.output_type_str, str, Point::new(0, 50));
+    }
+
+    fn draw_pointer(&mut self, display: &mut Display, element: &Element) {
+        match element {
+            Element::Rate => display.draw_pointer_right(Point::new(36, 10)),
+            Element::Prob => display.draw_pointer_right(Point::new(36, 28)),
+            Element::Pwm => display.draw_pointer_right(Point::new(36, 46)),
+            Element::OutputType => display.draw_pointer_left(Point::new(20, 25)),
+            _ => {}
+        };
     }
 }
