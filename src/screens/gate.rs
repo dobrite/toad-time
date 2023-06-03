@@ -44,23 +44,26 @@ impl GateScreen {
                 self.draw_pwm(display, pwm);
             }
             StateChange::OutputType(output, _) => {
-                display.clear();
-                self.draw_screen(display, output, config);
-                self.draw_pointer(display, &Element::OutputType);
+                self.redraw_screen(display, output, config, &Element::OutputType);
             }
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
             StateChange::NextScreen(Screen::Output(output, _)) => {
-                display.clear();
-                self.draw_screen(display, output, config);
-                self.draw_pointer(display, &Element::Rate);
+                self.redraw_screen(display, output, config, &Element::Rate);
             }
             _ => {}
         }
     }
 
-    fn draw_screen(&mut self, display: &mut Display, output: &Output, config: &OutputConfig) {
+    fn redraw_screen(
+        &mut self,
+        display: &mut Display,
+        output: &Output,
+        config: &OutputConfig,
+        element: &Element,
+    ) {
+        display.clear();
         self.draw_name(display, output);
         self.draw_clock(display);
         self.draw_dice(display);
@@ -68,6 +71,7 @@ impl GateScreen {
         self.draw_prob(display, &config.prob());
         self.draw_pwm(display, &config.pwm()); // 65x16 (13x8)
         self.draw_output_type(display, &config.output_type());
+        self.draw_pointer(display, element);
     }
 
     fn draw_name(&mut self, display: &mut Display, output: &Output) {

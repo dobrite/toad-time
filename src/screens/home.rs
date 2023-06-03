@@ -47,16 +47,20 @@ impl HomeScreen {
                 self.draw_pointer(display, element);
             }
             StateChange::NextScreen(_) => {
-                display.clear();
-                self.draw_bpm_label(display);
-                self.draw_bpm_value(display, &state.bpm);
-                self.draw_frogge(display);
-                self.draw_sync(display, &state.sync);
-                self.draw_play_pause(display, &state.play_status);
-                self.draw_pointer(display, &Element::Bpm);
+                self.redraw_screen(display, state, &Element::Bpm);
             }
             _ => {}
         }
+    }
+
+    fn redraw_screen(&mut self, display: &mut Display, state: &State, element: &Element) {
+        display.clear();
+        self.draw_bpm_label(display);
+        self.draw_bpm_value(display, &state.bpm);
+        self.draw_frogge(display);
+        self.draw_sync(display, &state.sync);
+        self.draw_play_pause(display, &state.play_status);
+        self.draw_pointer(display, element);
     }
 
     fn draw_bpm_label(&mut self, display: &mut Display) {
