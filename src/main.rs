@@ -20,7 +20,7 @@ use embedded_hal_async::spi::ExclusiveDevice;
 use heapless::Vec;
 use panic_probe as _;
 use rotary_encoder_embedded::{standard::StandardMode, Direction, RotaryEncoder};
-use seq::{OutputConfig, OutputType, Seq};
+use seq::{Frac, OutputConfig, OutputType, Rate, Seq};
 use ssd1306_async::{prelude::*, Ssd1306};
 
 use crate::{
@@ -72,12 +72,26 @@ fn main() -> ! {
     let display = Display::new(display_ctx);
 
     let mut outputs = Vec::new();
+
     let mut gate_a_config = OutputConfig::new();
     gate_a_config.set_output_type(OutputType::Euclid);
+    gate_a_config.set_rate(Rate::Mult(16, Frac::Zero));
     outputs.push(gate_a_config).ok();
-    outputs.push(OutputConfig::new()).ok();
-    outputs.push(OutputConfig::new()).ok();
-    outputs.push(OutputConfig::new()).ok();
+
+    let mut gate_b_config = OutputConfig::new();
+    gate_b_config.set_output_type(OutputType::Euclid);
+    gate_b_config.set_rate(Rate::Mult(16, Frac::Zero));
+    outputs.push(gate_b_config).ok();
+
+    let mut gate_c_config = OutputConfig::new();
+    gate_c_config.set_output_type(OutputType::Euclid);
+    gate_c_config.set_rate(Rate::Mult(16, Frac::Zero));
+    outputs.push(gate_c_config).ok();
+
+    let mut gate_d_config = OutputConfig::new();
+    gate_d_config.set_output_type(OutputType::Euclid);
+    gate_d_config.set_rate(Rate::Mult(16, Frac::Zero));
+    outputs.push(gate_d_config).ok();
 
     let initial_state = State::new(outputs);
     let initial_state1 = initial_state.clone();

@@ -3,7 +3,7 @@ use seq::{Frac, Rate};
 
 use super::Updatable;
 
-const RATES: [Rate; 17] = [
+const RATES: [Rate; 15] = [
     Rate::Div(64, Frac::Zero),
     Rate::Div(32, Frac::Zero),
     Rate::Div(16, Frac::Zero),
@@ -19,8 +19,6 @@ const RATES: [Rate; 17] = [
     Rate::Mult(5, Frac::Zero),
     Rate::Mult(8, Frac::Zero),
     Rate::Mult(16, Frac::Zero),
-    Rate::Mult(32, Frac::Zero),
-    Rate::Mult(64, Frac::Zero),
 ];
 
 impl Updatable for Rate {
@@ -63,8 +61,6 @@ impl From<&Rate> for RateString {
             Rate::Mult(5, Frac::Zero) => "x5",
             Rate::Mult(8, Frac::Zero) => "x8",
             Rate::Mult(16, Frac::Zero) => "x16",
-            Rate::Mult(32, Frac::Zero) => "x32",
-            Rate::Mult(64, Frac::Zero) => "x64",
             _ => unreachable!(),
         };
 
