@@ -5,6 +5,8 @@ use embassy_rp::{
     spi::Spi,
 };
 use embedded_graphics::{
+    draw_target::DrawTarget,
+    geometry::Dimensions,
     image::{Image, ImageDrawableExt},
     pixelcolor::BinaryColor,
     prelude::Point,
@@ -69,10 +71,31 @@ impl Display {
         self.display.flush().await.ok();
     }
 
+    pub fn clear_rect(&mut self, rect: Rectangle) {
+        self.display.fill_solid(&rect, BinaryColor::Off).ok();
+    }
+
+    pub fn clear_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+        let text = Text::new(str.as_ref(), point, self.smol_font);
+        let font_bb = SMOL_FONT.bounding_box;
+        let mut bb = text.bounding_box();
+        bb.top_left.y += font_bb.top_left.y;
+        bb.size.height += 2;
+        self.clear_rect(bb);
+    }
+
     pub fn draw_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
         Text::new(str.as_ref(), point, self.smol_font)
             .draw(&mut self.display)
             .unwrap();
+    }
+
+    pub fn clear_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+        let text = Text::new(str.as_ref(), point, self.bigge_font);
+        let font_bb = BIGGE_FONT.bounding_box;
+        let mut bb = text.bounding_box();
+        bb.top_left.y += font_bb.top_left.y + 2;
+        self.clear_rect(bb);
     }
 
     pub fn draw_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
