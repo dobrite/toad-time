@@ -41,8 +41,26 @@ impl State {
         let current = self.current_element;
 
         match command {
-            Command::EncoderRight => current.next(self),
-            Command::EncoderLeft => current.prev(self),
+            Command::EncoderRight => {
+                let state_change = current.next(self);
+                match state_change {
+                    StateChange::OutputType(ref screen_state) => {
+                        self.current_screen = screen_state.clone();
+                        state_change
+                    }
+                    _ => state_change,
+                }
+            }
+            Command::EncoderLeft => {
+                let state_change = current.prev(self);
+                match state_change {
+                    StateChange::OutputType(ref screen_state) => {
+                        self.current_screen = screen_state.clone();
+                        state_change
+                    }
+                    _ => state_change,
+                }
+            }
             Command::EncoderPress => self.next_element(),
             Command::PagePress => self.next_screen(),
             Command::PlayPress => self.toggle_play(),
@@ -50,7 +68,7 @@ impl State {
     }
 
     fn next_screen(&mut self) -> StateChange {
-        let next_screen = match self.current_screen {
+        self.current_screen = match self.current_screen {
             ScreenState::Home(_, _, _) => ScreenState::Output(
                 Output::A,
                 self.outputs[usize::from(Output::A)].clone(),
@@ -75,12 +93,16 @@ impl State {
                 Output::D => ScreenState::Home(self.bpm, self.sync, self.play_status),
             },
         };
+        self.current_element = match self.current_screen {
+            ScreenState::Home(..) => Element::Bpm,
+            ScreenState::Output(..) => Element::Rate,
+        };
 
-        StateChange::NextScreen(next_screen)
+        StateChange::NextScreen(self.current_screen.clone())
     }
 
     fn next_element(&mut self) -> StateChange {
-        let next_element = match self.current_element {
+        self.current_element = match self.current_element {
             Element::Bpm => Element::Sync,
             Element::Sync => Element::Bpm,
             Element::Rate => match &self.current_screen {
@@ -97,7 +119,7 @@ impl State {
             Element::OutputType => Element::Rate,
         };
 
-        StateChange::NextElement(next_element)
+        StateChange::NextElement(self.current_element)
     }
 
     fn toggle_play(&self) -> StateChange {
