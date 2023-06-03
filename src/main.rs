@@ -272,7 +272,7 @@ async fn core1_display_task(state: State, mut display: Display) {
     display.init().await;
     let next_screen =
         StateChange::NextScreen(ScreenState::Home(state.bpm, state.sync, state.play_status));
-    screens.draw(next_screen, &state, &mut display);
+    screens.draw(next_screen, &mut display);
     display.flush().await;
 
     loop {
@@ -280,7 +280,7 @@ async fn core1_display_task(state: State, mut display: Display) {
         match state_change {
             StateChange::None => {}
             _ => {
-                screens.draw(state_change, &state, &mut display);
+                screens.draw(state_change, &mut display);
                 display.flush().await
             }
         }

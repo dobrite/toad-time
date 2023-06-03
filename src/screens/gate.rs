@@ -25,12 +25,7 @@ impl GateScreen {
         }
     }
 
-    pub fn draw(
-        &mut self,
-        state_change: &StateChange,
-        config: &OutputConfig,
-        display: &mut Display,
-    ) {
+    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
         match state_change {
             StateChange::Rate(_, rate) => {
                 self.clear_rate(display);
@@ -49,7 +44,7 @@ impl GateScreen {
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(ScreenState::Output(output, ..)) => {
+            StateChange::NextScreen(ScreenState::Output(output, config, _todo)) => {
                 self.redraw_screen(display, output, config, &Element::Rate);
             }
             _ => {}

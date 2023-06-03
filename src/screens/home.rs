@@ -3,7 +3,7 @@ use heapless::String;
 
 use crate::{
     screens::Display,
-    state::{Bpm, Element, PlayStatus, State, Sync},
+    state::{Bpm, Element, PlayStatus, ScreenState, Sync},
     StateChange,
 };
 
@@ -32,7 +32,7 @@ impl HomeScreen {
         }
     }
 
-    pub fn draw(&mut self, state_change: &StateChange, state: &State, display: &mut Display) {
+    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
         match state_change {
             StateChange::Bpm(bpm) => {
                 self.clear_bpm_value(display);
@@ -46,20 +46,27 @@ impl HomeScreen {
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(_) => {
-                self.redraw_screen(display, state, &Element::Bpm);
+            StateChange::NextScreen(ScreenState::Home(bpm, sync, play_status)) => {
+                self.redraw_screen(display, bpm, sync, play_status, &Element::Bpm);
             }
             _ => {}
         }
     }
 
-    fn redraw_screen(&mut self, display: &mut Display, state: &State, element: &Element) {
+    fn redraw_screen(
+        &mut self,
+        display: &mut Display,
+        bpm: &Bpm,
+        sync: &Sync,
+        play_status: &PlayStatus,
+        element: &Element,
+    ) {
         display.clear();
         self.draw_bpm_label(display);
-        self.draw_bpm_value(display, &state.bpm);
+        self.draw_bpm_value(display, bpm);
         self.draw_frogge(display);
-        self.draw_sync(display, &state.sync);
-        self.draw_play_pause(display, &state.play_status);
+        self.draw_sync(display, sync);
+        self.draw_play_pause(display, play_status);
         self.draw_pointer(display, element);
     }
 
