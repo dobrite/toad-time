@@ -1,6 +1,6 @@
 use embedded_graphics::prelude::Point;
 use heapless::{String, Vec};
-use seq::{Length, OutputConfig, OutputType, Rate};
+use seq::{euclid, Density, Length, OutputConfig, OutputType, Rate};
 
 use crate::{
     screens::Display,
@@ -16,6 +16,7 @@ pub struct EuclidScreen {
     name_str: String<3>,
     output_type_str: String<3>,
     rate_str: String<3>,
+    sequence: Vec<bool, 16>,
 }
 
 impl EuclidScreen {
@@ -25,6 +26,7 @@ impl EuclidScreen {
             name_str: String::new(),
             output_type_str: String::new(),
             rate_str: String::new(),
+            sequence: Vec::new(),
         }
     }
 
@@ -39,26 +41,28 @@ impl EuclidScreen {
                 self.clear_rate(display);
                 self.draw_rate(display, rate);
             }
-            StateChange::Length(_, length, _) => {
+            StateChange::Length(_, length, density) => {
+                self.update_sequence(length, density);
                 self.clear_length(display);
                 self.draw_length(display, length);
                 self.clear_grid(display);
-                self.draw_grid(display, config.sequence());
+                self.draw_grid(display)
             }
             StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
+                self.update_sequence(&config.length(), &config.density());
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
-            StateChange::Density(_, _, _) => {
+            StateChange::Density(_, length, density) => {
+                self.update_sequence(length, density);
                 self.clear_grid(display);
-                self.draw_grid(display, config.sequence());
+                self.draw_grid(display);
             }
-            StateChange::Index(..) => {
-                self.draw_caret(display, config.index(), config.sequence().len());
-            }
+            StateChange::Index(..) => self.draw_caret(display, config.index()),
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
             StateChange::NextScreen(ScreenState::Output(output, ..)) => {
+                self.update_sequence(&config.length(), &config.density());
                 self.redraw_screen(display, output, config, &Element::Rate);
             }
             _ => {}
@@ -77,8 +81,8 @@ impl EuclidScreen {
         self.draw_clock(display);
         self.draw_rate(display, &config.rate());
         self.draw_length(display, &config.length());
-        self.draw_grid(display, config.sequence());
-        self.draw_caret(display, config.index(), config.sequence().len());
+        self.draw_grid(display);
+        self.draw_caret(display, config.index());
         self.draw_output_type(display, &config.output_type());
         self.draw_pointer(display, element);
     }
@@ -123,10 +127,10 @@ impl EuclidScreen {
         }
     }
 
-    fn draw_grid(&mut self, display: &mut Display, sequence: &Vec<bool, 16>) {
-        let len = sequence.len();
+    fn draw_grid(&mut self, display: &mut Display) {
+        let len = self.sequence.len();
         for idx in 0..len {
-            let step_on = sequence[idx];
+            let step_on = self.sequence[idx];
             let point = self.grid_point(idx, len);
             if step_on {
                 display.draw_step_on(point);
@@ -136,7 +140,8 @@ impl EuclidScreen {
         }
     }
 
-    pub fn draw_caret(&mut self, display: &mut Display, index: usize, len: usize) {
+    pub fn draw_caret(&mut self, display: &mut Display, index: usize) {
+        let len = self.sequence.len();
         let caret_point = |idx| -> Point {
             let mut grid_point = self.grid_point(idx, len);
             grid_point.x += 1;
@@ -162,5 +167,10 @@ impl EuclidScreen {
             Element::OutputType => display.draw_pointer_left(Point::new(20, 25)),
             _ => {}
         };
+    }
+
+    fn update_sequence(&mut self, length: &Length, density: &Density) {
+        self.sequence.resize_default(length.0 as usize).ok();
+        euclid(*density, *length, &mut self.sequence);
     }
 }
