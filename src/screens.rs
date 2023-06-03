@@ -3,7 +3,7 @@ use seq::OutputType;
 use crate::{
     display::Display,
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
-    state::{Output, Screen, State},
+    state::{Output, ScreenState, State},
     StateChange,
 };
 
@@ -28,8 +28,10 @@ impl Screens {
 
     pub fn draw(&mut self, state_change: StateChange, state: &State, display: &mut Display) {
         match state.current_screen {
-            Screen::Home => self.home.draw(&state_change, state, display),
-            Screen::Output(output, _) => self.draw_output(&output, &state_change, state, display),
+            ScreenState::Home(..) => self.home.draw(&state_change, state, display),
+            ScreenState::Output(output, ..) => {
+                self.draw_output(&output, &state_change, state, display)
+            }
         }
     }
 

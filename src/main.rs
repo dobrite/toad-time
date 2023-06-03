@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, PlayStatus, Screen, State, StateChange},
+    state::{Command, Output, PlayStatus, ScreenState, State, StateChange},
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -270,7 +270,8 @@ async fn core1_display_task(mut state: State, mut display: Display) {
     let mut screens = Screens::new();
 
     display.init().await;
-    let next_screen = StateChange::NextScreen(Screen::Home);
+    let next_screen =
+        StateChange::NextScreen(ScreenState::Home(state.bpm, state.sync, state.play_status));
     screens.draw(next_screen, &state, &mut display);
     display.flush().await;
 

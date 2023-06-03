@@ -4,7 +4,7 @@ use seq::{Length, OutputConfig, OutputType, Rate};
 
 use crate::{
     screens::Display,
-    state::{Element, Output, OutputTypeString, RateString, Screen},
+    state::{Element, Output, OutputTypeString, RateString, ScreenState},
     StateChange,
 };
 
@@ -58,7 +58,7 @@ impl EuclidScreen {
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(Screen::Output(output, _)) => {
+            StateChange::NextScreen(ScreenState::Output(output, ..)) => {
                 self.redraw_screen(display, output, config, &Element::Rate);
             }
             _ => {}
