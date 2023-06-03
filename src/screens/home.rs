@@ -88,10 +88,9 @@ impl HomeScreen {
     }
 
     fn draw_frogge(&mut self, display: &mut Display) {
-        let size = Size::new(22, 22);
-        let rectangle = Rectangle::new(Point::zero(), size);
+        let rectangle = Rectangle::new(Point::zero(), Size::new(22, 22));
         let point = Point::new(80, 26);
-        display.clear_rect(Rectangle::new(point, size));
+        display.clear_sub_bmp(&self.frogge, &rectangle, point);
         display.draw_sub_bmp(&self.frogge, &rectangle, point);
     }
 
@@ -107,14 +106,13 @@ impl HomeScreen {
     }
 
     fn draw_play_pause(&mut self, display: &mut Display, play_status: &PlayStatus) {
-        let size = Size::new(16, 16);
         let rectangle = match play_status {
-            PlayStatus::Playing => Rectangle::new(Point::zero(), size),
+            PlayStatus::Playing => Rectangle::new(Point::zero(), Size::new(16, 16)),
             PlayStatus::Paused => Rectangle::new(Point::new(16, 0), Size::new(32, 16)),
         };
 
         let point = Point::new(56, 30);
-        display.clear_rect(Rectangle::new(point, size));
+        display.clear_sub_bmp(&self.play_pause, &rectangle, point);
         display.draw_sub_bmp(&self.play_pause, &rectangle, point);
     }
 }

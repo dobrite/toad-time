@@ -104,8 +104,21 @@ impl Display {
             .unwrap();
     }
 
+    pub fn clear_bmp(&mut self, bmp: &Bmp, point: Point) {
+        let mut bb = bmp.bounding_box();
+        bb.top_left = point;
+        self.clear_rect(bb);
+    }
+
     pub fn draw_bmp(&mut self, bmp: &Bmp, point: Point) {
         Image::new(bmp, point).draw(&mut self.display).ok();
+    }
+
+    pub fn clear_sub_bmp(&mut self, bmp: &Bmp, rectangle: &Rectangle, point: Point) {
+        let sub_bmp = bmp.sub_image(rectangle);
+        let mut bb = sub_bmp.bounding_box();
+        bb.top_left = point;
+        self.clear_rect(bb);
     }
 
     pub fn draw_sub_bmp(&mut self, bmp: &Bmp, rectangle: &Rectangle, point: Point) {
