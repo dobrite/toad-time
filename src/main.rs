@@ -89,7 +89,6 @@ fn main() -> ! {
 
     let initial_state = State::new(outputs);
     let initial_state1 = initial_state.clone();
-    let initial_state2 = initial_state.clone();
 
     let outputs = {
         let mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4> = Vec::new();
@@ -114,6 +113,8 @@ fn main() -> ! {
         RotaryEncoder::new(rotary_dt, rotary_clk).into_standard_mode()
     };
 
+    let seq = Seq::new(initial_state.bpm.0, initial_state.outputs.clone());
+
     spawn_core1(p.CORE1, unsafe { &mut CORE1_STACK }, move || {
         let executor1 = EXECUTOR1.init(Executor::new());
         executor1.run(|spawner| {
@@ -128,7 +129,7 @@ fn main() -> ! {
     let executor0 = EXECUTOR0.init(Executor::new());
     executor0.run(|spawner| {
         let _ = spawner.spawn(core0_state_task(initial_state1));
-        let _ = spawner.spawn(core0_tick_task(initial_state2, outputs));
+        let _ = spawner.spawn(core0_tick_task(seq, outputs));
     });
 }
 
@@ -147,9 +148,7 @@ async fn core0_state_task(mut state: State) {
 }
 
 #[embassy_executor::task]
-async fn core0_tick_task(mut state: State, mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>) {
-    let mut seq = Seq::new(state.bpm.0, state.outputs.clone());
-
+async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>) {
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
     let mut state_changes: Vec<StateChange, 4> = Vec::new();
@@ -172,7 +171,6 @@ async fn core0_tick_task(mut state: State, mut outputs: Vec<EmbassyOutput<'stati
             });
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
-            state.handle_state_change(&state_change);
             match state_change {
                 StateChange::Rate(output, rate) => seq.set_rate(output.into(), rate),
                 StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
