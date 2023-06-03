@@ -8,7 +8,7 @@ use embedded_graphics::{
     geometry::Dimensions,
     image::{Image, ImageDrawableExt},
     pixelcolor::BinaryColor,
-    prelude::{Point, Size},
+    prelude::Point,
     primitives::Rectangle,
     Drawable,
 };
@@ -19,15 +19,15 @@ use ssd1306_async::{
     Ssd1306,
 };
 
-pub use self::tile_grid::TileGrid;
 use self::{
     bmps::{Bmp, Bmps},
     fonts::Fonts,
+    tile_grids::TileGrids,
 };
 
 mod bmps;
 mod fonts;
-mod tile_grid;
+mod tile_grids;
 
 pub type Ssd1306Display = Ssd1306<
     SPIInterface<
@@ -42,24 +42,16 @@ pub struct Display {
     bmps: Bmps,
     display: Ssd1306Display,
     fonts: Fonts,
-    frogge_tile_grid: TileGrid,
-    play_pause_tile_grid: TileGrid,
-    pwm_tile_grid: TileGrid,
+    tile_grids: TileGrids,
 }
 
 impl Display {
     pub fn new(display: Ssd1306Display) -> Self {
-        let frogge_tile_grid = TileGrid::new(Size::new(4, 2), Size::new(22, 22));
-        let play_pause_tile_grid = TileGrid::new(Size::new(2, 1), Size::new(16, 16));
-        let pwm_tile_grid = TileGrid::new(Size::new(5, 2), Size::new(26, 16));
-
         Self {
             bmps: Bmps::new(),
             display,
             fonts: Fonts::new(),
-            frogge_tile_grid,
-            play_pause_tile_grid,
-            pwm_tile_grid,
+            tile_grids: TileGrids::new(),
         }
     }
 
@@ -81,19 +73,19 @@ impl Display {
     }
 
     pub fn clear_frogge(&mut self, point: Point) {
-        let rectangle = self.frogge_tile_grid.get_rect(0);
+        let rectangle = self.tile_grids.get_frogge_rect(0);
         let bmp = self.bmps.frogge;
         self.clear_sub_bmp(&bmp, rectangle, point);
     }
 
     pub fn clear_play_pause(&mut self, point: Point) {
-        let rectangle = self.play_pause_tile_grid.get_rect(0);
+        let rectangle = self.tile_grids.get_play_pause_rect(0);
         let bmp = self.bmps.play_pause;
         self.clear_sub_bmp(&bmp, rectangle, point);
     }
 
     pub fn clear_pwm(&mut self, point: Point) {
-        let rectangle = self.pwm_tile_grid.get_rect(0);
+        let rectangle = self.tile_grids.get_pwm_rect(0);
         let bmp = self.bmps.pwm;
         self.clear_sub_bmp(&bmp, rectangle, point);
     }
@@ -119,13 +111,13 @@ impl Display {
     }
 
     pub fn draw_frogge(&mut self, index: usize, point: Point) {
-        let rectangle = self.frogge_tile_grid.get_rect(index);
+        let rectangle = self.tile_grids.get_frogge_rect(index);
         let bmp = self.bmps.frogge;
         self.draw_sub_bmp(&bmp, rectangle, point);
     }
 
     pub fn draw_play_pause(&mut self, index: usize, point: Point) {
-        let rectangle = self.play_pause_tile_grid.get_rect(index);
+        let rectangle = self.tile_grids.get_play_pause_rect(index);
         let bmp = self.bmps.play_pause;
         self.draw_sub_bmp(&bmp, rectangle, point);
     }
@@ -141,7 +133,7 @@ impl Display {
     }
 
     pub fn draw_pwm(&mut self, index: usize, point: Point) {
-        let rectangle = self.pwm_tile_grid.get_rect(index);
+        let rectangle = self.tile_grids.get_pwm_rect(index);
         let bmp = self.bmps.pwm;
         self.draw_sub_bmp(&bmp, rectangle, point);
     }
