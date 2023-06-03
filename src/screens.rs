@@ -32,7 +32,7 @@ impl Screens {
             StateChange::NextScreen(ref next_screen) => match next_screen {
                 ScreenState::Home(..) => self.home.draw(&state_change, display),
                 ScreenState::Output(_, config, _todo) => match config.output_type() {
-                    OutputType::Euclid => self.euclid.draw(&state_change, config, display),
+                    OutputType::Euclid => self.euclid.draw(&state_change, display),
                     OutputType::Gate => self.gate.draw(&state_change, display),
                 },
             },

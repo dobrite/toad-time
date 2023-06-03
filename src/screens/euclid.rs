@@ -30,12 +30,7 @@ impl EuclidScreen {
         }
     }
 
-    pub fn draw(
-        &mut self,
-        state_change: &StateChange,
-        config: &OutputConfig,
-        display: &mut Display,
-    ) {
+    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
         match state_change {
             StateChange::Rate(_, rate) => {
                 self.clear_rate(display);
@@ -57,11 +52,11 @@ impl EuclidScreen {
                 self.clear_grid(display);
                 self.draw_grid(display);
             }
-            StateChange::Index(..) => self.draw_caret(display, config.index()),
+            StateChange::Index(_, index) => self.draw_caret(display, *index),
             StateChange::NextElement(element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(ScreenState::Output(output, ..)) => {
+            StateChange::NextScreen(ScreenState::Output(output, config, _)) => {
                 self.update_sequence(&config.length(), &config.density());
                 self.redraw_screen(display, output, config, &Element::Rate);
             }
