@@ -78,19 +78,13 @@ fn main() -> ! {
     gate_a_config.set_rate(Rate::Mult(16, Frac::Zero));
     outputs.push(gate_a_config).ok();
 
-    let mut gate_b_config = OutputConfig::new();
-    gate_b_config.set_output_type(OutputType::Euclid);
-    gate_b_config.set_rate(Rate::Mult(16, Frac::Zero));
+    let gate_b_config = OutputConfig::new();
     outputs.push(gate_b_config).ok();
 
-    let mut gate_c_config = OutputConfig::new();
-    gate_c_config.set_output_type(OutputType::Euclid);
-    gate_c_config.set_rate(Rate::Mult(16, Frac::Zero));
+    let gate_c_config = OutputConfig::new();
     outputs.push(gate_c_config).ok();
 
-    let mut gate_d_config = OutputConfig::new();
-    gate_d_config.set_output_type(OutputType::Euclid);
-    gate_d_config.set_rate(Rate::Mult(16, Frac::Zero));
+    let gate_d_config = OutputConfig::new();
     outputs.push(gate_d_config).ok();
 
     let initial_state = State::new(outputs);
