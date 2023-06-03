@@ -1,5 +1,3 @@
-use core::fmt::Write;
-
 use embedded_graphics::prelude::Point;
 use heapless::String;
 
@@ -58,9 +56,7 @@ impl HomeScreen {
     }
 
     fn draw_bpm_label(&mut self, display: &mut Display) {
-        self.bpm_label.clear();
-        write!(self.bpm_label, "BPM").unwrap();
-        display.draw_smol_text(&self.bpm_label, Point::new(68, 27));
+        display.draw_smol_text(&mut self.bpm_label, "BPM", Point::new(68, 27));
     }
 
     fn clear_bpm_value(&mut self, display: &mut Display) {
@@ -68,9 +64,7 @@ impl HomeScreen {
     }
 
     fn draw_bpm_value(&mut self, display: &mut Display, bpm: &Bpm) {
-        self.bpm_str.clear();
-        write!(self.bpm_str, "{}", bpm).unwrap();
-        display.draw_bigge_text(&self.bpm_str, Point::new(22, 30));
+        display.draw_bigge_text(&mut self.bpm_str, bpm, Point::new(22, 30));
     }
 
     fn draw_frogge(&mut self, display: &mut Display) {
@@ -85,10 +79,7 @@ impl HomeScreen {
     }
 
     fn draw_sync(&mut self, display: &mut Display, sync: &Sync) {
-        self.sync_str.clear();
-        write!(self.sync_str, "{}", sync).unwrap();
-
-        display.draw_smol_text(&self.sync_str, Point::new(22, 50));
+        display.draw_smol_text(&mut self.sync_str, sync, Point::new(22, 50));
     }
 
     fn draw_play_pause(&mut self, display: &mut Display, play_status: &PlayStatus) {

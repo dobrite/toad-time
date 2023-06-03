@@ -1,3 +1,5 @@
+use core::fmt::Write;
+
 use embassy_rp::{
     gpio::Output,
     peripherals::{PIN_16, PIN_17, SPI0},
@@ -13,6 +15,7 @@ use embedded_graphics::{
     Drawable,
 };
 use embedded_hal_async::spi::ExclusiveDevice;
+use heapless::String;
 use ssd1306_async::{
     mode::{BufferedGraphicsMode, DisplayConfig},
     prelude::{DisplaySize128x64, SPIInterface},
@@ -153,9 +156,19 @@ impl Display {
         self.clear_rect(bb);
     }
 
-    pub fn draw_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+    pub fn draw_smol_text<const N: usize, D>(
+        &mut self,
+        string: &mut String<N>,
+        displayable: D,
+        point: Point,
+    ) where
+        D: core::fmt::Display,
+    {
+        string.clear();
+        write!(string, "{}", displayable).unwrap();
+
         self.fonts
-            .smol_text(str.as_ref(), point)
+            .smol_text(string, point)
             .draw(&mut self.display)
             .unwrap();
     }
@@ -165,9 +178,19 @@ impl Display {
         self.clear_rect(bb);
     }
 
-    pub fn draw_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
+    pub fn draw_bigge_text<const N: usize, D>(
+        &mut self,
+        string: &mut String<N>,
+        displayable: D,
+        point: Point,
+    ) where
+        D: core::fmt::Display,
+    {
+        string.clear();
+        write!(string, "{}", displayable).unwrap();
+
         self.fonts
-            .bigge_text(str.as_ref(), point)
+            .bigge_text(string, point)
             .draw(&mut self.display)
             .unwrap();
     }

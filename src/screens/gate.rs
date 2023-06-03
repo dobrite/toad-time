@@ -1,5 +1,3 @@
-use core::fmt::Write;
-
 use embedded_graphics::prelude::Point;
 use heapless::String;
 use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
@@ -68,9 +66,7 @@ impl GateScreen {
     }
 
     fn draw_name(&mut self, display: &mut Display, output: &Output) {
-        self.name_str.clear();
-        write!(self.name_str, "{}", output).unwrap();
-        display.draw_bigge_text(&self.name_str, Point::new(0, 24));
+        display.draw_bigge_text(&mut self.name_str, output, Point::new(0, 24));
     }
 
     fn draw_clock(&mut self, display: &mut Display) {
@@ -86,9 +82,8 @@ impl GateScreen {
     }
 
     fn draw_rate(&mut self, display: &mut Display, rate: &Rate) {
-        self.rate_str.clear();
-        write!(self.rate_str, "{}", RateString::from(rate).0).unwrap();
-        display.draw_smol_text(&self.rate_str, Point::new(72, 29));
+        let str = RateString::from(rate).0;
+        display.draw_smol_text(&mut self.rate_str, str, Point::new(72, 29));
     }
 
     fn clear_prob(&mut self, display: &mut Display) {
@@ -96,9 +91,8 @@ impl GateScreen {
     }
 
     fn draw_prob(&mut self, display: &mut Display, prob: &Prob) {
-        self.prob_str.clear();
-        write!(self.prob_str, "{}", ProbString::from(prob).0).unwrap();
-        display.draw_smol_text(&self.prob_str, Point::new(74, 46));
+        let str = ProbString::from(prob).0;
+        display.draw_smol_text(&mut self.prob_str, str, Point::new(74, 46));
     }
 
     fn draw_pwm(&mut self, display: &mut Display, pwm: &Pwm) {
@@ -108,9 +102,7 @@ impl GateScreen {
     }
 
     fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
-        self.output_type_str.clear();
         let str = OutputTypeString::from(output_type).0;
-        write!(self.output_type_str, "{}", str).unwrap();
-        display.draw_bigge_text(&self.output_type_str, Point::new(0, 50));
+        display.draw_bigge_text(&mut self.output_type_str, str, Point::new(0, 50));
     }
 }
