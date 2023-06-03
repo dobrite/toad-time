@@ -298,7 +298,7 @@ dependencies = [
 [[package]]
 name = "eg-pcf"
 version = "0.1.0"
-source = "git+https://github.com/dobrite/pcf.git#cb618a40a96eca18562b56c7c84977cf6841960c"
+source = "git+https://github.com/dobrite/pcf.git#d6b8870ce831741db8560799a394fdb46ecd56e3"
 dependencies = [
  "eg-pcf-macros",
  "embedded-graphics",
@@ -307,7 +307,7 @@ dependencies = [
 [[package]]
 name = "eg-pcf-macros"
 version = "0.1.0"
-source = "git+https://github.com/dobrite/pcf.git#cb618a40a96eca18562b56c7c84977cf6841960c"
+source = "git+https://github.com/dobrite/pcf.git#d6b8870ce831741db8560799a394fdb46ecd56e3"
 dependencies = [
  "embedded-graphics",
  "pcf-parser",
@@ -962,7 +962,7 @@ checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
 [[package]]
 name = "pcf-parser"
 version = "0.1.0"
-source = "git+https://github.com/dobrite/pcf.git#cb618a40a96eca18562b56c7c84977cf6841960c"
+source = "git+https://github.com/dobrite/pcf.git#d6b8870ce831741db8560799a394fdb46ecd56e3"
 dependencies = [
  "byteorder",
 ]
