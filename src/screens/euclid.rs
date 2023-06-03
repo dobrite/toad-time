@@ -8,7 +8,8 @@ use tinybmp::Bmp as TinyBmp;
 use crate::{
     display::Bmp,
     screens::Display,
-    state::{Output, OutputTypeString, RateString},
+    state::{Output, OutputTypeString, RateString, Screen},
+    StateChange,
 };
 
 const GRID_START_X: usize = 54;
@@ -21,7 +22,10 @@ const STEP_OFF: &[u8; 134] = include_bytes!("../assets/icons/step-off.bmp");
 pub struct EuclidScreen {
     caret: Bmp,
     clock: Bmp,
+    length_str: String<3>,
     name_str: String<3>,
+    output_type_str: String<3>,
+    rate_str: String<3>,
     step_on: Bmp,
     step_off: Bmp,
 }
@@ -36,25 +40,66 @@ impl EuclidScreen {
         Self {
             caret,
             clock,
+            length_str: String::new(),
             name_str: String::new(),
+            output_type_str: String::new(),
+            rate_str: String::new(),
             step_on,
             step_off,
         }
     }
 
-    pub fn draw(&mut self, name: &Output, config: &OutputConfig, display: &mut Display) {
-        self.draw_name(name, display);
-        self.draw_clock(display);
-        self.draw_rate(&config.rate(), display);
-        self.draw_length(&config.length(), display);
-        self.draw_grid(config.index(), config.sequence(), display);
-        self.draw_output_type(&config.output_type(), display);
+    pub fn draw(
+        &mut self,
+        state_change: &StateChange,
+        config: &OutputConfig,
+        display: &mut Display,
+    ) {
+        match state_change {
+            StateChange::Rate(_, rate) => {
+                self.clear_rate(display);
+                self.draw_rate(rate, display);
+            }
+            StateChange::Length(_, length) => {
+                self.clear_length(display);
+                self.draw_length(length, display);
+                self.clear_grid(display);
+                self.draw_grid(config.sequence(), display);
+            }
+            StateChange::OutputType(output, _) => {
+                display.clear();
+                self.draw_name(output, display);
+                self.draw_clock(display);
+                self.draw_rate(&config.rate(), display);
+                self.draw_length(&config.length(), display);
+                self.draw_grid(config.sequence(), display);
+                self.draw_caret(config.index(), config.sequence().len(), display);
+                self.draw_output_type(&config.output_type(), display);
+            }
+            StateChange::Density(_, _) => {
+                self.clear_grid(display);
+                self.draw_grid(config.sequence(), display);
+            }
+            StateChange::Index(..) => {
+                self.draw_caret(config.index(), config.sequence().len(), display);
+            }
+            StateChange::NextScreen(Screen::Output(output, _)) => {
+                display.clear();
+                self.draw_name(output, display);
+                self.draw_clock(display);
+                self.draw_rate(&config.rate(), display);
+                self.draw_length(&config.length(), display);
+                self.draw_grid(config.sequence(), display);
+                self.draw_caret(config.index(), config.sequence().len(), display);
+                self.draw_output_type(&config.output_type(), display);
+            }
+            _ => {}
+        }
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {
         self.name_str.clear();
         write!(self.name_str, "{}", output).unwrap();
-
         display.draw_bigge_text(&self.name_str, Point::new(0, 24));
     }
 
@@ -62,33 +107,67 @@ impl EuclidScreen {
         display.draw_bmp(&self.clock, Point::new(54, 8));
     }
 
+    fn clear_rate(&mut self, display: &mut Display) {
+        display.clear_smol_text(&self.rate_str, Point::new(72, 29));
+    }
+
     fn draw_rate(&mut self, rate: &Rate, display: &mut Display) {
-        display.draw_smol_text(&RateString::from(rate).0, Point::new(72, 29));
+        self.rate_str.clear();
+        write!(self.rate_str, "{}", RateString::from(rate).0).unwrap();
+        display.draw_smol_text(&self.rate_str, Point::new(72, 29));
+    }
+
+    fn clear_length(&mut self, display: &mut Display) {
+        display.clear_smol_text(&self.length_str, Point::new(74, 45));
     }
 
     fn draw_length(&mut self, length: &Length, display: &mut Display) {
-        let s: String<3> = String::from(length.0);
-        display.draw_smol_text(&s, Point::new(74, 45));
+        self.length_str.clear();
+        write!(self.length_str, "{}", length.0).unwrap();
+        display.draw_smol_text(&self.length_str, Point::new(74, 45));
     }
 
-    fn draw_grid(&mut self, index: usize, sequence: &Vec<bool, 16>, display: &mut Display) {
-        let len = sequence.len();
-        for idx in 0..len {
-            let x = idx % len % 8;
-            let y = idx / 8;
-            let step_on = sequence[idx];
-            let step_bmp = if step_on { self.step_on } else { self.step_off };
-            let p_x = (GRID_START_X + x * 7) as i32;
-            let p_y = (GRID_START_Y + y * 10) as i32;
-            if idx == index {
-                display.draw_bmp(&self.caret, Point::new(p_x + 1, p_y - 3));
-            }
+    #[inline(always)]
+    fn grid_point(&self, idx: usize, len: usize) -> Point {
+        let x = idx % len % 8;
+        let y = idx / 8;
+        let p_x = GRID_START_X + x * (5 + 2);
+        let p_y = GRID_START_Y + y * (5 + 5);
+        Point::new(p_x as i32, p_y as i32)
+    }
 
-            display.draw_bmp(&step_bmp, Point::new(p_x, p_y));
+    fn clear_grid(&mut self, display: &mut Display) {
+        for idx in 0..16 {
+            display.clear_bmp(&self.step_on, self.grid_point(idx, 16));
         }
     }
 
+    fn draw_grid(&mut self, sequence: &Vec<bool, 16>, display: &mut Display) {
+        let len = sequence.len();
+        for idx in 0..len {
+            let step_on = sequence[idx];
+            let step_bmp = if step_on { self.step_on } else { self.step_off };
+            display.draw_bmp(&step_bmp, self.grid_point(idx, len));
+        }
+    }
+
+    pub fn draw_caret(&mut self, index: usize, len: usize, display: &mut Display) {
+        let caret_point = |idx| -> Point {
+            let mut grid_point = self.grid_point(idx, len);
+            grid_point.x += 1;
+            grid_point.y -= 3;
+            grid_point
+        };
+
+        let idx = if index == 0 { len } else { index };
+        display.clear_bmp(&self.caret, caret_point(idx - 1));
+        display.draw_bmp(&self.caret, caret_point(index));
+    }
+
     fn draw_output_type(&mut self, output_type: &OutputType, display: &mut Display) {
-        display.draw_bigge_text(&OutputTypeString::from(output_type).0, Point::new(0, 50));
+        self.output_type_str.clear();
+        let str = OutputTypeString::from(output_type).0;
+        write!(self.output_type_str, "{}", str).unwrap();
+        display.draw_bigge_text(&self.output_type_str, Point::new(0, 50));
     }
 }
