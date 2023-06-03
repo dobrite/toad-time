@@ -37,8 +37,8 @@ impl Updatable for Prob {
 
 pub struct ProbString(pub String<4>);
 
-impl From<Prob> for ProbString {
-    fn from(val: Prob) -> Self {
+impl From<&Prob> for ProbString {
+    fn from(val: &Prob) -> Self {
         let prob_string = match val {
             Prob::P100 => "100%",
             Prob::P90 => "90%",

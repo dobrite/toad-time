@@ -45,10 +45,10 @@ impl EuclidScreen {
     pub fn draw(&mut self, name: &Output, config: &OutputConfig, display: &mut Display) {
         self.draw_name(name, display);
         self.draw_clock(display);
-        self.draw_rate(config.rate(), display);
-        self.draw_length(config.length(), display);
+        self.draw_rate(&config.rate(), display);
+        self.draw_length(&config.length(), display);
         self.draw_grid(config.index(), config.sequence(), display);
-        self.draw_output_type(config.output_type(), display);
+        self.draw_output_type(&config.output_type(), display);
     }
 
     fn draw_name(&mut self, output: &Output, display: &mut Display) {
@@ -62,11 +62,11 @@ impl EuclidScreen {
         display.draw_bmp(&self.clock, Point::new(54, 8));
     }
 
-    fn draw_rate(&mut self, rate: Rate, display: &mut Display) {
+    fn draw_rate(&mut self, rate: &Rate, display: &mut Display) {
         display.draw_smol_text(&RateString::from(rate).0, Point::new(72, 29));
     }
 
-    fn draw_length(&mut self, length: Length, display: &mut Display) {
+    fn draw_length(&mut self, length: &Length, display: &mut Display) {
         let s: String<3> = String::from(length.0);
         display.draw_smol_text(&s, Point::new(74, 45));
     }
@@ -88,7 +88,7 @@ impl EuclidScreen {
         }
     }
 
-    fn draw_output_type(&mut self, output_type: OutputType, display: &mut Display) {
+    fn draw_output_type(&mut self, output_type: &OutputType, display: &mut Display) {
         display.draw_bigge_text(&OutputTypeString::from(output_type).0, Point::new(0, 50));
     }
 }

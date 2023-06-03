@@ -45,8 +45,8 @@ impl Updatable for Rate {
 
 pub struct RateString(pub String<3>);
 
-impl From<Rate> for RateString {
-    fn from(val: Rate) -> Self {
+impl From<&Rate> for RateString {
+    fn from(val: &Rate) -> Self {
         let rate_string = match val {
             Rate::Div(64, Frac::Zero) => "/64",
             Rate::Div(32, Frac::Zero) => "/32",
