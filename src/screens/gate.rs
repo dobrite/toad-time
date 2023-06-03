@@ -55,40 +55,38 @@ impl GateScreen {
         match state_change {
             StateChange::Rate(_, rate) => {
                 self.clear_rate(display);
-                self.draw_rate(rate, display);
+                self.draw_rate(display, rate);
             }
             StateChange::Prob(_, prob) => {
                 self.clear_prob(display);
-                self.draw_prob(prob, display);
+                self.draw_prob(display, prob);
             }
             StateChange::Pwm(_, pwm) => {
-                self.draw_pwm(pwm, display);
+                self.draw_pwm(display, pwm);
             }
             StateChange::OutputType(output, _) => {
                 display.clear();
-                self.draw_name(output, display);
-                self.draw_clock(display);
-                self.draw_dice(display);
-                self.draw_rate(&config.rate(), display);
-                self.draw_prob(&config.prob(), display);
-                self.draw_pwm(&config.pwm(), display); // 65x16 (13x8)
-                self.draw_output_type(&config.output_type(), display);
+                self.draw_screen(display, output, config);
             }
             StateChange::NextScreen(Screen::Output(output, _)) => {
                 display.clear();
-                self.draw_name(output, display);
-                self.draw_clock(display);
-                self.draw_dice(display);
-                self.draw_rate(&config.rate(), display);
-                self.draw_prob(&config.prob(), display);
-                self.draw_pwm(&config.pwm(), display); // 65x16 (13x8)
-                self.draw_output_type(&config.output_type(), display);
+                self.draw_screen(display, output, config);
             }
             _ => {}
         }
     }
 
-    fn draw_name(&mut self, output: &Output, display: &mut Display) {
+    fn draw_screen(&mut self, display: &mut Display, output: &Output, config: &OutputConfig) {
+        self.draw_name(display, output);
+        self.draw_clock(display);
+        self.draw_dice(display);
+        self.draw_rate(display, &config.rate());
+        self.draw_prob(display, &config.prob());
+        self.draw_pwm(display, &config.pwm()); // 65x16 (13x8)
+        self.draw_output_type(display, &config.output_type());
+    }
+
+    fn draw_name(&mut self, display: &mut Display, output: &Output) {
         self.name_str.clear();
         write!(self.name_str, "{}", output).unwrap();
         display.draw_bigge_text(&self.name_str, Point::new(0, 24));
@@ -106,7 +104,7 @@ impl GateScreen {
         display.clear_smol_text(&self.rate_str, Point::new(72, 29));
     }
 
-    fn draw_rate(&mut self, rate: &Rate, display: &mut Display) {
+    fn draw_rate(&mut self, display: &mut Display, rate: &Rate) {
         self.rate_str.clear();
         write!(self.rate_str, "{}", RateString::from(rate).0).unwrap();
         display.draw_smol_text(&self.rate_str, Point::new(72, 29));
@@ -116,20 +114,20 @@ impl GateScreen {
         display.clear_smol_text(&self.prob_str, Point::new(74, 46));
     }
 
-    fn draw_prob(&mut self, prob: &Prob, display: &mut Display) {
+    fn draw_prob(&mut self, display: &mut Display, prob: &Prob) {
         self.prob_str.clear();
         write!(self.prob_str, "{}", ProbString::from(prob).0).unwrap();
         display.draw_smol_text(&self.prob_str, Point::new(74, 46));
     }
 
-    fn draw_pwm(&mut self, pwm: &Pwm, display: &mut Display) {
+    fn draw_pwm(&mut self, display: &mut Display, pwm: &Pwm) {
         let rectangle = self.pwm_tile_grid.get_rect(pwm.index());
         let point = Point::new(55, 46);
         display.clear_sub_bmp(&self.pwm, &rectangle, point);
         display.draw_sub_bmp(&self.pwm, &rectangle, point);
     }
 
-    fn draw_output_type(&mut self, output_type: &OutputType, display: &mut Display) {
+    fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
         self.output_type_str.clear();
         let str = OutputTypeString::from(output_type).0;
         write!(self.output_type_str, "{}", str).unwrap();
