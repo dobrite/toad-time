@@ -140,7 +140,7 @@ async fn core0_state_task(mut state: State) {
 
 #[embassy_executor::task]
 async fn core0_tick_task(mut state: State, mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>) {
-    let mut seq = Seq::new(120, state.outputs.clone());
+    let mut seq = Seq::new(state.bpm.0, state.outputs.clone());
 
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
