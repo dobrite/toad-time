@@ -43,7 +43,7 @@ impl GateScreen {
             StateChange::Pwm(_, pwm) => {
                 self.draw_pwm(display, pwm);
             }
-            StateChange::OutputType(output, _) => {
+            StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
             StateChange::NextElement(element) => {

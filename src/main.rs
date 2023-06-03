@@ -140,7 +140,6 @@ async fn core0_state_task(mut state: State) {
         match state.handle_command(command) {
             StateChange::None => {}
             state_change => {
-                state.handle_state_change(&state_change);
                 let _ = TICK_STATE_CHANNEL.send(state_change).await;
             }
         }
@@ -177,9 +176,10 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                 StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
                 StateChange::Length(output, length) => seq.set_length(output.into(), length),
                 StateChange::Density(output, density) => seq.set_density(output.into(), density),
-                StateChange::OutputType(output, output_type) => {
-                    seq.set_output_type(output.into(), output_type)
+                StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
+                    seq.set_output_type(output.into(), config.output_type())
                 }
+                StateChange::OutputType(ScreenState::Home(..)) => unreachable!(),
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
@@ -266,7 +266,7 @@ async fn core1_encoder_task(mut encoder: Encoder) {
 }
 
 #[embassy_executor::task]
-async fn core1_display_task(mut state: State, mut display: Display) {
+async fn core1_display_task(state: State, mut display: Display) {
     let mut screens = Screens::new();
 
     display.init().await;
@@ -280,7 +280,6 @@ async fn core1_display_task(mut state: State, mut display: Display) {
         match state_change {
             StateChange::None => {}
             _ => {
-                state.handle_state_change(&state_change);
                 screens.draw(state_change, &state, &mut display);
                 display.flush().await
             }

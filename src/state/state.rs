@@ -37,40 +37,6 @@ impl State {
         }
     }
 
-    pub fn handle_state_change(&mut self, state_change: &StateChange) {
-        match state_change {
-            StateChange::Bpm(bpm) => self.bpm = *bpm,
-            StateChange::Sync(sync) => self.sync = *sync,
-            StateChange::Rate(output, rate) => self.outputs[usize::from(*output)].set_rate(*rate),
-            StateChange::Pwm(output, pwm) => self.outputs[usize::from(*output)].set_pwm(*pwm),
-            StateChange::Prob(output, prob) => self.outputs[usize::from(*output)].set_prob(*prob),
-            StateChange::Length(output, length) => {
-                self.outputs[usize::from(*output)].set_length(*length)
-            }
-            StateChange::Density(output, density) => {
-                self.outputs[usize::from(*output)].set_density(*density)
-            }
-            StateChange::OutputType(output, output_type) => {
-                let mut config = self.outputs[usize::from(*output)].clone();
-                config.set_output_type(*output_type);
-                self.current_screen = ScreenState::Output(*output, config, Option::None);
-            }
-            StateChange::Index(output, index) => {
-                self.outputs[usize::from(*output)].set_index(*index)
-            }
-            StateChange::PlayStatus(play_status) => self.play_status = *play_status,
-            StateChange::NextScreen(screen_state) => {
-                self.current_screen = screen_state.clone();
-                self.current_element = match self.current_screen {
-                    ScreenState::Home(..) => Element::Bpm,
-                    ScreenState::Output(..) => Element::Rate,
-                };
-            }
-            StateChange::NextElement(element) => self.current_element = *element,
-            StateChange::None => {}
-        }
-    }
-
     pub fn handle_command(&mut self, command: Command) -> StateChange {
         let current = self.current_element;
 

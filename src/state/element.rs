@@ -73,7 +73,11 @@ impl Element {
                     ScreenState::Output(output, ..) => output,
                 };
                 match state.outputs[usize::from(output)].output_type().next() {
-                    Option::Some(output_type) => StateChange::OutputType(output, output_type),
+                    Option::Some(output_type) => {
+                        let mut config = state.outputs[usize::from(output)].clone();
+                        config.set_output_type(output_type);
+                        StateChange::OutputType(ScreenState::Output(output, config, Option::None))
+                    }
                     Option::None => StateChange::None,
                 }
             }
@@ -140,7 +144,11 @@ impl Element {
                     ScreenState::Output(output, ..) => output,
                 };
                 match state.outputs[usize::from(output)].output_type().prev() {
-                    Option::Some(output_type) => StateChange::OutputType(output, output_type),
+                    Option::Some(output_type) => {
+                        let mut config = state.outputs[usize::from(output)].clone();
+                        config.set_output_type(output_type);
+                        StateChange::OutputType(ScreenState::Output(output, config, Option::None))
+                    }
                     Option::None => StateChange::None,
                 }
             }
