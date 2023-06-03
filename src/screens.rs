@@ -6,6 +6,7 @@ use crate::{
     display::{Bmp, Display},
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
     state::{Element, Output, Screen, State},
+    StateChange,
 };
 
 mod euclid;
@@ -39,29 +40,31 @@ impl Screens {
         }
     }
 
-    pub async fn draw(&mut self, state: &State, display: &mut Display) {
+    pub fn draw(&mut self, state_change: StateChange, state: &State, display: &mut Display) {
         match state.current_screen {
-            Screen::Home => self.draw_home(state, display).await,
-            Screen::Output(output, _) => self.draw_output(&output, state, display).await,
+            Screen::Home => self.home.draw(&state_change, state, display),
+            Screen::Output(output, _) => self.draw_output(&output, &state_change, state, display),
+        }
+
+        match state_change {
+            StateChange::NextScreen(_) => self.draw_pointer(state.current_element, display),
+            StateChange::NextElement(_) => self.draw_pointer(state.current_element, display),
+            _ => {}
         }
     }
 
-    pub async fn draw_home(&mut self, state: &State, display: &mut Display) {
-        display.clear();
-        self.home.draw(state, display);
-        self.draw_pointer(state.current_element, display);
-        display.flush().await;
-    }
-
-    async fn draw_output(&mut self, output: &Output, state: &State, display: &mut Display) {
-        display.clear();
+    fn draw_output(
+        &mut self,
+        output: &Output,
+        state_change: &StateChange,
+        state: &State,
+        display: &mut Display,
+    ) {
         let output_config = &state.outputs[usize::from(*output)];
         match output_config.output_type() {
-            OutputType::Euclid => self.euclid.draw(output, output_config, display),
-            OutputType::Gate => self.gate.draw(output, output_config, display),
+            OutputType::Euclid => self.euclid.draw(state_change, output_config, display),
+            OutputType::Gate => self.gate.draw(state_change, output_config, display),
         }
-        self.draw_pointer(state.current_element, display);
-        display.flush().await;
     }
 
     fn draw_pointer(&mut self, current: Element, display: &mut Display) {
