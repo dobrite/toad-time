@@ -1,9 +1,8 @@
 use embedded_graphics::prelude::Point;
 use seq::OutputType;
-use tinybmp::Bmp as TinyBmp;
 
 use crate::{
-    display::{Bmp, Display},
+    display::Display,
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
     state::{Element, Output, Screen, State},
     StateChange,
@@ -12,9 +11,6 @@ use crate::{
 mod euclid;
 mod gate;
 mod home;
-
-const POINTER_LEFT: &[u8; 630] = include_bytes!("assets/icons/pointer-left.bmp");
-const POINTER_RIGHT: &[u8; 630] = include_bytes!("assets/icons/pointer-right.bmp");
 
 enum Direction {
     Right,
@@ -25,8 +21,6 @@ pub struct Screens {
     euclid: EuclidScreen,
     gate: GateScreen,
     home: HomeScreen,
-    pointer_left: Bmp,
-    pointer_right: Bmp,
 }
 
 impl Screens {
@@ -35,8 +29,6 @@ impl Screens {
             euclid: EuclidScreen::new(),
             gate: GateScreen::new(),
             home: HomeScreen::new(),
-            pointer_left: TinyBmp::from_slice(POINTER_LEFT).unwrap(),
-            pointer_right: TinyBmp::from_slice(POINTER_RIGHT).unwrap(),
         }
     }
 
@@ -78,10 +70,9 @@ impl Screens {
             Element::Density => (Point::new(36, 46), Direction::Right),
             Element::OutputType => (Point::new(20, 25), Direction::Left),
         };
-        let pointer = match dir {
-            Direction::Right => self.pointer_right,
-            Direction::Left => self.pointer_left,
+        match dir {
+            Direction::Right => display.draw_pointer_right(point),
+            Direction::Left => display.draw_pointer_left(point),
         };
-        display.draw_bmp(&pointer, point);
     }
 }

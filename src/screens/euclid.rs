@@ -3,10 +3,8 @@ use core::fmt::Write;
 use embedded_graphics::prelude::Point;
 use heapless::{String, Vec};
 use seq::{Length, OutputConfig, OutputType, Rate};
-use tinybmp::Bmp as TinyBmp;
 
 use crate::{
-    display::Bmp,
     screens::Display,
     state::{Output, OutputTypeString, RateString, Screen},
     StateChange,
@@ -14,38 +12,21 @@ use crate::{
 
 const GRID_START_X: usize = 54;
 const GRID_START_Y: usize = 46;
-const CLOCK: &[u8; 1318] = include_bytes!("../assets/icons/clock.bmp");
-const CARET: &[u8; 78] = include_bytes!("../assets/icons/caret.bmp");
-const STEP_ON: &[u8; 134] = include_bytes!("../assets/icons/step-on.bmp");
-const STEP_OFF: &[u8; 134] = include_bytes!("../assets/icons/step-off.bmp");
 
 pub struct EuclidScreen {
-    caret: Bmp,
-    clock: Bmp,
     length_str: String<3>,
     name_str: String<3>,
     output_type_str: String<3>,
     rate_str: String<3>,
-    step_on: Bmp,
-    step_off: Bmp,
 }
 
 impl EuclidScreen {
     pub fn new() -> Self {
-        let caret = TinyBmp::from_slice(CARET).unwrap();
-        let clock = TinyBmp::from_slice(CLOCK).unwrap();
-        let step_on = TinyBmp::from_slice(STEP_ON).unwrap();
-        let step_off = TinyBmp::from_slice(STEP_OFF).unwrap();
-
         Self {
-            caret,
-            clock,
             length_str: String::new(),
             name_str: String::new(),
             output_type_str: String::new(),
             rate_str: String::new(),
-            step_on,
-            step_off,
         }
     }
 
@@ -102,7 +83,7 @@ impl EuclidScreen {
     }
 
     fn draw_clock(&mut self, display: &mut Display) {
-        display.draw_bmp(&self.clock, Point::new(54, 8));
+        display.draw_clock(Point::new(54, 8));
     }
 
     fn clear_rate(&mut self, display: &mut Display) {
@@ -136,7 +117,7 @@ impl EuclidScreen {
 
     fn clear_grid(&mut self, display: &mut Display) {
         for idx in 0..16 {
-            display.clear_bmp(&self.step_on, self.grid_point(idx, 16));
+            display.clear_step_on(self.grid_point(idx, 16));
         }
     }
 
@@ -144,8 +125,12 @@ impl EuclidScreen {
         let len = sequence.len();
         for idx in 0..len {
             let step_on = sequence[idx];
-            let step_bmp = if step_on { self.step_on } else { self.step_off };
-            display.draw_bmp(&step_bmp, self.grid_point(idx, len));
+            let point = self.grid_point(idx, len);
+            if step_on {
+                display.draw_step_on(point);
+            } else {
+                display.draw_step_off(point);
+            };
         }
     }
 
@@ -158,8 +143,8 @@ impl EuclidScreen {
         };
 
         let idx = if index == 0 { len } else { index };
-        display.clear_bmp(&self.caret, caret_point(idx - 1));
-        display.draw_bmp(&self.caret, caret_point(index));
+        display.clear_caret(caret_point(idx - 1));
+        display.draw_caret(caret_point(index));
     }
 
     fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {

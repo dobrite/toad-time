@@ -1,27 +1,17 @@
 use core::fmt::Write;
 
-use embedded_graphics::{
-    prelude::{Point, Size},
-    primitives::Rectangle,
-};
+use embedded_graphics::prelude::Point;
 use heapless::String;
-use tinybmp::Bmp as TinyBmp;
 
 use crate::{
-    display::Bmp,
     screens::Display,
     state::{Bpm, PlayStatus, State, Sync},
     StateChange,
 };
 
-const FROGGE: &[u8; 4950] = include_bytes!("../assets/icons/spin-sprite-sheet.bmp"); // 88x44
-const PLAY_PAUSE: &[u8; 1590] = include_bytes!("../assets/icons/play-pause.bmp");
-
 pub struct HomeScreen {
     bpm_label: String<3>,
     bpm_str: String<3>,
-    frogge: Bmp,
-    play_pause: Bmp,
     sync_str: String<3>,
 }
 
@@ -35,15 +25,11 @@ impl HomeScreen {
     pub fn new() -> Self {
         let bpm_label = String::new();
         let bpm_str = String::new();
-        let play_pause = TinyBmp::from_slice(PLAY_PAUSE).unwrap();
         let sync_str = String::new();
-        let frogge = TinyBmp::from_slice(FROGGE).unwrap();
 
         Self {
             bpm_label,
             bpm_str,
-            frogge,
-            play_pause,
             sync_str,
         }
     }
@@ -88,10 +74,10 @@ impl HomeScreen {
     }
 
     fn draw_frogge(&mut self, display: &mut Display) {
-        let rectangle = Rectangle::new(Point::zero(), Size::new(22, 22));
         let point = Point::new(80, 26);
-        display.clear_sub_bmp(&self.frogge, &rectangle, point);
-        display.draw_sub_bmp(&self.frogge, &rectangle, point);
+        let index = 0;
+        display.clear_frogge(point);
+        display.draw_frogge(index, point);
     }
 
     fn clear_sync(&mut self, display: &mut Display) {
@@ -106,13 +92,12 @@ impl HomeScreen {
     }
 
     fn draw_play_pause(&mut self, display: &mut Display, play_status: &PlayStatus) {
-        let rectangle = match play_status {
-            PlayStatus::Playing => Rectangle::new(Point::zero(), Size::new(16, 16)),
-            PlayStatus::Paused => Rectangle::new(Point::new(16, 0), Size::new(32, 16)),
-        };
-
         let point = Point::new(56, 30);
-        display.clear_sub_bmp(&self.play_pause, &rectangle, point);
-        display.draw_sub_bmp(&self.play_pause, &rectangle, point);
+        let index = match play_status {
+            PlayStatus::Playing => 0,
+            PlayStatus::Paused => 1,
+        };
+        display.clear_play_pause(point);
+        display.draw_play_pause(index, point);
     }
 }
