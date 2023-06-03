@@ -1,4 +1,3 @@
-use eg_pcf::{include_pcf, text::PcfTextStyle, PcfFont};
 use embassy_rp::{
     gpio::Output,
     peripherals::{PIN_16, PIN_17, SPI0},
@@ -11,7 +10,6 @@ use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::{Point, Size},
     primitives::Rectangle,
-    text::Text,
     Drawable,
 };
 use embedded_hal_async::spi::ExclusiveDevice;
@@ -21,14 +19,15 @@ use ssd1306_async::{
     Ssd1306,
 };
 
-use self::bmps::{Bmp, Bmps};
 pub use self::tile_grid::TileGrid;
+use self::{
+    bmps::{Bmp, Bmps},
+    fonts::Fonts,
+};
 
 mod bmps;
+mod fonts;
 mod tile_grid;
-
-const SMOL_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-7.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
-const BIGGE_FONT: PcfFont = include_pcf!("src/assets/fonts/FrogPrincess-10.pcf", 'A'..='Z' | 'a'..='z' | '0'..='9' | ' ' | '/' | '%');
 
 pub type Ssd1306Display = Ssd1306<
     SPIInterface<
@@ -39,34 +38,28 @@ pub type Ssd1306Display = Ssd1306<
     BufferedGraphicsMode<DisplaySize128x64>,
 >;
 
-type Font = PcfTextStyle<'static, BinaryColor>;
-
 pub struct Display {
-    bigge_font: Font,
     bmps: Bmps,
     display: Ssd1306Display,
+    fonts: Fonts,
     frogge_tile_grid: TileGrid,
     play_pause_tile_grid: TileGrid,
     pwm_tile_grid: TileGrid,
-    smol_font: Font,
 }
 
 impl Display {
     pub fn new(display: Ssd1306Display) -> Self {
-        let bigge_font = PcfTextStyle::new(&BIGGE_FONT, BinaryColor::On);
         let frogge_tile_grid = TileGrid::new(Size::new(4, 2), Size::new(22, 22));
         let play_pause_tile_grid = TileGrid::new(Size::new(2, 1), Size::new(16, 16));
         let pwm_tile_grid = TileGrid::new(Size::new(5, 2), Size::new(26, 16));
-        let smol_font = PcfTextStyle::new(&SMOL_FONT, BinaryColor::On);
 
         Self {
-            bigge_font,
             bmps: Bmps::new(),
             display,
+            fonts: Fonts::new(),
             frogge_tile_grid,
             play_pause_tile_grid,
             pwm_tile_grid,
-            smol_font,
         }
     }
 
@@ -164,30 +157,25 @@ impl Display {
     }
 
     pub fn clear_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
-        let text = Text::new(str.as_ref(), point, self.smol_font);
-        let font_bb = SMOL_FONT.bounding_box;
-        let mut bb = text.bounding_box();
-        bb.top_left.y += font_bb.top_left.y;
-        bb.size.height += 2;
+        let bb = self.fonts.smol_font_bounding_box(str.as_ref(), point);
         self.clear_rect(bb);
     }
 
     pub fn draw_smol_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
-        Text::new(str.as_ref(), point, self.smol_font)
+        self.fonts
+            .smol_text(str.as_ref(), point)
             .draw(&mut self.display)
             .unwrap();
     }
 
     pub fn clear_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
-        let text = Text::new(str.as_ref(), point, self.bigge_font);
-        let font_bb = BIGGE_FONT.bounding_box;
-        let mut bb = text.bounding_box();
-        bb.top_left.y += font_bb.top_left.y + 2;
+        let bb = self.fonts.bigge_font_bounding_box(str.as_ref(), point);
         self.clear_rect(bb);
     }
 
     pub fn draw_bigge_text<S: AsRef<str>>(&mut self, str: S, point: Point) {
-        Text::new(str.as_ref(), point, self.bigge_font)
+        self.fonts
+            .bigge_text(str.as_ref(), point)
             .draw(&mut self.display)
             .unwrap();
     }
