@@ -15,8 +15,14 @@ pub enum Element {
 impl Element {
     pub fn next(&self, state: &mut State) -> Option<StateChange> {
         match self {
-            Element::Bpm => state.bpm.next().map(StateChange::Bpm),
-            Element::Sync => state.sync.next().map(StateChange::Sync),
+            Element::Bpm => state.bpm.next().map(|bpm| {
+                state.bpm = bpm;
+                StateChange::Bpm(bpm)
+            }),
+            Element::Sync => state.sync.next().map(|sync| {
+                state.sync = sync;
+                StateChange::Sync(sync)
+            }),
             elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
@@ -60,8 +66,14 @@ impl Element {
 
     pub fn prev(&self, state: &mut State) -> Option<StateChange> {
         match self {
-            Element::Bpm => state.bpm.prev().map(StateChange::Bpm),
-            Element::Sync => state.sync.prev().map(StateChange::Sync),
+            Element::Bpm => state.bpm.prev().map(|bpm| {
+                state.bpm = bpm;
+                StateChange::Bpm(bpm)
+            }),
+            Element::Sync => state.sync.prev().map(|sync| {
+                state.sync = sync;
+                StateChange::Sync(sync)
+            }),
             elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
