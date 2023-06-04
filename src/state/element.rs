@@ -17,70 +17,52 @@ impl Element {
         match self {
             Element::Bpm => state.bpm.next().into(),
             Element::Sync => state.sync.next().into(),
-            Element::Rate => {
+            elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].rate().next() {
-                    Option::Some(rate) => StateChange::Rate(output, rate),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Pwm => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].pwm().next() {
-                    Option::Some(pwm) => StateChange::Pwm(output, pwm),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Prob => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].prob().next() {
-                    Option::Some(prob) => StateChange::Prob(output, prob),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Length => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                let config = &state.outputs[usize::from(output)];
-                match config.length().next() {
-                    Option::Some(length) => StateChange::Length(output, length, config.density()),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Density => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                let config = &state.outputs[usize::from(output)];
-                match config.density().next() {
-                    Option::Some(density) => StateChange::Density(output, config.length(), density),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::OutputType => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].output_type().next() {
-                    Option::Some(output_type) => {
-                        let mut config = state.outputs[usize::from(output)].clone();
-                        config.set_output_type(output_type);
-                        StateChange::OutputType(ScreenState::Output(output, config, Option::None))
+                let config = &mut state.outputs[usize::from(output)];
+                match elem {
+                    Element::Rate => config.rate().next().map_or(StateChange::None, |rate| {
+                        config.set_rate(rate);
+                        StateChange::Rate(output, config.output_type(), rate)
+                    }),
+                    Element::Pwm => config.pwm().next().map_or(StateChange::None, |pwm| {
+                        config.set_pwm(pwm);
+                        StateChange::Pwm(output, pwm)
+                    }),
+                    Element::Prob => config.prob().next().map_or(StateChange::None, |prob| {
+                        config.set_prob(prob);
+                        StateChange::Prob(output, prob)
+                    }),
+                    Element::Length => config.length().next().map_or(StateChange::None, |length| {
+                        config.set_length(length);
+                        StateChange::Length(output, length, config.density())
+                    }),
+                    Element::Density => {
+                        config
+                            .density()
+                            .next()
+                            .map_or(StateChange::None, |density| {
+                                config.set_density(density);
+                                StateChange::Density(output, config.length(), density)
+                            })
                     }
-                    Option::None => StateChange::None,
+                    Element::OutputType => {
+                        config
+                            .output_type()
+                            .next()
+                            .map_or(StateChange::None, |output_type| {
+                                config.set_output_type(output_type);
+                                StateChange::OutputType(ScreenState::Output(
+                                    output,
+                                    config.clone(),
+                                    Option::None,
+                                ))
+                            })
+                    }
+                    _ => unreachable!(),
                 }
             }
         }
@@ -90,70 +72,52 @@ impl Element {
         match self {
             Element::Bpm => state.bpm.prev().into(),
             Element::Sync => state.sync.prev().into(),
-            Element::Rate => {
+            elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
                     ScreenState::Output(output, ..) => output,
                 };
-                match state.outputs[usize::from(output)].rate().prev() {
-                    Option::Some(rate) => StateChange::Rate(output, rate),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Pwm => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].pwm().prev() {
-                    Option::Some(pwm) => StateChange::Pwm(output, pwm),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Prob => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].prob().prev() {
-                    Option::Some(prob) => StateChange::Prob(output, prob),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Length => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                let config = &state.outputs[usize::from(output)];
-                match config.length().prev() {
-                    Option::Some(length) => StateChange::Length(output, length, config.density()),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::Density => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                let config = &state.outputs[usize::from(output)];
-                match config.density().prev() {
-                    Option::Some(density) => StateChange::Density(output, config.length(), density),
-                    Option::None => StateChange::None,
-                }
-            }
-            Element::OutputType => {
-                let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
-                };
-                match state.outputs[usize::from(output)].output_type().prev() {
-                    Option::Some(output_type) => {
-                        let mut config = state.outputs[usize::from(output)].clone();
-                        config.set_output_type(output_type);
-                        StateChange::OutputType(ScreenState::Output(output, config, Option::None))
+                let config = &mut state.outputs[usize::from(output)];
+                match elem {
+                    Element::Rate => config.rate().prev().map_or(StateChange::None, |rate| {
+                        config.set_rate(rate);
+                        StateChange::Rate(output, config.output_type(), rate)
+                    }),
+                    Element::Pwm => config.pwm().prev().map_or(StateChange::None, |pwm| {
+                        config.set_pwm(pwm);
+                        StateChange::Pwm(output, pwm)
+                    }),
+                    Element::Prob => config.prob().prev().map_or(StateChange::None, |prob| {
+                        config.set_prob(prob);
+                        StateChange::Prob(output, prob)
+                    }),
+                    Element::Length => config.length().prev().map_or(StateChange::None, |length| {
+                        config.set_length(length);
+                        StateChange::Length(output, length, config.density())
+                    }),
+                    Element::Density => {
+                        config
+                            .density()
+                            .prev()
+                            .map_or(StateChange::None, |density| {
+                                config.set_density(density);
+                                StateChange::Density(output, config.length(), density)
+                            })
                     }
-                    Option::None => StateChange::None,
+                    Element::OutputType => {
+                        config
+                            .output_type()
+                            .prev()
+                            .map_or(StateChange::None, |output_type| {
+                                config.set_output_type(output_type);
+                                StateChange::OutputType(ScreenState::Output(
+                                    output,
+                                    config.clone(),
+                                    Option::None,
+                                ))
+                            })
+                    }
+                    _ => unreachable!(),
                 }
             }
         }
