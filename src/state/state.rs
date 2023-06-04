@@ -37,33 +37,27 @@ impl State {
         }
     }
 
-    pub fn handle_command(&mut self, command: Command) -> StateChange {
+    pub fn handle_command(&mut self, command: Command) -> Option<StateChange> {
         let current = self.current_element;
 
         match command {
-            Command::EncoderRight => {
-                let state_change = current.next(self);
-                match state_change {
-                    StateChange::OutputType(ref screen_state) => {
-                        self.current_screen = screen_state.clone();
-                        state_change
-                    }
-                    _ => state_change,
+            Command::EncoderRight => current.next(self).map(|state_change| match state_change {
+                StateChange::OutputType(ref screen_state) => {
+                    self.current_screen = screen_state.clone();
+                    state_change
                 }
-            }
-            Command::EncoderLeft => {
-                let state_change = current.prev(self);
-                match state_change {
-                    StateChange::OutputType(ref screen_state) => {
-                        self.current_screen = screen_state.clone();
-                        state_change
-                    }
-                    _ => state_change,
+                _ => state_change,
+            }),
+            Command::EncoderLeft => current.prev(self).map(|state_change| match state_change {
+                StateChange::OutputType(ref screen_state) => {
+                    self.current_screen = screen_state.clone();
+                    state_change
                 }
-            }
-            Command::EncoderPress => self.next_element(),
-            Command::PagePress => self.next_screen(),
-            Command::PlayPress => self.toggle_play(),
+                _ => state_change,
+            }),
+            Command::EncoderPress => Some(self.next_element()),
+            Command::PagePress => Some(self.next_screen()),
+            Command::PlayPress => Some(self.toggle_play()),
         }
     }
 

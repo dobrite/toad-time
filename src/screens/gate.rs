@@ -27,7 +27,7 @@ impl GateScreen {
 
     pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
         match state_change {
-            StateChange::Rate(_, rate) => {
+            StateChange::Rate(.., rate) => {
                 self.clear_rate(display);
                 self.draw_rate(display, rate);
             }

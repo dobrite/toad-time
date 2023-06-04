@@ -137,11 +137,8 @@ fn main() -> ! {
 async fn core0_state_task(mut state: State) {
     loop {
         let command = COMMAND_CHANNEL.recv().await;
-        match state.handle_command(command) {
-            StateChange::None => {}
-            state_change => {
-                let _ = TICK_STATE_CHANNEL.send(state_change).await;
-            }
+        if let Some(state_change) = state.handle_command(command) {
+            TICK_STATE_CHANNEL.send(state_change).await;
         }
     }
 }
@@ -171,7 +168,7 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             match state_change {
-                StateChange::Rate(output, rate) => seq.set_rate(output.into(), rate),
+                StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), rate),
                 StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
                 StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
                 StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
@@ -192,7 +189,6 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                 StateChange::Index(..)
                 | StateChange::NextElement(_)
                 | StateChange::NextScreen(_)
-                | StateChange::None
                 | StateChange::Sync(_) => {}
             }
 
@@ -252,12 +248,8 @@ async fn core1_encoder_task(mut encoder: Encoder) {
     loop {
         encoder.update();
         match encoder.direction() {
-            Direction::Clockwise => {
-                let _ = COMMAND_CHANNEL.send(Command::EncoderRight).await;
-            }
-            Direction::Anticlockwise => {
-                let _ = COMMAND_CHANNEL.send(Command::EncoderLeft).await;
-            }
+            Direction::Clockwise => COMMAND_CHANNEL.send(Command::EncoderRight).await,
+            Direction::Anticlockwise => COMMAND_CHANNEL.send(Command::EncoderLeft).await,
             Direction::None => {}
         }
 
@@ -277,12 +269,7 @@ async fn core1_display_task(state: State, mut display: Display) {
 
     loop {
         let state_change = DISPLAY_STATE_CHANNEL.recv().await;
-        match state_change {
-            StateChange::None => {}
-            _ => {
-                screens.draw(state_change, &mut display);
-                display.flush().await
-            }
-        }
+        screens.draw(state_change, &mut display);
+        display.flush().await
     }
 }
