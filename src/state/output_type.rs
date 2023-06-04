@@ -4,23 +4,17 @@ use seq::OutputType;
 use super::Updatable;
 
 impl Updatable for OutputType {
-    fn next(&mut self) -> Option<Self> {
+    fn next(&self) -> Option<Self> {
         match self {
             OutputType::Euclid => Option::None,
-            OutputType::Gate => {
-                *self = OutputType::Euclid;
-                Option::Some(*self)
-            }
+            OutputType::Gate => Option::Some(OutputType::Euclid),
         }
     }
 
-    fn prev(&mut self) -> Option<Self> {
+    fn prev(&self) -> Option<Self> {
         match self {
             OutputType::Gate => Option::None,
-            OutputType::Euclid => {
-                *self = OutputType::Gate;
-                Option::Some(*self)
-            }
+            OutputType::Euclid => Option::Some(OutputType::Gate),
         }
     }
 }

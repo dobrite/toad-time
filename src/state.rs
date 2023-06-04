@@ -25,10 +25,10 @@ mod state_change;
 mod sync;
 
 trait Updatable {
-    fn next(&mut self) -> Option<Self>
+    fn next(&self) -> Option<Self>
     where
         Self: Sized;
-    fn prev(&mut self) -> Option<Self>
+    fn prev(&self) -> Option<Self>
     where
         Self: Sized;
 }
