@@ -41,7 +41,7 @@ impl GateScreen {
             StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
-            StateChange::NextElement(element) => {
+            StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }
             StateChange::NextScreen(ScreenState::Output(output, config, _todo)) => {

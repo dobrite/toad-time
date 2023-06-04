@@ -113,7 +113,7 @@ impl State {
             Element::OutputType => Element::Rate,
         };
 
-        StateChange::NextElement(self.current_element)
+        StateChange::NextElement(self.current_screen.clone(), self.current_element)
     }
 
     fn toggle_play(&mut self) -> StateChange {

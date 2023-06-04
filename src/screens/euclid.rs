@@ -53,7 +53,7 @@ impl EuclidScreen {
                 self.draw_grid(display);
             }
             StateChange::Index(_, index) => self.draw_caret(display, *index),
-            StateChange::NextElement(element) => {
+            StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }
             StateChange::NextScreen(ScreenState::Output(output, config, _)) => {

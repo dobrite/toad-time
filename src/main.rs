@@ -187,7 +187,7 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                     ticker = Ticker::every(Duration::from_micros(tick_duration));
                 }
                 StateChange::Index(..)
-                | StateChange::NextElement(_)
+                | StateChange::NextElement(..)
                 | StateChange::NextScreen(_)
                 | StateChange::Sync(_) => {}
             }
