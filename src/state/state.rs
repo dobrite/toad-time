@@ -76,12 +76,12 @@ impl State {
                 ),
                 Output::B => ScreenState::Output(
                     Output::C,
-                    self.outputs[usize::from(Output::B)].clone(),
+                    self.outputs[usize::from(Output::C)].clone(),
                     Option::None,
                 ),
                 Output::C => ScreenState::Output(
                     Output::D,
-                    self.outputs[usize::from(Output::B)].clone(),
+                    self.outputs[usize::from(Output::D)].clone(),
                     Option::None,
                 ),
                 Output::D => ScreenState::Home(self.bpm, self.sync, self.play_status),
