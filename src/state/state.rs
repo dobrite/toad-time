@@ -122,12 +122,12 @@ impl State {
         StateChange::NextElement(self.current_element)
     }
 
-    fn toggle_play(&self) -> StateChange {
-        let play_status = match self.play_status {
+    fn toggle_play(&mut self) -> StateChange {
+        self.play_status = match self.play_status {
             PlayStatus::Playing => PlayStatus::Paused,
             PlayStatus::Paused => PlayStatus::Playing,
         };
 
-        StateChange::PlayStatus(play_status)
+        StateChange::PlayStatus(self.play_status)
     }
 }
