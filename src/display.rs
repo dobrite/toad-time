@@ -125,9 +125,19 @@ impl Display {
         self.draw_sub_bmp(&bmp, rectangle, point);
     }
 
+    pub fn clear_pointer_left(&mut self, point: Point) {
+        let bmp = self.bmps.pointer_left;
+        self.clear_bmp(&bmp, point);
+    }
+
     pub fn draw_pointer_left(&mut self, point: Point) {
         let bmp = self.bmps.pointer_left;
         self.draw_bmp(&bmp, point);
+    }
+
+    pub fn clear_pointer_right(&mut self, point: Point) {
+        let bmp = self.bmps.pointer_right;
+        self.clear_bmp(&bmp, point);
     }
 
     pub fn draw_pointer_right(&mut self, point: Point) {

@@ -52,10 +52,9 @@ impl Screens {
                 },
                 _ => unreachable!(),
             },
-            StateChange::NextElement(ref screen_state, _) => match screen_state {
-                ScreenState::Home(..) => self.home.draw(&state_change, display),
-                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
-                {
+            StateChange::NextElement(screen, ..) => match screen {
+                Screen::Home => self.home.draw(&state_change, display),
+                Screen::Output(_, output_type) => match output_type {
                     OutputType::Euclid => self.euclid.draw(&state_change, display),
                     OutputType::Gate => self.gate.draw(&state_change, display),
                 },

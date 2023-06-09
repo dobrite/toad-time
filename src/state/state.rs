@@ -78,6 +78,8 @@ impl State {
     }
 
     fn next_element(&mut self) -> StateChange {
+        let prev_element = self.current_element;
+
         self.current_element = match self.current_element {
             Element::Bpm => Element::Sync,
             Element::Sync => Element::Bpm,
@@ -95,7 +97,7 @@ impl State {
             Element::OutputType => Element::Rate,
         };
 
-        StateChange::NextElement(self.to_screen_state(), self.current_element)
+        StateChange::NextElement(self.current_screen, prev_element, self.current_element)
     }
 
     fn to_screen_state(&self) -> ScreenState {

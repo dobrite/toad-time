@@ -43,8 +43,9 @@ impl HomeScreen {
                 self.draw_sync(display, sync);
             }
             StateChange::PlayStatus(_, play_status) => self.draw_play_pause(display, play_status),
-            StateChange::NextElement(screen_state, element) => {
-                self.redraw_screen(display, screen_state, element);
+            StateChange::NextElement(_, previous_element, current_element) => {
+                self.clear_pointer(display, previous_element);
+                self.draw_pointer(display, current_element);
             }
             StateChange::NextScreen(screen_state) => {
                 self.redraw_screen(display, screen_state, &Element::Bpm);
@@ -110,6 +111,14 @@ impl HomeScreen {
         };
         display.clear_play_pause(point);
         display.draw_play_pause(index, point);
+    }
+
+    fn clear_pointer(&mut self, display: &mut Display, element: &Element) {
+        match element {
+            Element::Bpm => display.clear_pointer_right(Point::new(4, 8)),
+            Element::Sync => display.clear_pointer_right(Point::new(4, 32)),
+            _ => {}
+        };
     }
 
     fn draw_pointer(&mut self, display: &mut Display, element: &Element) {

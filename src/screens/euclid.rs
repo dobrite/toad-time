@@ -52,8 +52,9 @@ impl EuclidScreen {
                 self.draw_grid(display);
             }
             StateChange::Index(_, index) => self.draw_caret(display, *index),
-            StateChange::NextElement(screen_state, element) => {
-                self.redraw_screen(display, screen_state, element);
+            StateChange::NextElement(_, previous_element, current_element) => {
+                self.clear_pointer(display, previous_element);
+                self.draw_pointer(display, current_element);
             }
             StateChange::NextScreen(screen_state) => {
                 self.redraw_screen(display, screen_state, &Element::Rate);
@@ -157,6 +158,16 @@ impl EuclidScreen {
     fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
         let str = OutputTypeString::from(output_type).0;
         display.draw_bigge_text(&mut self.output_type_str, str, Point::new(0, 50));
+    }
+
+    fn clear_pointer(&mut self, display: &mut Display, element: &Element) {
+        match element {
+            Element::Rate => display.clear_pointer_right(Point::new(36, 10)),
+            Element::Length => display.clear_pointer_right(Point::new(36, 28)),
+            Element::Density => display.clear_pointer_right(Point::new(36, 46)),
+            Element::OutputType => display.clear_pointer_left(Point::new(20, 25)),
+            _ => {}
+        };
     }
 
     fn draw_pointer(&mut self, display: &mut Display, element: &Element) {

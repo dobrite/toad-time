@@ -13,7 +13,7 @@ pub enum StateChange {
     OutputType(ScreenState),
     PlayStatus(Screen, PlayStatus),
     NextScreen(ScreenState),
-    NextElement(ScreenState, Element),
+    NextElement(Screen, Element, Element),
     Index(Output, usize),
 }
 
