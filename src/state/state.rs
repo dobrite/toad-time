@@ -9,7 +9,7 @@ pub struct State {
     pub sync: Sync,
     pub play_status: PlayStatus,
     pub current_element: Element,
-    pub current_screen: ScreenState,
+    pub current_screen: Screen,
     pub outputs: Vec<OutputConfig, 4>,
 }
 
@@ -32,7 +32,7 @@ impl State {
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current_element: Element::Bpm,
-            current_screen: ScreenState::new_home(Bpm(120), Sync::Ext, PlayStatus::Playing),
+            current_screen: Screen::Home,
             outputs,
         }
     }
@@ -41,20 +41,8 @@ impl State {
         let current = self.current_element;
 
         match command {
-            Command::EncoderRight => current.next(self).map(|state_change| match state_change {
-                StateChange::OutputType(ref screen_state) => {
-                    self.current_screen = screen_state.clone();
-                    state_change
-                }
-                _ => state_change,
-            }),
-            Command::EncoderLeft => current.prev(self).map(|state_change| match state_change {
-                StateChange::OutputType(ref screen_state) => {
-                    self.current_screen = screen_state.clone();
-                    state_change
-                }
-                _ => state_change,
-            }),
+            Command::EncoderRight => current.next(self),
+            Command::EncoderLeft => current.prev(self),
             Command::EncoderPress => Some(self.next_element()),
             Command::PagePress => Some(self.next_screen()),
             Command::PlayPress => Some(self.toggle_play()),
@@ -63,36 +51,30 @@ impl State {
 
     fn next_screen(&mut self) -> StateChange {
         self.current_screen = match self.current_screen {
-            ScreenState::Home(_) => ScreenState::new_output(
+            Screen::Home => Screen::Output(
                 Output::A,
-                self.outputs[usize::from(Output::A)].clone(),
-                Option::None,
+                self.outputs[usize::from(Output::A)].output_type(),
             ),
-            ScreenState::Output(OutputScreenState { output, .. }) => match output {
-                Output::A => ScreenState::new_output(
-                    Output::B,
-                    self.outputs[usize::from(Output::B)].clone(),
-                    Option::None,
-                ),
-                Output::B => ScreenState::new_output(
-                    Output::C,
-                    self.outputs[usize::from(Output::C)].clone(),
-                    Option::None,
-                ),
-                Output::C => ScreenState::new_output(
-                    Output::D,
-                    self.outputs[usize::from(Output::D)].clone(),
-                    Option::None,
-                ),
-                Output::D => ScreenState::new_home(self.bpm, self.sync, self.play_status),
-            },
+            Screen::Output(Output::A, _) => Screen::Output(
+                Output::B,
+                self.outputs[usize::from(Output::B)].output_type(),
+            ),
+            Screen::Output(Output::B, _) => Screen::Output(
+                Output::C,
+                self.outputs[usize::from(Output::C)].output_type(),
+            ),
+            Screen::Output(Output::C, _) => Screen::Output(
+                Output::D,
+                self.outputs[usize::from(Output::D)].output_type(),
+            ),
+            Screen::Output(Output::D, _) => Screen::Home,
         };
         self.current_element = match self.current_screen {
-            ScreenState::Home(..) => Element::Bpm,
-            ScreenState::Output(..) => Element::Rate,
+            Screen::Home => Element::Bpm,
+            Screen::Output(..) => Element::Rate,
         };
 
-        StateChange::NextScreen(self.current_screen.clone())
+        StateChange::NextScreen(self.to_screen_state())
     }
 
     fn next_element(&mut self) -> StateChange {
@@ -100,9 +82,8 @@ impl State {
             Element::Bpm => Element::Sync,
             Element::Sync => Element::Bpm,
             Element::Rate => match &self.current_screen {
-                ScreenState::Home(..) => unreachable!(),
-                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
-                {
+                Screen::Home => unreachable!(),
+                Screen::Output(_, output_type) => match output_type {
                     OutputType::Gate => Element::Prob,
                     OutputType::Euclid => Element::Length,
                 },
@@ -114,7 +95,25 @@ impl State {
             Element::OutputType => Element::Rate,
         };
 
-        StateChange::NextElement(self.current_screen.clone(), self.current_element)
+        StateChange::NextElement(self.to_screen_state(), self.current_element)
+    }
+
+    fn to_screen_state(&self) -> ScreenState {
+        match self.current_screen {
+            Screen::Home => ScreenState::Home(HomeScreenState {
+                bpm: self.bpm,
+                sync: self.sync,
+                play_status: self.play_status,
+            }),
+            Screen::Output(output, _) => {
+                let config = self.outputs[usize::from(output)].clone();
+                ScreenState::Output(OutputScreenState {
+                    output,
+                    config,
+                    index: Option::None,
+                })
+            }
+        }
     }
 
     fn toggle_play(&mut self) -> StateChange {
@@ -123,6 +122,6 @@ impl State {
             PlayStatus::Paused => PlayStatus::Playing,
         };
 
-        StateChange::PlayStatus(self.current_screen.clone(), self.play_status)
+        StateChange::PlayStatus(self.current_screen, self.play_status)
     }
 }

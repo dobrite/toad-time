@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, ScreenState, State, StateChange},
+    state::{Command, Output, Screen, ScreenState, State, StateChange},
     state_memo::StateMemo,
 };
 
@@ -116,7 +116,7 @@ fn main() -> ! {
     };
 
     let seq = Seq::new(initial_state.bpm.0, initial_state.outputs.clone());
-    let memo = StateMemo::new(initial_state.current_screen.clone());
+    let memo = StateMemo::new(Screen::Home);
 
     spawn_core1(p.CORE1, unsafe { &mut CORE1_STACK }, move || {
         let executor1 = EXECUTOR1.init(Executor::new());

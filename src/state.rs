@@ -9,6 +9,7 @@ pub use self::{
     play_status::PlayStatus,
     prob::ProbString,
     rate::RateString,
+    screen::Screen,
     screen_state::{HomeScreenState, OutputScreenState, ScreenState},
     state::State,
     state_change::StateChange,
@@ -27,6 +28,7 @@ mod play_status;
 mod prob;
 mod pwm;
 mod rate;
+mod screen;
 mod screen_state;
 #[allow(clippy::module_inception)]
 mod state;

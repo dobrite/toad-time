@@ -3,7 +3,7 @@ use seq::OutputType;
 use crate::{
     display::Display,
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
-    state::{OutputScreenState, ScreenState},
+    state::{OutputScreenState, Screen, ScreenState},
     StateChange,
 };
 
@@ -30,8 +30,8 @@ impl Screens {
         match state_change {
             StateChange::Bpm(_) => self.home.draw(&state_change, display),
             StateChange::Sync(_) => self.home.draw(&state_change, display),
-            StateChange::PlayStatus(ref screen_state, _) => {
-                if let ScreenState::Home(..) = screen_state {
+            StateChange::PlayStatus(screen, _) => {
+                if let Screen::Home = screen {
                     self.home.draw(&state_change, display)
                 }
             }

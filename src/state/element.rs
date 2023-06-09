@@ -1,4 +1,4 @@
-use super::{OutputScreenState, ScreenState, State, StateChange, Updatable};
+use super::{Screen, ScreenState, State, StateChange, Updatable};
 
 #[derive(Clone, Copy)]
 pub enum Element {
@@ -25,8 +25,8 @@ impl Element {
             }),
             elem => {
                 let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(OutputScreenState { output, .. }) => output,
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
                 };
                 let config = &mut state.outputs[usize::from(output)];
                 match elem {
@@ -76,8 +76,8 @@ impl Element {
             }),
             elem => {
                 let output = match state.current_screen {
-                    ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(OutputScreenState { output, .. }) => output,
+                    Screen::Home => unreachable!(),
+                    Screen::Output(output, _) => output,
                 };
                 let config = &mut state.outputs[usize::from(output)];
                 match elem {

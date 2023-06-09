@@ -1,6 +1,6 @@
 use seq::{Density, Length, OutputType, Prob, Pwm, Rate, Seq};
 
-use super::{Bpm, Element, Output, OutputScreenState, PlayStatus, ScreenState, Sync};
+use super::{Bpm, Element, Output, OutputScreenState, PlayStatus, Screen, ScreenState, Sync};
 
 pub enum StateChange {
     Bpm(Bpm),
@@ -11,7 +11,7 @@ pub enum StateChange {
     Length(Output, Length, Density),
     Density(Output, Length, Density),
     OutputType(ScreenState),
-    PlayStatus(ScreenState, PlayStatus),
+    PlayStatus(Screen, PlayStatus),
     NextScreen(ScreenState),
     NextElement(ScreenState, Element),
     Index(Output, usize),

@@ -1,5 +1,3 @@
-use seq::OutputType;
-
 use super::*;
 
 #[derive(Clone)]
@@ -39,18 +37,6 @@ impl ScreenState {
         })
     }
 
-    pub fn is_euclid(&self, current_output: Output) -> bool {
-        if let ScreenState::Output(OutputScreenState { output, config, .. }) = self {
-            if current_output == *output {
-                config.output_type() == OutputType::Euclid
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
     pub fn index(&self) -> Option<usize> {
         match self {
             ScreenState::Home(..) => Option::None,
@@ -63,6 +49,30 @@ impl ScreenState {
     pub fn set_index(&mut self, index: usize) {
         if let ScreenState::Output(OutputScreenState { output, config, .. }) = self {
             *self = ScreenState::new_output(*output, config.clone(), Some(index));
+        }
+    }
+}
+
+impl From<ScreenState> for Screen {
+    fn from(val: ScreenState) -> Self {
+        match val {
+            ScreenState::Home(..) => Screen::Home,
+            ScreenState::Output(OutputScreenState { output, config, .. }) => {
+                let output_type = config.output_type();
+                Screen::Output(output, output_type)
+            }
+        }
+    }
+}
+
+impl From<&ScreenState> for Screen {
+    fn from(val: &ScreenState) -> Self {
+        match val {
+            ScreenState::Home(..) => Screen::Home,
+            ScreenState::Output(OutputScreenState { output, config, .. }) => {
+                let output_type = config.output_type();
+                Screen::Output(*output, output_type)
+            }
         }
     }
 }
