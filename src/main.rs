@@ -175,32 +175,40 @@ async fn core0_tick_task(
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             match state_change {
-                StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), rate),
-                StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
-                StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
-                StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
-                StateChange::Density(output, _, density) => seq.set_density(output.into(), density),
-                StateChange::OutputType(ref ss @ ScreenState::Output(output, ref config, _)) => {
-                    memo.current_screen = ss.clone();
-                    seq.set_output_type(output.into(), config.output_type());
+                StateChange::NextScreen(ref next_screen) => {
+                    memo.current_screen = next_screen.clone()
                 }
-                StateChange::OutputType(ref ss @ ScreenState::Home(..)) => {
-                    memo.current_screen = ss.clone()
+                StateChange::OutputType(ref screen_state) => {
+                    memo.current_screen = screen_state.clone();
+                }
+                _ => {}
+            }
+
+            match state_change {
+                StateChange::Bpm(bpm) => seq.set_bpm(bpm.0),
+                StateChange::Density(output, _, density) => seq.set_density(output.into(), density),
+                StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
+                StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
+                    seq.set_output_type(output.into(), config.output_type());
                 }
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
                 },
-                StateChange::Bpm(bpm) => {
-                    seq.set_bpm(bpm.0);
-                    let tick_duration = seq.tick_duration_micros();
-                    ticker = Ticker::every(Duration::from_micros(tick_duration));
-                }
-                StateChange::NextScreen(ref next_screen) => {
-                    memo.current_screen = next_screen.clone()
-                }
-                StateChange::Index(..) | StateChange::NextElement(..) | StateChange::Sync(_) => {}
+                StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
+                StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
+                StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), rate),
+                StateChange::Index(..)
+                | StateChange::NextElement(..)
+                | StateChange::NextScreen(..)
+                | StateChange::OutputType(..)
+                | StateChange::Sync(_) => {}
             }
+
+            if let StateChange::Bpm(_) = state_change {
+                let tick_duration = seq.tick_duration_micros();
+                ticker = Ticker::every(Duration::from_micros(tick_duration));
+            };
 
             let state_change = if let Some(StateChange::Index(_, index)) = state_changes.first() {
                 match state_change {
