@@ -1,4 +1,3 @@
-use heapless::Vec;
 use seq::{Density, Length, OutputType, Prob, Pwm, Rate, Seq};
 
 use super::{Bpm, Element, Output, OutputScreenState, PlayStatus, ScreenState, Sync};
@@ -46,19 +45,19 @@ impl StateChange {
         }
     }
 
-    pub fn update_index(&mut self, state_changes: &Vec<StateChange, 4>) {
-        if let Some(StateChange::Index(_, index)) = state_changes.first() {
-            match self {
-                StateChange::OutputType(screen_state) => {
-                    screen_state.set_index(*index);
-                    *self = StateChange::OutputType(screen_state.clone())
-                }
-                StateChange::NextScreen(screen_state) => {
-                    screen_state.set_index(*index);
-                    *self = StateChange::NextScreen(screen_state.clone())
-                }
-                _ => {}
+    pub fn update_index(self, seq: &Seq) -> Self {
+        match self {
+            StateChange::OutputType(mut screen_state) => {
+                let index = seq.get_index(screen_state.index().unwrap_or(0));
+                screen_state.set_index(index);
+                StateChange::OutputType(screen_state)
             }
-        };
+            StateChange::NextScreen(mut screen_state) => {
+                let index = seq.get_index(screen_state.index().unwrap_or(0));
+                screen_state.set_index(index);
+                StateChange::NextScreen(screen_state)
+            }
+            _ => self,
+        }
     }
 }

@@ -157,26 +157,22 @@ async fn core0_tick_task(
     let mut state_changes: Vec<StateChange, 4> = Vec::new();
 
     loop {
-        let result = seq.tick();
-        outputs
-            .iter_mut()
-            .zip(result.iter())
-            .enumerate()
-            .for_each(|(idx, (output, result))| {
-                if result.on_change {
-                    output.toggle()
-                };
-                let current_output = Output::into_output(idx);
-                if result.index_change && memo.current_screen.is_euclid(current_output) {
-                    let state_change = StateChange::Index(current_output, result.index);
-                    state_changes.push(state_change).ok();
-                }
-            });
+        seq.tick();
+        outputs.iter_mut().enumerate().for_each(|(idx, output)| {
+            if seq.get_on_change(idx) {
+                output.toggle()
+            };
+            let current_output = Output::into_output(idx);
+            if seq.get_index_change(idx) && memo.current_screen.is_euclid(current_output) {
+                let state_change = StateChange::Index(current_output, seq.get_index(idx));
+                state_changes.push(state_change).ok();
+            }
+        });
 
-        while let Ok(mut state_change) = TICK_STATE_CHANNEL.try_recv() {
+        while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             memo.update(&state_change);
             state_change.update_seq(&mut seq);
-            state_change.update_index(&state_changes);
+            let state_change = state_change.update_index(&seq);
 
             if let StateChange::Bpm(_) = state_change {
                 let tick_duration = seq.tick_duration_micros();

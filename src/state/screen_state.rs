@@ -51,6 +51,15 @@ impl ScreenState {
         }
     }
 
+    pub fn index(&self) -> Option<usize> {
+        match self {
+            ScreenState::Home(..) => Option::None,
+            ScreenState::Output(OutputScreenState { output, .. }) => {
+                Option::Some(usize::from(output))
+            }
+        }
+    }
+
     pub fn set_index(&mut self, index: usize) {
         if let ScreenState::Output(OutputScreenState { output, config, .. }) = self {
             *self = ScreenState::new_output(*output, config.clone(), Some(index));
