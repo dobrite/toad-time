@@ -46,10 +46,16 @@ impl EuclidScreen {
             StateChange::OutputType(ScreenState::Output(OutputScreenState {
                 output,
                 config,
-                ..
+                index,
             })) => {
                 self.update_sequence(&config.length(), &config.density());
-                self.redraw_screen(display, output, config, &Element::OutputType);
+                self.redraw_screen(
+                    display,
+                    output,
+                    config,
+                    index.unwrap_or(0),
+                    &Element::OutputType,
+                );
             }
             StateChange::Density(_, length, density) => {
                 self.update_sequence(length, density);
@@ -63,10 +69,10 @@ impl EuclidScreen {
             StateChange::NextScreen(ScreenState::Output(OutputScreenState {
                 output,
                 config,
-                ..
+                index,
             })) => {
                 self.update_sequence(&config.length(), &config.density());
-                self.redraw_screen(display, output, config, &Element::Rate);
+                self.redraw_screen(display, output, config, index.unwrap_or(0), &Element::Rate);
             }
             _ => {}
         }
@@ -77,6 +83,7 @@ impl EuclidScreen {
         display: &mut Display,
         output: &Output,
         config: &OutputConfig,
+        index: usize,
         element: &Element,
     ) {
         display.clear();
@@ -85,7 +92,7 @@ impl EuclidScreen {
         self.draw_rate(display, &config.rate());
         self.draw_length(display, &config.length());
         self.draw_grid(display);
-        self.draw_caret(display, config.index());
+        self.draw_caret(display, index);
         self.draw_output_type(display, &config.output_type());
         self.draw_pointer(display, element);
     }
