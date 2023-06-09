@@ -27,6 +27,7 @@ use crate::{
     display::Display,
     screens::Screens,
     state::{Command, Output, PlayStatus, ScreenState, State, StateChange},
+    state_memo::StateMemo,
 };
 
 static mut CORE1_STACK: Stack<65_536> = Stack::new();
@@ -41,6 +42,7 @@ type Encoder = RotaryEncoder<StandardMode, Input<'static, PIN_14>, Input<'static
 mod display;
 mod screens;
 mod state;
+mod state_memo;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -114,6 +116,7 @@ fn main() -> ! {
     };
 
     let seq = Seq::new(initial_state.bpm.0, initial_state.outputs.clone());
+    let memo = StateMemo::new(initial_state.current_screen.clone());
 
     spawn_core1(p.CORE1, unsafe { &mut CORE1_STACK }, move || {
         let executor1 = EXECUTOR1.init(Executor::new());
@@ -129,7 +132,7 @@ fn main() -> ! {
     let executor0 = EXECUTOR0.init(Executor::new());
     executor0.run(|spawner| {
         let _ = spawner.spawn(core0_state_task(initial_state1));
-        let _ = spawner.spawn(core0_tick_task(seq, outputs));
+        let _ = spawner.spawn(core0_tick_task(memo, seq, outputs));
     });
 }
 
@@ -144,7 +147,11 @@ async fn core0_state_task(mut state: State) {
 }
 
 #[embassy_executor::task]
-async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>) {
+async fn core0_tick_task(
+    mut memo: StateMemo,
+    mut seq: Seq,
+    mut outputs: Vec<EmbassyOutput<'static, AnyPin>, 4>,
+) {
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
     let mut state_changes: Vec<StateChange, 4> = Vec::new();
@@ -159,9 +166,9 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                 if result.on_change {
                     output.toggle()
                 };
-                if result.index_change {
-                    let output = Output::into_output(idx);
-                    let state_change = StateChange::Index(output, result.index);
+                let current_output = Output::into_output(idx);
+                if result.index_change && memo.current_screen.is_euclid(current_output) {
+                    let state_change = StateChange::Index(current_output, result.index);
                     state_changes.push(state_change).ok();
                 }
             });
@@ -173,10 +180,13 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                 StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
                 StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
                 StateChange::Density(output, _, density) => seq.set_density(output.into(), density),
-                StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
-                    seq.set_output_type(output.into(), config.output_type())
+                StateChange::OutputType(ref ss @ ScreenState::Output(output, ref config, _)) => {
+                    memo.current_screen = ss.clone();
+                    seq.set_output_type(output.into(), config.output_type());
                 }
-                StateChange::OutputType(ScreenState::Home(..)) => unreachable!(),
+                StateChange::OutputType(ref ss @ ScreenState::Home(..)) => {
+                    memo.current_screen = ss.clone()
+                }
                 StateChange::PlayStatus(play_status) => match play_status {
                     PlayStatus::Playing => { /* TODO: pause */ }
                     PlayStatus::Paused => { /* TODO: reset then play */ }
@@ -186,11 +196,27 @@ async fn core0_tick_task(mut seq: Seq, mut outputs: Vec<EmbassyOutput<'static, A
                     let tick_duration = seq.tick_duration_micros();
                     ticker = Ticker::every(Duration::from_micros(tick_duration));
                 }
-                StateChange::Index(..)
-                | StateChange::NextElement(..)
-                | StateChange::NextScreen(_)
-                | StateChange::Sync(_) => {}
+                StateChange::NextScreen(ref next_screen) => {
+                    memo.current_screen = next_screen.clone()
+                }
+                StateChange::Index(..) | StateChange::NextElement(..) | StateChange::Sync(_) => {}
             }
+
+            let state_change = if let Some(StateChange::Index(_, index)) = state_changes.first() {
+                match state_change {
+                    StateChange::OutputType(mut ss) => {
+                        ss.set_index(*index);
+                        StateChange::OutputType(ss)
+                    }
+                    StateChange::NextScreen(mut ss) => {
+                        ss.set_index(*index);
+                        StateChange::NextScreen(ss)
+                    }
+                    _ => state_change,
+                }
+            } else {
+                state_change
+            };
 
             DISPLAY_STATE_CHANNEL
                 .try_send(state_change)
