@@ -1,6 +1,6 @@
 use super::{Screen, ScreenState, State, StateChange, Updatable};
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum Element {
     Rate,
     Pwm,

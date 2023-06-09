@@ -38,7 +38,7 @@ impl State {
     }
 
     pub fn handle_command(&mut self, command: Command) -> Option<StateChange> {
-        let current = self.current_element;
+        let current = &mut self.current_element.clone();
 
         match command {
             Command::EncoderRight => current.next(self),
@@ -78,7 +78,7 @@ impl State {
     }
 
     fn next_element(&mut self) -> StateChange {
-        let prev_element = self.current_element;
+        let prev_element = self.current_element.clone();
 
         self.current_element = match self.current_element {
             Element::Bpm => Element::Sync,
@@ -97,7 +97,11 @@ impl State {
             Element::OutputType => Element::Rate,
         };
 
-        StateChange::NextElement(self.current_screen, prev_element, self.current_element)
+        StateChange::NextElement(
+            self.current_screen,
+            prev_element,
+            self.current_element.clone(),
+        )
     }
 
     fn to_screen_state(&self) -> ScreenState {
