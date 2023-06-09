@@ -26,7 +26,7 @@ use ssd1306_async::{prelude::*, Ssd1306};
 use crate::{
     display::Display,
     screens::Screens,
-    state::{Command, Output, PlayStatus, ScreenState, State, StateChange},
+    state::{Command, Output, ScreenState, State, StateChange},
     state_memo::StateMemo,
 };
 
@@ -173,57 +173,14 @@ async fn core0_tick_task(
                 }
             });
 
-        while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
-            match state_change {
-                StateChange::NextScreen(ref next_screen) => {
-                    memo.current_screen = next_screen.clone()
-                }
-                StateChange::OutputType(ref screen_state) => {
-                    memo.current_screen = screen_state.clone();
-                }
-                _ => {}
-            }
-
-            match state_change {
-                StateChange::Bpm(bpm) => seq.set_bpm(bpm.0),
-                StateChange::Density(output, _, density) => seq.set_density(output.into(), density),
-                StateChange::Length(output, length, _) => seq.set_length(output.into(), length),
-                StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
-                    seq.set_output_type(output.into(), config.output_type());
-                }
-                StateChange::PlayStatus(play_status) => match play_status {
-                    PlayStatus::Playing => { /* TODO: pause */ }
-                    PlayStatus::Paused => { /* TODO: reset then play */ }
-                },
-                StateChange::Prob(output, prob) => seq.set_prob(output.into(), prob),
-                StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), pwm),
-                StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), rate),
-                StateChange::Index(..)
-                | StateChange::NextElement(..)
-                | StateChange::NextScreen(..)
-                | StateChange::OutputType(..)
-                | StateChange::Sync(_) => {}
-            }
+        while let Ok(mut state_change) = TICK_STATE_CHANNEL.try_recv() {
+            memo.update(&state_change);
+            state_change.update_seq(&mut seq);
+            state_change.update_index(&state_changes);
 
             if let StateChange::Bpm(_) = state_change {
                 let tick_duration = seq.tick_duration_micros();
                 ticker = Ticker::every(Duration::from_micros(tick_duration));
-            };
-
-            let state_change = if let Some(StateChange::Index(_, index)) = state_changes.first() {
-                match state_change {
-                    StateChange::OutputType(mut ss) => {
-                        ss.set_index(*index);
-                        StateChange::OutputType(ss)
-                    }
-                    StateChange::NextScreen(mut ss) => {
-                        ss.set_index(*index);
-                        StateChange::NextScreen(ss)
-                    }
-                    _ => state_change,
-                }
-            } else {
-                state_change
             };
 
             DISPLAY_STATE_CHANNEL
