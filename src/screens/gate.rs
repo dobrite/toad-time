@@ -1,6 +1,6 @@
 use embedded_graphics::prelude::Point;
 use heapless::String;
-use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
+use seq::{OutputType, Prob, Pwm, Rate};
 
 use crate::{
     screens::Display,
@@ -40,22 +40,14 @@ impl GateScreen {
             StateChange::Pwm(_, pwm) => {
                 self.draw_pwm(display, pwm);
             }
-            StateChange::OutputType(ScreenState::Output(OutputScreenState {
-                output,
-                config,
-                ..
-            })) => {
-                self.redraw_screen(display, output, config, &Element::OutputType);
+            StateChange::OutputType(screen_state) => {
+                self.redraw_screen(display, screen_state, &Element::OutputType);
             }
-            StateChange::NextElement(_, element) => {
-                self.draw_pointer(display, element);
+            StateChange::NextElement(screen_state, element) => {
+                self.redraw_screen(display, screen_state, element);
             }
-            StateChange::NextScreen(ScreenState::Output(OutputScreenState {
-                output,
-                config,
-                ..
-            })) => {
-                self.redraw_screen(display, output, config, &Element::Rate);
+            StateChange::NextScreen(screen_state) => {
+                self.redraw_screen(display, screen_state, &Element::Rate);
             }
             _ => {}
         }
@@ -64,19 +56,20 @@ impl GateScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        output: &Output,
-        config: &OutputConfig,
+        screen_state: &ScreenState,
         element: &Element,
     ) {
-        display.clear();
-        self.draw_name(display, output);
-        self.draw_clock(display);
-        self.draw_dice(display);
-        self.draw_rate(display, &config.rate());
-        self.draw_prob(display, &config.prob());
-        self.draw_pwm(display, &config.pwm()); // 65x16 (13x8)
-        self.draw_output_type(display, &config.output_type());
-        self.draw_pointer(display, element);
+        if let ScreenState::Output(OutputScreenState { output, config, .. }) = screen_state {
+            display.clear();
+            self.draw_name(display, output);
+            self.draw_clock(display);
+            self.draw_dice(display);
+            self.draw_rate(display, &config.rate());
+            self.draw_prob(display, &config.prob());
+            self.draw_pwm(display, &config.pwm()); // 65x16 (13x8)
+            self.draw_output_type(display, &config.output_type());
+            self.draw_pointer(display, element);
+        }
     }
 
     fn draw_name(&mut self, display: &mut Display, output: &Output) {

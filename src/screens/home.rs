@@ -43,15 +43,11 @@ impl HomeScreen {
                 self.draw_sync(display, sync);
             }
             StateChange::PlayStatus(_, play_status) => self.draw_play_pause(display, play_status),
-            StateChange::NextElement(_, element) => {
-                self.draw_pointer(display, element);
+            StateChange::NextElement(screen_state, element) => {
+                self.redraw_screen(display, screen_state, element);
             }
-            StateChange::NextScreen(ScreenState::Home(HomeScreenState {
-                bpm,
-                sync,
-                play_status,
-            })) => {
-                self.redraw_screen(display, bpm, sync, play_status, &Element::Bpm);
+            StateChange::NextScreen(screen_state) => {
+                self.redraw_screen(display, screen_state, &Element::Bpm);
             }
             _ => {}
         }
@@ -60,18 +56,23 @@ impl HomeScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        bpm: &Bpm,
-        sync: &Sync,
-        play_status: &PlayStatus,
+        screen_state: &ScreenState,
         element: &Element,
     ) {
-        display.clear();
-        self.draw_bpm_label(display);
-        self.draw_bpm_value(display, bpm);
-        self.draw_frogge(display);
-        self.draw_sync(display, sync);
-        self.draw_play_pause(display, play_status);
-        self.draw_pointer(display, element);
+        if let ScreenState::Home(HomeScreenState {
+            bpm,
+            sync,
+            play_status,
+        }) = screen_state
+        {
+            display.clear();
+            self.draw_bpm_label(display);
+            self.draw_bpm_value(display, bpm);
+            self.draw_frogge(display);
+            self.draw_sync(display, sync);
+            self.draw_play_pause(display, play_status);
+            self.draw_pointer(display, element);
+        }
     }
 
     fn draw_bpm_label(&mut self, display: &mut Display) {

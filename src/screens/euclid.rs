@@ -1,6 +1,6 @@
 use embedded_graphics::prelude::Point;
 use heapless::{String, Vec};
-use seq::{euclid, Density, Length, OutputConfig, OutputType, Rate};
+use seq::{euclid, Density, Length, OutputType, Rate};
 
 use crate::{
     screens::Display,
@@ -43,19 +43,8 @@ impl EuclidScreen {
                 self.clear_grid(display);
                 self.draw_grid(display)
             }
-            StateChange::OutputType(ScreenState::Output(OutputScreenState {
-                output,
-                config,
-                index,
-            })) => {
-                self.update_sequence(&config.length(), &config.density());
-                self.redraw_screen(
-                    display,
-                    output,
-                    config,
-                    index.unwrap_or(0),
-                    &Element::OutputType,
-                );
+            StateChange::OutputType(screen_state) => {
+                self.redraw_screen(display, screen_state, &Element::OutputType);
             }
             StateChange::Density(_, length, density) => {
                 self.update_sequence(length, density);
@@ -63,16 +52,11 @@ impl EuclidScreen {
                 self.draw_grid(display);
             }
             StateChange::Index(_, index) => self.draw_caret(display, *index),
-            StateChange::NextElement(_, element) => {
-                self.draw_pointer(display, element);
+            StateChange::NextElement(screen_state, element) => {
+                self.redraw_screen(display, screen_state, element);
             }
-            StateChange::NextScreen(ScreenState::Output(OutputScreenState {
-                output,
-                config,
-                index,
-            })) => {
-                self.update_sequence(&config.length(), &config.density());
-                self.redraw_screen(display, output, config, index.unwrap_or(0), &Element::Rate);
+            StateChange::NextScreen(screen_state) => {
+                self.redraw_screen(display, screen_state, &Element::Rate);
             }
             _ => {}
         }
@@ -81,20 +65,26 @@ impl EuclidScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        output: &Output,
-        config: &OutputConfig,
-        index: usize,
+        screen_state: &ScreenState,
         element: &Element,
     ) {
-        display.clear();
-        self.draw_name(display, output);
-        self.draw_clock(display);
-        self.draw_rate(display, &config.rate());
-        self.draw_length(display, &config.length());
-        self.draw_grid(display);
-        self.draw_caret(display, index);
-        self.draw_output_type(display, &config.output_type());
-        self.draw_pointer(display, element);
+        if let ScreenState::Output(OutputScreenState {
+            output,
+            config,
+            index,
+        }) = screen_state
+        {
+            display.clear();
+            self.update_sequence(&config.length(), &config.density());
+            self.draw_name(display, output);
+            self.draw_clock(display);
+            self.draw_rate(display, &config.rate());
+            self.draw_length(display, &config.length());
+            self.draw_grid(display);
+            self.draw_caret(display, index.unwrap_or(0));
+            self.draw_output_type(display, &config.output_type());
+            self.draw_pointer(display, element);
+        }
     }
 
     fn draw_name(&mut self, display: &mut Display, output: &Output) {
