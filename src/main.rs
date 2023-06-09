@@ -162,10 +162,12 @@ async fn core0_tick_task(
             if seq.get_on_change(idx) {
                 output.toggle()
             };
-            let current_output = Output::into_output(idx);
-            if seq.get_index_change(idx) && memo.current_screen.is_euclid(current_output) {
-                let state_change = StateChange::Index(current_output, seq.get_index(idx));
-                state_changes.push(state_change).ok();
+            if seq.get_index_change(idx) {
+                let current_output = Output::into_output(idx);
+                if memo.current_screen.is_euclid(current_output) {
+                    let state_change = StateChange::Index(current_output, seq.get_index(idx));
+                    state_changes.push(state_change).ok();
+                }
             }
         });
 
