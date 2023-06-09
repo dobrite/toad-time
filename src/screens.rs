@@ -30,7 +30,11 @@ impl Screens {
         match state_change {
             StateChange::Bpm(_) => self.home.draw(&state_change, display),
             StateChange::Sync(_) => self.home.draw(&state_change, display),
-            StateChange::PlayStatus(_) => self.home.draw(&state_change, display),
+            StateChange::PlayStatus(ref screen_state, _) => {
+                if let ScreenState::Home(..) = screen_state {
+                    self.home.draw(&state_change, display)
+                }
+            }
             StateChange::Rate(_, output_type, _) => match output_type {
                 OutputType::Gate => self.gate.draw(&state_change, display),
                 OutputType::Euclid => self.euclid.draw(&state_change, display),

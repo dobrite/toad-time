@@ -123,6 +123,6 @@ impl State {
             PlayStatus::Paused => PlayStatus::Playing,
         };
 
-        StateChange::PlayStatus(self.play_status)
+        StateChange::PlayStatus(self.current_screen.clone(), self.play_status)
     }
 }

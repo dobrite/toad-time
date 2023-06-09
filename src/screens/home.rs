@@ -42,7 +42,7 @@ impl HomeScreen {
                 self.clear_sync(display);
                 self.draw_sync(display, sync);
             }
-            StateChange::PlayStatus(play_status) => self.draw_play_pause(display, play_status),
+            StateChange::PlayStatus(_, play_status) => self.draw_play_pause(display, play_status),
             StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }

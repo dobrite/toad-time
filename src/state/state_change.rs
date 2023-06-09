@@ -11,7 +11,7 @@ pub enum StateChange {
     Length(Output, Length, Density),
     Density(Output, Length, Density),
     OutputType(ScreenState),
-    PlayStatus(PlayStatus),
+    PlayStatus(ScreenState, PlayStatus),
     NextScreen(ScreenState),
     NextElement(ScreenState, Element),
     Index(Output, usize),
@@ -30,7 +30,7 @@ impl StateChange {
             })) => {
                 seq.set_output_type(output.into(), config.output_type());
             }
-            StateChange::PlayStatus(play_status) => match play_status {
+            StateChange::PlayStatus(_, play_status) => match play_status {
                 PlayStatus::Playing => { /* TODO: pause */ }
                 PlayStatus::Paused => { /* TODO: reset then play */ }
             },
