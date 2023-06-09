@@ -3,7 +3,7 @@ use seq::OutputType;
 use crate::{
     display::Display,
     screens::{euclid::EuclidScreen, gate::GateScreen, home::HomeScreen},
-    state::ScreenState,
+    state::{OutputScreenState, ScreenState},
     StateChange,
 };
 
@@ -41,7 +41,8 @@ impl Screens {
             StateChange::Density(..) => self.euclid.draw(&state_change, display),
             StateChange::Index(..) => self.euclid.draw(&state_change, display),
             StateChange::OutputType(ref screen_state) => match screen_state {
-                ScreenState::Output(_, config, _todo) => match config.output_type() {
+                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
+                {
                     OutputType::Euclid => self.euclid.draw(&state_change, display),
                     OutputType::Gate => self.gate.draw(&state_change, display),
                 },
@@ -49,14 +50,16 @@ impl Screens {
             },
             StateChange::NextElement(ref screen_state, _) => match screen_state {
                 ScreenState::Home(..) => self.home.draw(&state_change, display),
-                ScreenState::Output(_, config, _todo) => match config.output_type() {
+                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
+                {
                     OutputType::Euclid => self.euclid.draw(&state_change, display),
                     OutputType::Gate => self.gate.draw(&state_change, display),
                 },
             },
             StateChange::NextScreen(ref next_screen) => match next_screen {
                 ScreenState::Home(..) => self.home.draw(&state_change, display),
-                ScreenState::Output(_, config, _todo) => match config.output_type() {
+                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
+                {
                     OutputType::Euclid => self.euclid.draw(&state_change, display),
                     OutputType::Gate => self.gate.draw(&state_change, display),
                 },

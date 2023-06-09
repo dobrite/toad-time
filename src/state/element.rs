@@ -1,4 +1,4 @@
-use super::{ScreenState, State, StateChange, Updatable};
+use super::{OutputScreenState, ScreenState, State, StateChange, Updatable};
 
 #[derive(Clone, Copy)]
 pub enum Element {
@@ -26,7 +26,7 @@ impl Element {
             elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
+                    ScreenState::Output(OutputScreenState { output, .. }) => output,
                 };
                 let config = &mut state.outputs[usize::from(output)];
                 match elem {
@@ -52,7 +52,7 @@ impl Element {
                     }),
                     Element::OutputType => config.output_type().next().map(|output_type| {
                         config.set_output_type(output_type);
-                        StateChange::OutputType(ScreenState::Output(
+                        StateChange::OutputType(ScreenState::new_output(
                             output,
                             config.clone(),
                             Option::None,
@@ -77,7 +77,7 @@ impl Element {
             elem => {
                 let output = match state.current_screen {
                     ScreenState::Home(..) => unreachable!(),
-                    ScreenState::Output(output, ..) => output,
+                    ScreenState::Output(OutputScreenState { output, .. }) => output,
                 };
                 let config = &mut state.outputs[usize::from(output)];
                 match elem {
@@ -103,7 +103,7 @@ impl Element {
                     }),
                     Element::OutputType => config.output_type().prev().map(|output_type| {
                         config.set_output_type(output_type);
-                        StateChange::OutputType(ScreenState::Output(
+                        StateChange::OutputType(ScreenState::new_output(
                             output,
                             config.clone(),
                             Option::None,

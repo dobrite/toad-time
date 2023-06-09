@@ -253,8 +253,11 @@ async fn core1_display_task(state: State, mut display: Display) {
     let mut screens = Screens::new();
 
     display.init().await;
-    let next_screen =
-        StateChange::NextScreen(ScreenState::Home(state.bpm, state.sync, state.play_status));
+    let next_screen = StateChange::NextScreen(ScreenState::new_home(
+        state.bpm,
+        state.sync,
+        state.play_status,
+    ));
     screens.draw(next_screen, &mut display);
     display.flush().await;
 

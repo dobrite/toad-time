@@ -3,7 +3,7 @@ use heapless::String;
 
 use crate::{
     screens::Display,
-    state::{Bpm, Element, PlayStatus, ScreenState, Sync},
+    state::{Bpm, Element, HomeScreenState, PlayStatus, ScreenState, Sync},
     StateChange,
 };
 
@@ -46,7 +46,11 @@ impl HomeScreen {
             StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(ScreenState::Home(bpm, sync, play_status)) => {
+            StateChange::NextScreen(ScreenState::Home(HomeScreenState {
+                bpm,
+                sync,
+                play_status,
+            })) => {
                 self.redraw_screen(display, bpm, sync, play_status, &Element::Bpm);
             }
             _ => {}

@@ -32,7 +32,7 @@ impl State {
             sync: Sync::Ext,
             play_status: PlayStatus::Playing,
             current_element: Element::Bpm,
-            current_screen: ScreenState::Home(Bpm(120), Sync::Ext, PlayStatus::Playing),
+            current_screen: ScreenState::new_home(Bpm(120), Sync::Ext, PlayStatus::Playing),
             outputs,
         }
     }
@@ -63,28 +63,28 @@ impl State {
 
     fn next_screen(&mut self) -> StateChange {
         self.current_screen = match self.current_screen {
-            ScreenState::Home(_, _, _) => ScreenState::Output(
+            ScreenState::Home(_) => ScreenState::new_output(
                 Output::A,
                 self.outputs[usize::from(Output::A)].clone(),
                 Option::None,
             ),
-            ScreenState::Output(output, ..) => match output {
-                Output::A => ScreenState::Output(
+            ScreenState::Output(OutputScreenState { output, .. }) => match output {
+                Output::A => ScreenState::new_output(
                     Output::B,
                     self.outputs[usize::from(Output::B)].clone(),
                     Option::None,
                 ),
-                Output::B => ScreenState::Output(
+                Output::B => ScreenState::new_output(
                     Output::C,
                     self.outputs[usize::from(Output::C)].clone(),
                     Option::None,
                 ),
-                Output::C => ScreenState::Output(
+                Output::C => ScreenState::new_output(
                     Output::D,
                     self.outputs[usize::from(Output::D)].clone(),
                     Option::None,
                 ),
-                Output::D => ScreenState::Home(self.bpm, self.sync, self.play_status),
+                Output::D => ScreenState::new_home(self.bpm, self.sync, self.play_status),
             },
         };
         self.current_element = match self.current_screen {
@@ -101,7 +101,8 @@ impl State {
             Element::Sync => Element::Bpm,
             Element::Rate => match &self.current_screen {
                 ScreenState::Home(..) => unreachable!(),
-                ScreenState::Output(_, config, _) => match config.output_type() {
+                ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()
+                {
                     OutputType::Gate => Element::Prob,
                     OutputType::Euclid => Element::Length,
                 },

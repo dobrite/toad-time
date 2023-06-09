@@ -4,7 +4,9 @@ use seq::{OutputConfig, OutputType, Prob, Pwm, Rate};
 
 use crate::{
     screens::Display,
-    state::{Element, Output, OutputTypeString, ProbString, RateString, ScreenState},
+    state::{
+        Element, Output, OutputScreenState, OutputTypeString, ProbString, RateString, ScreenState,
+    },
     StateChange,
 };
 
@@ -38,13 +40,21 @@ impl GateScreen {
             StateChange::Pwm(_, pwm) => {
                 self.draw_pwm(display, pwm);
             }
-            StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
+            StateChange::OutputType(ScreenState::Output(OutputScreenState {
+                output,
+                config,
+                ..
+            })) => {
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
             StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(ScreenState::Output(output, config, _todo)) => {
+            StateChange::NextScreen(ScreenState::Output(OutputScreenState {
+                output,
+                config,
+                ..
+            })) => {
                 self.redraw_screen(display, output, config, &Element::Rate);
             }
             _ => {}

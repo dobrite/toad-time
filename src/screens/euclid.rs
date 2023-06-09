@@ -4,7 +4,7 @@ use seq::{euclid, Density, Length, OutputConfig, OutputType, Rate};
 
 use crate::{
     screens::Display,
-    state::{Element, Output, OutputTypeString, RateString, ScreenState},
+    state::{Element, Output, OutputScreenState, OutputTypeString, RateString, ScreenState},
     StateChange,
 };
 
@@ -43,7 +43,11 @@ impl EuclidScreen {
                 self.clear_grid(display);
                 self.draw_grid(display)
             }
-            StateChange::OutputType(ScreenState::Output(output, config, _todo)) => {
+            StateChange::OutputType(ScreenState::Output(OutputScreenState {
+                output,
+                config,
+                ..
+            })) => {
                 self.update_sequence(&config.length(), &config.density());
                 self.redraw_screen(display, output, config, &Element::OutputType);
             }
@@ -56,7 +60,11 @@ impl EuclidScreen {
             StateChange::NextElement(_, element) => {
                 self.draw_pointer(display, element);
             }
-            StateChange::NextScreen(ScreenState::Output(output, config, _)) => {
+            StateChange::NextScreen(ScreenState::Output(OutputScreenState {
+                output,
+                config,
+                ..
+            })) => {
                 self.update_sequence(&config.length(), &config.density());
                 self.redraw_screen(display, output, config, &Element::Rate);
             }

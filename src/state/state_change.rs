@@ -1,7 +1,7 @@
 use heapless::Vec;
 use seq::{Density, Length, OutputType, Prob, Pwm, Rate, Seq};
 
-use super::{Bpm, Element, Output, PlayStatus, ScreenState, Sync};
+use super::{Bpm, Element, Output, OutputScreenState, PlayStatus, ScreenState, Sync};
 
 pub enum StateChange {
     Bpm(Bpm),
@@ -26,7 +26,11 @@ impl StateChange {
                 seq.set_density(usize::from(*output), *density)
             }
             StateChange::Length(output, length, _) => seq.set_length(usize::from(*output), *length),
-            StateChange::OutputType(ScreenState::Output(output, ref config, _)) => {
+            StateChange::OutputType(ScreenState::Output(OutputScreenState {
+                output,
+                ref config,
+                ..
+            })) => {
                 seq.set_output_type(usize::from(*output), config.output_type());
             }
             StateChange::PlayStatus(play_status) => match play_status {
