@@ -33,6 +33,17 @@ impl From<Output> for usize {
     }
 }
 
+impl From<&Output> for usize {
+    fn from(val: &Output) -> Self {
+        match val {
+            Output::A => 0,
+            Output::B => 1,
+            Output::C => 2,
+            Output::D => 3,
+        }
+    }
+}
+
 impl fmt::Display for Output {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

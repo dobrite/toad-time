@@ -22,24 +22,22 @@ impl StateChange {
     pub fn update_seq(&self, seq: &mut Seq) {
         match self {
             StateChange::Bpm(bpm) => seq.set_bpm(bpm.0),
-            StateChange::Density(output, _, density) => {
-                seq.set_density(usize::from(*output), *density)
-            }
-            StateChange::Length(output, length, _) => seq.set_length(usize::from(*output), *length),
+            StateChange::Density(output, _, density) => seq.set_density(output.into(), *density),
+            StateChange::Length(output, length, _) => seq.set_length(output.into(), *length),
             StateChange::OutputType(ScreenState::Output(OutputScreenState {
                 output,
                 ref config,
                 ..
             })) => {
-                seq.set_output_type(usize::from(*output), config.output_type());
+                seq.set_output_type(output.into(), config.output_type());
             }
             StateChange::PlayStatus(play_status) => match play_status {
                 PlayStatus::Playing => { /* TODO: pause */ }
                 PlayStatus::Paused => { /* TODO: reset then play */ }
             },
-            StateChange::Prob(output, prob) => seq.set_prob(usize::from(*output), *prob),
-            StateChange::Pwm(output, pwm) => seq.set_pwm(usize::from(*output), *pwm),
-            StateChange::Rate(output, _, rate) => seq.set_rate(usize::from(*output), *rate),
+            StateChange::Prob(output, prob) => seq.set_prob(output.into(), *prob),
+            StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), *pwm),
+            StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), *rate),
             StateChange::Index(..)
             | StateChange::NextElement(..)
             | StateChange::NextScreen(..)
