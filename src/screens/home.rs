@@ -32,7 +32,7 @@ impl HomeScreen {
         }
     }
 
-    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
+    pub fn draw(&mut self, state_change: StateChange, display: &mut Display) {
         match state_change {
             StateChange::Bpm(bpm) => {
                 self.clear_bpm_value(display);
@@ -48,7 +48,7 @@ impl HomeScreen {
                 self.draw_pointer(display, current_element);
             }
             StateChange::NextScreen(screen_state) => {
-                self.redraw_screen(display, screen_state, &Element::Bpm);
+                self.redraw_screen(display, screen_state, Element::Bpm);
             }
             _ => {}
         }
@@ -57,8 +57,8 @@ impl HomeScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        screen_state: &ScreenState,
-        element: &Element,
+        screen_state: ScreenState,
+        element: Element,
     ) {
         if let ScreenState::Home(HomeScreenState {
             bpm,
@@ -84,7 +84,7 @@ impl HomeScreen {
         display.clear_bigge_text(&self.bpm_str, Point::new(22, 30));
     }
 
-    fn draw_bpm_value(&mut self, display: &mut Display, bpm: &Bpm) {
+    fn draw_bpm_value(&mut self, display: &mut Display, bpm: Bpm) {
         display.draw_bigge_text(&mut self.bpm_str, bpm, Point::new(22, 30));
     }
 
@@ -99,11 +99,11 @@ impl HomeScreen {
         display.clear_smol_text(&self.sync_str, Point::new(22, 50));
     }
 
-    fn draw_sync(&mut self, display: &mut Display, sync: &Sync) {
+    fn draw_sync(&mut self, display: &mut Display, sync: Sync) {
         display.draw_smol_text(&mut self.sync_str, sync, Point::new(22, 50));
     }
 
-    fn draw_play_pause(&mut self, display: &mut Display, play_status: &PlayStatus) {
+    fn draw_play_pause(&mut self, display: &mut Display, play_status: PlayStatus) {
         let point = Point::new(56, 30);
         let index = match play_status {
             PlayStatus::Playing => 0,
@@ -113,7 +113,7 @@ impl HomeScreen {
         display.draw_play_pause(index, point);
     }
 
-    fn clear_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn clear_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Bpm => display.clear_pointer_right(Point::new(4, 8)),
             Element::Sync => display.clear_pointer_right(Point::new(4, 32)),
@@ -121,7 +121,7 @@ impl HomeScreen {
         };
     }
 
-    fn draw_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn draw_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Bpm => display.draw_pointer_right(Point::new(4, 8)),
             Element::Sync => display.draw_pointer_right(Point::new(4, 32)),

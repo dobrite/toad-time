@@ -30,7 +30,7 @@ impl EuclidScreen {
         }
     }
 
-    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
+    pub fn draw(&mut self, state_change: StateChange, display: &mut Display) {
         match state_change {
             StateChange::Rate(.., rate) => {
                 self.clear_rate(display);
@@ -44,20 +44,20 @@ impl EuclidScreen {
                 self.draw_grid(display)
             }
             StateChange::OutputType(screen_state) => {
-                self.redraw_screen(display, screen_state, &Element::OutputType);
+                self.redraw_screen(display, screen_state, Element::OutputType);
             }
             StateChange::Density(_, length, density) => {
                 self.update_sequence(length, density);
                 self.clear_grid(display);
                 self.draw_grid(display);
             }
-            StateChange::Index(_, index) => self.draw_caret(display, *index),
+            StateChange::Index(_, index) => self.draw_caret(display, index),
             StateChange::NextElement(_, previous_element, current_element) => {
                 self.clear_pointer(display, previous_element);
                 self.draw_pointer(display, current_element);
             }
             StateChange::NextScreen(screen_state) => {
-                self.redraw_screen(display, screen_state, &Element::Rate);
+                self.redraw_screen(display, screen_state, Element::Rate);
             }
             _ => {}
         }
@@ -66,8 +66,8 @@ impl EuclidScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        screen_state: &ScreenState,
-        element: &Element,
+        screen_state: ScreenState,
+        element: Element,
     ) {
         if let ScreenState::Output(OutputScreenState {
             output,
@@ -76,19 +76,19 @@ impl EuclidScreen {
         }) = screen_state
         {
             display.clear();
-            self.update_sequence(&config.length(), &config.density());
+            self.update_sequence(config.length(), config.density());
             self.draw_name(display, output);
             self.draw_clock(display);
-            self.draw_rate(display, &config.rate());
-            self.draw_length(display, &config.length());
+            self.draw_rate(display, config.rate());
+            self.draw_length(display, config.length());
             self.draw_grid(display);
             self.draw_caret(display, index.unwrap_or(0));
-            self.draw_output_type(display, &config.output_type());
+            self.draw_output_type(display, config.output_type());
             self.draw_pointer(display, element);
         }
     }
 
-    fn draw_name(&mut self, display: &mut Display, output: &Output) {
+    fn draw_name(&mut self, display: &mut Display, output: Output) {
         display.draw_bigge_text(&mut self.name_str, output, Point::new(0, 24));
     }
 
@@ -100,7 +100,7 @@ impl EuclidScreen {
         display.clear_smol_text(&self.rate_str, Point::new(72, 29));
     }
 
-    fn draw_rate(&mut self, display: &mut Display, rate: &Rate) {
+    fn draw_rate(&mut self, display: &mut Display, rate: Rate) {
         let str = RateString::from(rate).0;
         display.draw_smol_text(&mut self.rate_str, str, Point::new(72, 29));
     }
@@ -109,7 +109,7 @@ impl EuclidScreen {
         display.clear_smol_text(&self.length_str, Point::new(74, 45));
     }
 
-    fn draw_length(&mut self, display: &mut Display, length: &Length) {
+    fn draw_length(&mut self, display: &mut Display, length: Length) {
         display.draw_smol_text(&mut self.length_str, length.0, Point::new(74, 45));
     }
 
@@ -155,12 +155,12 @@ impl EuclidScreen {
         display.draw_caret(caret_point(index));
     }
 
-    fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
+    fn draw_output_type(&mut self, display: &mut Display, output_type: OutputType) {
         let str = OutputTypeString::from(output_type).0;
         display.draw_bigge_text(&mut self.output_type_str, str, Point::new(0, 50));
     }
 
-    fn clear_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn clear_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Rate => display.clear_pointer_right(Point::new(36, 10)),
             Element::Length => display.clear_pointer_right(Point::new(36, 28)),
@@ -170,7 +170,7 @@ impl EuclidScreen {
         };
     }
 
-    fn draw_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn draw_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Rate => display.draw_pointer_right(Point::new(36, 10)),
             Element::Length => display.draw_pointer_right(Point::new(36, 28)),
@@ -180,8 +180,8 @@ impl EuclidScreen {
         };
     }
 
-    fn update_sequence(&mut self, length: &Length, density: &Density) {
+    fn update_sequence(&mut self, length: Length, density: Density) {
         self.sequence.resize_default(length.0 as usize).ok();
-        euclid(*density, *length, &mut self.sequence);
+        euclid(density, length, &mut self.sequence);
     }
 }

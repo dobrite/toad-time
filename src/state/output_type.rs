@@ -21,8 +21,8 @@ impl Updatable for OutputType {
 
 pub struct OutputTypeString(pub String<3>);
 
-impl From<&OutputType> for OutputTypeString {
-    fn from(val: &OutputType) -> Self {
+impl From<OutputType> for OutputTypeString {
+    fn from(val: OutputType) -> Self {
         let output_type_string = match val {
             OutputType::Gate => "G",
             OutputType::Euclid => "E",

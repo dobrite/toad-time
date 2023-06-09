@@ -27,7 +27,7 @@ impl GateScreen {
         }
     }
 
-    pub fn draw(&mut self, state_change: &StateChange, display: &mut Display) {
+    pub fn draw(&mut self, state_change: StateChange, display: &mut Display) {
         match state_change {
             StateChange::Rate(.., rate) => {
                 self.clear_rate(display);
@@ -41,14 +41,14 @@ impl GateScreen {
                 self.draw_pwm(display, pwm);
             }
             StateChange::OutputType(screen_state) => {
-                self.redraw_screen(display, screen_state, &Element::OutputType);
+                self.redraw_screen(display, screen_state, Element::OutputType);
             }
             StateChange::NextElement(_, previous_element, current_element) => {
                 self.clear_pointer(display, previous_element);
                 self.draw_pointer(display, current_element);
             }
             StateChange::NextScreen(screen_state) => {
-                self.redraw_screen(display, screen_state, &Element::Rate);
+                self.redraw_screen(display, screen_state, Element::Rate);
             }
             _ => {}
         }
@@ -57,23 +57,23 @@ impl GateScreen {
     fn redraw_screen(
         &mut self,
         display: &mut Display,
-        screen_state: &ScreenState,
-        element: &Element,
+        screen_state: ScreenState,
+        element: Element,
     ) {
         if let ScreenState::Output(OutputScreenState { output, config, .. }) = screen_state {
             display.clear();
             self.draw_name(display, output);
             self.draw_clock(display);
             self.draw_dice(display);
-            self.draw_rate(display, &config.rate());
-            self.draw_prob(display, &config.prob());
-            self.draw_pwm(display, &config.pwm()); // 65x16 (13x8)
-            self.draw_output_type(display, &config.output_type());
+            self.draw_rate(display, config.rate());
+            self.draw_prob(display, config.prob());
+            self.draw_pwm(display, config.pwm()); // 65x16 (13x8)
+            self.draw_output_type(display, config.output_type());
             self.draw_pointer(display, element);
         }
     }
 
-    fn draw_name(&mut self, display: &mut Display, output: &Output) {
+    fn draw_name(&mut self, display: &mut Display, output: Output) {
         display.draw_bigge_text(&mut self.name_str, output, Point::new(0, 24));
     }
 
@@ -89,7 +89,7 @@ impl GateScreen {
         display.clear_smol_text(&self.rate_str, Point::new(72, 29));
     }
 
-    fn draw_rate(&mut self, display: &mut Display, rate: &Rate) {
+    fn draw_rate(&mut self, display: &mut Display, rate: Rate) {
         let str = RateString::from(rate).0;
         display.draw_smol_text(&mut self.rate_str, str, Point::new(72, 29));
     }
@@ -98,23 +98,23 @@ impl GateScreen {
         display.clear_smol_text(&self.prob_str, Point::new(74, 46));
     }
 
-    fn draw_prob(&mut self, display: &mut Display, prob: &Prob) {
+    fn draw_prob(&mut self, display: &mut Display, prob: Prob) {
         let str = ProbString::from(prob).0;
         display.draw_smol_text(&mut self.prob_str, str, Point::new(74, 46));
     }
 
-    fn draw_pwm(&mut self, display: &mut Display, pwm: &Pwm) {
+    fn draw_pwm(&mut self, display: &mut Display, pwm: Pwm) {
         let point = Point::new(55, 46);
         display.clear_pwm(point);
         display.draw_pwm(pwm.index(), point);
     }
 
-    fn draw_output_type(&mut self, display: &mut Display, output_type: &OutputType) {
+    fn draw_output_type(&mut self, display: &mut Display, output_type: OutputType) {
         let str = OutputTypeString::from(output_type).0;
         display.draw_bigge_text(&mut self.output_type_str, str, Point::new(0, 50));
     }
 
-    fn clear_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn clear_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Rate => display.clear_pointer_right(Point::new(36, 10)),
             Element::Prob => display.clear_pointer_right(Point::new(36, 28)),
@@ -124,7 +124,7 @@ impl GateScreen {
         };
     }
 
-    fn draw_pointer(&mut self, display: &mut Display, element: &Element) {
+    fn draw_pointer(&mut self, display: &mut Display, element: Element) {
         match element {
             Element::Rate => display.draw_pointer_right(Point::new(36, 10)),
             Element::Prob => display.draw_pointer_right(Point::new(36, 28)),
