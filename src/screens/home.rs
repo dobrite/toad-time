@@ -10,6 +10,7 @@ use crate::{
 pub struct HomeScreen {
     bpm_label: String<3>,
     bpm_str: String<3>,
+    frogge_index: usize,
     sync_str: String<3>,
 }
 
@@ -28,12 +29,14 @@ impl HomeScreen {
         Self {
             bpm_label,
             bpm_str,
+            frogge_index: 0,
             sync_str,
         }
     }
 
     pub fn draw(&mut self, state_change: StateChange, display: &mut Display) {
         match state_change {
+            StateChange::Frame => self.draw_frogge(display),
             StateChange::Bpm(bpm) => {
                 self.clear_bpm_value(display);
                 self.draw_bpm_value(display, bpm);
@@ -90,9 +93,10 @@ impl HomeScreen {
 
     fn draw_frogge(&mut self, display: &mut Display) {
         let point = Point::new(80, 26);
-        let index = 0;
         display.clear_frogge(point);
-        display.draw_frogge(index, point);
+        display.draw_frogge(self.frogge_index, point);
+        self.frogge_index += 1;
+        self.frogge_index %= 8;
     }
 
     fn clear_sync(&mut self, display: &mut Display) {

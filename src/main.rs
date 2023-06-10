@@ -24,6 +24,7 @@ use seq::{Frac, OutputConfig, OutputType, Rate, Seq};
 use ssd1306_async::{prelude::*, Ssd1306};
 
 use crate::{
+    animator::Animator,
     display::Display,
     screens::Screens,
     state::{Command, Output, Screen, ScreenState, State, StateChange},
@@ -39,6 +40,7 @@ static DISPLAY_STATE_CHANNEL: Channel<CriticalSectionRawMutex, StateChange, 8> =
 
 type Encoder = RotaryEncoder<StandardMode, Input<'static, PIN_14>, Input<'static, PIN_15>>;
 
+mod animator;
 mod display;
 mod screens;
 mod state;
@@ -155,6 +157,7 @@ async fn core0_tick_task(
     let tick_duration = seq.tick_duration_micros();
     let mut ticker = Ticker::every(Duration::from_micros(tick_duration));
     let mut state_changes: Vec<StateChange, 4> = Vec::new();
+    let mut animator = Animator::new(seq.resolution(), 1);
 
     loop {
         seq.tick();
@@ -170,6 +173,11 @@ async fn core0_tick_task(
                 }
             }
         });
+
+        animator.update();
+        if animator.next_frame() {
+            state_changes.push(StateChange::Frame).ok();
+        }
 
         while let Ok(state_change) = TICK_STATE_CHANNEL.try_recv() {
             memo.update(&state_change);

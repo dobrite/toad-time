@@ -14,6 +14,7 @@ pub enum StateChange {
     NextScreen(ScreenState),
     NextElement(Screen, Element, Element),
     Index(Output, usize),
+    Frame,
 }
 
 impl StateChange {
@@ -40,7 +41,8 @@ impl StateChange {
             StateChange::Prob(output, prob) => seq.set_prob(output.into(), *prob),
             StateChange::Pwm(output, pwm) => seq.set_pwm(output.into(), *pwm),
             StateChange::Rate(output, _, rate) => seq.set_rate(output.into(), *rate),
-            StateChange::Index(..)
+            StateChange::Frame
+            | StateChange::Index(..)
             | StateChange::NextElement(..)
             | StateChange::NextScreen(..)
             | StateChange::OutputType(..)
@@ -73,6 +75,7 @@ impl StateChange {
 impl From<&StateChange> for Option<Screen> {
     fn from(val: &StateChange) -> Self {
         match val {
+            StateChange::Frame => Option::None,
             StateChange::Bpm(_) | StateChange::Sync(_) => Option::Some(Screen::Home),
             StateChange::PlayStatus(screen, _) => {
                 if let Screen::Home = screen {
