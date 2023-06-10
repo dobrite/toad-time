@@ -53,7 +53,8 @@ impl BpmSync {
     fn calculate_bpm(&self) -> u32 {
         let sum = self.sum();
         let len = self.instants.len() as u64;
-        let avg_micros = (sum / len) as f32;
+        let num_windows = len - 1;
+        let avg_micros = (sum / num_windows) as f32;
         let beats_per_second = MICRO_SECONDS_IN_A_SECOND as f32 / avg_micros;
         let bpm = beats_per_second * SECONDS_IN_A_MINUTE as f32;
 
