@@ -3,6 +3,7 @@ use heapless::Vec;
 
 const MICRO_SECONDS_IN_A_SECOND: u64 = 1_000_000;
 const SECONDS_IN_A_MINUTE: u64 = 60;
+const TOO_LONG_IN_MIRCO_SECONDS: u64 = 5_000_000; // 5 seconds
 
 #[derive(Clone)]
 pub struct BpmSync {
@@ -36,8 +37,9 @@ impl BpmSync {
         Option::Some(self.calculate_bpm())
     }
 
-    fn been_too_long(&self, _now: Instant) -> bool {
-        false // TODO
+    fn been_too_long(&self, later: Instant) -> bool {
+        let earlier = *self.instants.last().unwrap();
+        (later - earlier).as_micros() >= TOO_LONG_IN_MIRCO_SECONDS
     }
 
     fn calculate_bpm(&self) -> u32 {
