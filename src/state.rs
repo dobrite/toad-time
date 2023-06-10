@@ -2,6 +2,7 @@ use seq::OutputConfig;
 
 pub use self::{
     bpm::Bpm,
+    bpm_sync::BpmSync,
     command::Command,
     element::Element,
     output::Output,
@@ -18,6 +19,7 @@ pub use self::{
 };
 
 mod bpm;
+mod bpm_sync;
 mod command;
 mod density;
 mod element;

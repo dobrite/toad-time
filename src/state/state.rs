@@ -6,6 +6,7 @@ use super::*;
 #[derive(Clone)]
 pub struct State {
     pub bpm: Bpm,
+    bpm_sync: Option<BpmSync>,
     pub sync: Sync,
     pub play_status: PlayStatus,
     pub current_element: Element,
@@ -29,6 +30,7 @@ impl State {
     pub fn new(outputs: Vec<OutputConfig, 4>) -> Self {
         Self {
             bpm: Bpm(120),
+            bpm_sync: Option::Some(BpmSync::new()),
             sync: Sync::Int,
             play_status: PlayStatus::Playing,
             current_element: Element::Bpm,
@@ -145,12 +147,19 @@ impl State {
     }
 
     fn bpm_sync(&mut self) -> Option<StateChange> {
-        let bpm = Bpm(240);
-        self.bpm = bpm;
+        if let Sync::Int = self.sync {
+            return Option::None
+        }
 
-        match self.sync {
-            Sync::Int => Option::None,
-            Sync::Ext => Option::Some(StateChange::Bpm(bpm)),
+        match &mut self.bpm_sync {
+            Option::None => {
+                self.bpm_sync = Option::Some(BpmSync::new());
+                Option::None
+            }
+            Option::Some(bpm_sync) => bpm_sync.pulse().map(|next_bpm| {
+                self.bpm = Bpm(next_bpm);
+                StateChange::Bpm(self.bpm)
+            }),
         }
     }
 }
