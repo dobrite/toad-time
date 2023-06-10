@@ -12,7 +12,7 @@ impl Updatable for Density {
     }
 
     fn prev(&self) -> Option<Self> {
-        if self.0 == 1 {
+        if self.0 == 0 {
             Option::None
         } else {
             Option::Some(Self(self.0 - 1))
