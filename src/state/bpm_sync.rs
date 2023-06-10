@@ -9,7 +9,7 @@ const TOO_LONG_IN_MIRCO_SECONDS: u64 = 5_000_000; // 5 seconds
 
 #[derive(Clone)]
 pub struct BpmSync {
-    instants: Vec<Instant, 8>,
+    instants: Vec<Instant, 4>,
 }
 
 impl Default for BpmSync {
