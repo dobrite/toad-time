@@ -58,6 +58,7 @@ impl State {
             Command::EncoderPress => Some(self.next_element()),
             Command::PagePress => Some(self.next_screen()),
             Command::PlayPress => Some(self.toggle_play()),
+            Command::BpmPress => self.bpm_sync(),
         }
     }
 
@@ -141,5 +142,15 @@ impl State {
         };
 
         StateChange::PlayStatus(self.current_screen, self.play_status)
+    }
+
+    fn bpm_sync(&mut self) -> Option<StateChange> {
+        let bpm = Bpm(240);
+        self.bpm = bpm;
+
+        match self.sync {
+            Sync::Int => Option::None,
+            Sync::Ext => Option::Some(StateChange::Bpm(bpm)),
+        }
     }
 }

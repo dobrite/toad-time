@@ -7,4 +7,5 @@ pub enum Command {
     EncoderPress,
     PagePress,
     PlayPress,
+    BpmPress,
 }

@@ -10,7 +10,7 @@ use embassy_executor::{Executor, _export::StaticCell};
 use embassy_rp::{
     gpio::{AnyPin, Input, Level, Output as EmbassyOutput, Pin, Pull},
     multicore::{spawn_core1, Stack},
-    peripherals::{PIN_11, PIN_12, PIN_13, PIN_14, PIN_15},
+    peripherals::{PIN_10, PIN_11, PIN_12, PIN_13, PIN_14, PIN_15},
     spi::{Config, Spi},
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
@@ -107,6 +107,7 @@ fn main() -> ! {
         outputs
     };
 
+    let bpm_button = Input::new(p.PIN_10, Pull::Up);
     let play_button = Input::new(p.PIN_11, Pull::Up);
     let page_button = Input::new(p.PIN_12, Pull::Up);
     let encoder_button = Input::new(p.PIN_13, Pull::Up);
@@ -128,6 +129,7 @@ fn main() -> ! {
             let _ = spawner.spawn(core1_encoder_button_task(encoder_button));
             let _ = spawner.spawn(core1_page_button_task(page_button));
             let _ = spawner.spawn(core1_play_button_task(play_button));
+            let _ = spawner.spawn(core1_bpm_button_task(bpm_button));
         });
     });
 
@@ -219,6 +221,11 @@ async fn core1_page_button_task(page_button: Input<'static, PIN_12>) {
 #[embassy_executor::task]
 async fn core1_play_button_task(play_button: Input<'static, PIN_11>) {
     debounced_button(play_button, Command::PlayPress).await
+}
+
+#[embassy_executor::task]
+async fn core1_bpm_button_task(bpm_button: Input<'static, PIN_10>) {
+    debounced_button(bpm_button, Command::BpmPress).await
 }
 
 async fn debounced_button<B: InputPin>(button: B, command: Command)
