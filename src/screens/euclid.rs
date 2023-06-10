@@ -40,13 +40,18 @@ impl EuclidScreen {
                 self.draw_rate(display, rate);
             }
             StateChange::Sequence(SequenceState {
-                length, density, ..
+                length,
+                density,
+                index,
+                ..
             }) => {
                 self.update_sequence(length, density);
                 self.clear_length(display);
                 self.draw_length(display, length);
                 self.clear_grid(display);
-                self.draw_grid(display)
+                self.draw_grid(display);
+                self.clear_carets(display);
+                self.draw_caret(display, index.unwrap_or(0))
             }
             StateChange::OutputType(screen_state) => {
                 self.redraw_screen(display, screen_state, Element::OutputType);
@@ -114,6 +119,14 @@ impl EuclidScreen {
     }
 
     #[inline(always)]
+    fn caret_point(&self, idx: usize) -> Point {
+        let mut grid_point = self.grid_point(idx);
+        grid_point.x += 1;
+        grid_point.y -= 3;
+        grid_point
+    }
+
+    #[inline(always)]
     fn grid_point(&self, idx: usize) -> Point {
         let x = idx % 8;
         let y = idx / 8;
@@ -141,18 +154,17 @@ impl EuclidScreen {
         }
     }
 
+    pub fn clear_carets(&mut self, display: &mut Display) {
+        for idx in 0..16 {
+            display.clear_caret(self.caret_point(idx));
+        }
+    }
+
     pub fn draw_caret(&mut self, display: &mut Display, index: usize) {
         let len = self.sequence.len();
-        let caret_point = |idx| -> Point {
-            let mut grid_point = self.grid_point(idx);
-            grid_point.x += 1;
-            grid_point.y -= 3;
-            grid_point
-        };
-
         let idx = if index == 0 { len } else { index };
-        display.clear_caret(caret_point(idx - 1));
-        display.draw_caret(caret_point(index));
+        display.clear_caret(self.caret_point(idx - 1));
+        display.draw_caret(self.caret_point(index));
     }
 
     fn draw_output_type(&mut self, display: &mut Display, output_type: OutputType) {
