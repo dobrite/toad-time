@@ -193,7 +193,6 @@ impl EuclidScreen {
     }
 
     fn update_sequence(&mut self, length: Length, density: Density) {
-        self.sequence.resize_default(length.0 as usize).ok();
         euclid(density, length, &mut self.sequence);
     }
 }
