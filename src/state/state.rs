@@ -41,8 +41,20 @@ impl State {
         let current = &mut self.current_element.clone();
 
         match command {
-            Command::EncoderRight => current.next(self),
-            Command::EncoderLeft => current.prev(self),
+            Command::EncoderRight => current.next(self).map(|state_change| match state_change {
+                StateChange::OutputType(ref screen_state) => {
+                    self.current_screen = screen_state.into();
+                    state_change
+                }
+                _ => state_change,
+            }),
+            Command::EncoderLeft => current.prev(self).map(|state_change| match state_change {
+                StateChange::OutputType(ref screen_state) => {
+                    self.current_screen = screen_state.into();
+                    state_change
+                }
+                _ => state_change,
+            }),
             Command::EncoderPress => Some(self.next_element()),
             Command::PagePress => Some(self.next_screen()),
             Command::PlayPress => Some(self.toggle_play()),
