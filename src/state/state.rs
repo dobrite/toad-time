@@ -29,7 +29,7 @@ impl State {
     pub fn new(outputs: Vec<OutputConfig, 4>) -> Self {
         Self {
             bpm: Bpm(120),
-            sync: Sync::Ext,
+            sync: Sync::Int,
             play_status: PlayStatus::Playing,
             current_element: Element::Bpm,
             current_screen: Screen::Home,

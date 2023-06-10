@@ -13,15 +13,15 @@ pub enum Sync {
 impl Updatable for Sync {
     fn next(&self) -> Option<Self> {
         match self {
-            Sync::Int => Option::None,
-            Sync::Ext => Option::Some(Sync::Int),
+            Sync::Ext => Option::None,
+            Sync::Int => Option::Some(Sync::Ext),
         }
     }
 
     fn prev(&self) -> Option<Self> {
         match self {
-            Sync::Ext => Option::None,
-            Sync::Int => Option::Some(Sync::Ext),
+            Sync::Int => Option::None,
+            Sync::Ext => Option::Some(Sync::Int),
         }
     }
 }
