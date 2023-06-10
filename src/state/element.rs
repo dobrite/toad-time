@@ -1,3 +1,5 @@
+use seq::Density;
+
 use super::{Screen, ScreenState, SequenceState, State, StateChange, Updatable};
 
 #[derive(Clone)]
@@ -47,8 +49,14 @@ impl Element {
                         SequenceState::new(output, length, config.density()).into()
                     }),
                     Element::Density => config.density().next().map(|density| {
-                        config.set_sequence(config.length(), density);
-                        SequenceState::new(output, config.length(), density).into()
+                        let length = config.length();
+                        let density = if density.0 > length.0 {
+                            Density(density.0 - 1)
+                        } else {
+                            density
+                        };
+                        config.set_sequence(length, density);
+                        SequenceState::new(output, length, density).into()
                     }),
                     Element::OutputType => config.output_type().next().map(|output_type| {
                         config.set_output_type(output_type);
@@ -94,8 +102,14 @@ impl Element {
                         StateChange::Prob(output, prob)
                     }),
                     Element::Length => config.length().prev().map(|length| {
-                        config.set_sequence(length, config.density());
-                        SequenceState::new(output, length, config.density()).into()
+                        let density = config.density();
+                        let density = if length.0 < density.0 {
+                            config.density().prev().unwrap_or(density)
+                        } else {
+                            density
+                        };
+                        config.set_sequence(length, density);
+                        SequenceState::new(output, length, density).into()
                     }),
                     Element::Density => config.density().prev().map(|density| {
                         config.set_sequence(config.length(), density);
