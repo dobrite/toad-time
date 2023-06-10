@@ -114,8 +114,8 @@ impl EuclidScreen {
     }
 
     #[inline(always)]
-    fn grid_point(&self, idx: usize, len: usize) -> Point {
-        let x = idx % len % 8;
+    fn grid_point(&self, idx: usize) -> Point {
+        let x = idx % 8;
         let y = idx / 8;
         let p_x = GRID_START_X + x * (5 + 2);
         let p_y = GRID_START_Y + y * (5 + 5);
@@ -124,7 +124,7 @@ impl EuclidScreen {
 
     fn clear_grid(&mut self, display: &mut Display) {
         for idx in 0..16 {
-            display.clear_step_on(self.grid_point(idx, 16));
+            display.clear_step_on(self.grid_point(idx));
         }
     }
 
@@ -132,7 +132,7 @@ impl EuclidScreen {
         let len = self.sequence.len();
         for idx in 0..len {
             let step_on = self.sequence[idx];
-            let point = self.grid_point(idx, len);
+            let point = self.grid_point(idx);
             if step_on {
                 display.draw_step_on(point);
             } else {
@@ -144,7 +144,7 @@ impl EuclidScreen {
     pub fn draw_caret(&mut self, display: &mut Display, index: usize) {
         let len = self.sequence.len();
         let caret_point = |idx| -> Point {
-            let mut grid_point = self.grid_point(idx, len);
+            let mut grid_point = self.grid_point(idx);
             grid_point.x += 1;
             grid_point.y -= 3;
             grid_point
