@@ -4,6 +4,9 @@ use defmt::Format;
 
 use super::Updatable;
 
+pub const MIN_BPM: u32 = 1;
+pub const MAX_BPM: u32 = 300;
+
 #[derive(Clone, Copy, Format)]
 pub struct Bpm(pub u32);
 
@@ -15,7 +18,7 @@ impl fmt::Display for Bpm {
 
 impl Updatable for Bpm {
     fn next(&self) -> Option<Self> {
-        if self.0 == 300 {
+        if self.0 == MAX_BPM {
             Option::None
         } else {
             Option::Some(Self(self.0 + 1))
@@ -23,7 +26,7 @@ impl Updatable for Bpm {
     }
 
     fn prev(&self) -> Option<Self> {
-        if self.0 == 1 {
+        if self.0 == MIN_BPM {
             Option::None
         } else {
             Option::Some(Self(self.0 - 1))

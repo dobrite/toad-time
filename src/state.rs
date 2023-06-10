@@ -1,7 +1,7 @@
 use seq::OutputConfig;
 
 pub use self::{
-    bpm::Bpm,
+    bpm::{Bpm, MAX_BPM, MIN_BPM},
     bpm_sync::BpmSync,
     command::Command,
     element::Element,

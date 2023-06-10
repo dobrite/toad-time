@@ -1,6 +1,8 @@
 use embassy_time::Instant;
 use heapless::Vec;
 
+use super::MAX_BPM;
+
 const MICRO_SECONDS_IN_A_SECOND: u64 = 1_000_000;
 const SECONDS_IN_A_MINUTE: u64 = 60;
 const TOO_LONG_IN_MIRCO_SECONDS: u64 = 5_000_000; // 5 seconds
@@ -55,7 +57,7 @@ impl BpmSync {
         let beats_per_second = MICRO_SECONDS_IN_A_SECOND as f32 / avg_micros;
         let bpm = beats_per_second * SECONDS_IN_A_MINUTE as f32;
 
-        bpm as u32
+        [bpm as u32, MAX_BPM].into_iter().min().unwrap()
     }
 
     fn sum(&self) -> u64 {
