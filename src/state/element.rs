@@ -19,10 +19,12 @@ impl Element {
         match self {
             Element::Bpm => state.bpm.next().map(|bpm| {
                 state.bpm = bpm;
+                state.bpm_sync = Option::None;
                 StateChange::Bpm(bpm)
             }),
             Element::Sync => state.sync.next().map(|sync| {
                 state.sync = sync;
+                state.bpm_sync = Option::None;
                 StateChange::Sync(sync)
             }),
             elem => {

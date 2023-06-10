@@ -6,7 +6,7 @@ use super::*;
 #[derive(Clone)]
 pub struct State {
     pub bpm: Bpm,
-    bpm_sync: Option<BpmSync>,
+    pub bpm_sync: Option<BpmSync>,
     pub sync: Sync,
     pub play_status: PlayStatus,
     pub current_element: Element,
