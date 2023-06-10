@@ -10,6 +10,12 @@ pub struct BpmSync {
     instants: Vec<Instant, 8>,
 }
 
+impl Default for BpmSync {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BpmSync {
     pub fn new() -> Self {
         Self {
