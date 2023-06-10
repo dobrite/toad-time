@@ -69,3 +69,41 @@ impl StateChange {
         }
     }
 }
+
+impl From<&StateChange> for Option<Screen> {
+    fn from(val: &StateChange) -> Self {
+        match val {
+            StateChange::Bpm(_) | StateChange::Sync(_) => Option::Some(Screen::Home),
+            StateChange::PlayStatus(screen, _) => {
+                if let Screen::Home = screen {
+                    Option::Some(Screen::Home)
+                } else {
+                    Option::None
+                }
+            }
+            StateChange::Rate(output, output_type, _) => {
+                Option::Some(Screen::Output(*output, *output_type))
+            }
+            StateChange::Prob(output, ..) | StateChange::Pwm(output, ..) => {
+                Option::Some(Screen::Output(*output, OutputType::Gate))
+            }
+            StateChange::Index(output, ..)
+            | StateChange::Sequence(SequenceState { output, .. }) => {
+                Option::Some(Screen::Output(*output, OutputType::Euclid))
+            }
+            StateChange::OutputType(ref screen_state) => match screen_state {
+                ScreenState::Output(OutputScreenState { output, config, .. }) => {
+                    Option::Some(Screen::Output(*output, config.output_type()))
+                }
+                _ => unreachable!(),
+            },
+            StateChange::NextElement(screen, ..) => Option::Some(*screen),
+            StateChange::NextScreen(ref next_screen) => match next_screen {
+                ScreenState::Home(..) => Option::Some(Screen::Home),
+                ScreenState::Output(OutputScreenState { output, config, .. }) => {
+                    Option::Some(Screen::Output(*output, config.output_type()))
+                }
+            },
+        }
+    }
+}
