@@ -1,4 +1,4 @@
-use super::{Screen, ScreenState, State, StateChange, Updatable};
+use super::{Screen, ScreenState, SequenceState, State, StateChange, Updatable};
 
 #[derive(Clone)]
 pub enum Element {
@@ -43,12 +43,22 @@ impl Element {
                         StateChange::Prob(output, prob)
                     }),
                     Element::Length => config.length().next().map(|length| {
-                        config.set_length(length);
-                        StateChange::Length(output, length, config.density())
+                        config.set_sequence(length, config.density());
+                        StateChange::Sequence(SequenceState {
+                            output,
+                            length,
+                            density: config.density(),
+                            index: Option::None,
+                        })
                     }),
                     Element::Density => config.density().next().map(|density| {
-                        config.set_density(density);
-                        StateChange::Density(output, config.length(), density)
+                        config.set_sequence(config.length(), density);
+                        StateChange::Sequence(SequenceState {
+                            output,
+                            length: config.length(),
+                            density,
+                            index: Option::None,
+                        })
                     }),
                     Element::OutputType => config.output_type().next().map(|output_type| {
                         config.set_output_type(output_type);
@@ -94,12 +104,22 @@ impl Element {
                         StateChange::Prob(output, prob)
                     }),
                     Element::Length => config.length().prev().map(|length| {
-                        config.set_length(length);
-                        StateChange::Length(output, length, config.density())
+                        config.set_sequence(length, config.density());
+                        StateChange::Sequence(SequenceState {
+                            output,
+                            length,
+                            density: config.density(),
+                            index: Option::None,
+                        })
                     }),
                     Element::Density => config.density().prev().map(|density| {
-                        config.set_density(density);
-                        StateChange::Density(output, config.length(), density)
+                        config.set_sequence(config.length(), density);
+                        StateChange::Sequence(SequenceState {
+                            output,
+                            length: config.length(),
+                            density,
+                            index: Option::None,
+                        })
                     }),
                     Element::OutputType => config.output_type().prev().map(|output_type| {
                         config.set_output_type(output_type);

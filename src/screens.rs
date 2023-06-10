@@ -41,8 +41,7 @@ impl Screens {
             },
             StateChange::Pwm(..) => self.gate.draw(state_change, display),
             StateChange::Prob(..) => self.gate.draw(state_change, display),
-            StateChange::Length(..) => self.euclid.draw(state_change, display),
-            StateChange::Density(..) => self.euclid.draw(state_change, display),
+            StateChange::Sequence(..) => self.euclid.draw(state_change, display),
             StateChange::Index(..) => self.euclid.draw(state_change, display),
             StateChange::OutputType(ref screen_state) => match screen_state {
                 ScreenState::Output(OutputScreenState { config, .. }) => match config.output_type()

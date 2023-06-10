@@ -11,6 +11,7 @@ pub use self::{
     rate::RateString,
     screen::Screen,
     screen_state::{HomeScreenState, OutputScreenState, ScreenState},
+    sequence_state::SequenceState,
     state::State,
     state_change::StateChange,
     sync::Sync,
@@ -29,6 +30,7 @@ mod pwm;
 mod rate;
 mod screen;
 mod screen_state;
+mod sequence_state;
 #[allow(clippy::module_inception)]
 mod state;
 mod state_change;

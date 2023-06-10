@@ -1,6 +1,6 @@
-use seq::{Density, Length, OutputType, Prob, Pwm, Rate, Seq};
+use seq::{OutputType, Prob, Pwm, Rate, Seq};
 
-use super::{Bpm, Element, Output, OutputScreenState, PlayStatus, Screen, ScreenState, Sync};
+use super::*;
 
 pub enum StateChange {
     Bpm(Bpm),
@@ -8,8 +8,7 @@ pub enum StateChange {
     Rate(Output, OutputType, Rate),
     Pwm(Output, Pwm),
     Prob(Output, Prob),
-    Length(Output, Length, Density),
-    Density(Output, Length, Density),
+    Sequence(SequenceState),
     OutputType(ScreenState),
     PlayStatus(Screen, PlayStatus),
     NextScreen(ScreenState),
@@ -21,8 +20,12 @@ impl StateChange {
     pub fn update_seq(&self, seq: &mut Seq) {
         match self {
             StateChange::Bpm(bpm) => seq.set_bpm(bpm.0),
-            StateChange::Density(output, _, density) => seq.set_density(output.into(), *density),
-            StateChange::Length(output, length, _) => seq.set_length(output.into(), *length),
+            StateChange::Sequence(SequenceState {
+                output,
+                length,
+                density,
+                ..
+            }) => seq.set_sequence(output.into(), *length, *density),
             StateChange::OutputType(ScreenState::Output(OutputScreenState {
                 output,
                 ref config,
@@ -56,6 +59,11 @@ impl StateChange {
                 let index = seq.get_index(screen_state.index().unwrap_or(0));
                 screen_state.set_index(index);
                 StateChange::NextScreen(screen_state)
+            }
+            StateChange::Sequence(mut sequence_state) => {
+                let index = seq.get_index(sequence_state.output.into());
+                sequence_state.index = Option::Some(index);
+                StateChange::Sequence(sequence_state)
             }
             _ => self,
         }
