@@ -20,15 +20,17 @@ impl Default for BpmSync {
 
 impl BpmSync {
     pub fn new() -> Self {
-        Self {
-            instants: Vec::new(),
-        }
+        let now = Instant::now();
+        let mut instants = Vec::new();
+        instants.push(now).ok();
+
+        Self { instants }
     }
 
     pub fn pulse(&mut self) -> Option<u32> {
         let now = Instant::now();
 
-        if self.instants.is_empty() || self.been_too_long(now) {
+        if self.been_too_long(now) {
             self.instants.clear();
             self.instants.push(now).ok();
 
