@@ -50,15 +50,15 @@ impl StateChange {
 
     pub fn update_index(self, seq: &Seq) -> Self {
         match self {
-            StateChange::OutputType(mut screen_state) => {
-                let index = seq.get_index(screen_state.index().unwrap_or(0));
-                screen_state.set_index(index);
-                StateChange::OutputType(screen_state)
-            }
             StateChange::NextScreen(mut screen_state) => {
                 let index = seq.get_index(screen_state.index().unwrap_or(0));
                 screen_state.set_index(index);
                 StateChange::NextScreen(screen_state)
+            }
+            StateChange::OutputType(mut screen_state) => {
+                let index = seq.get_index(screen_state.index().unwrap_or(0));
+                screen_state.set_index(index);
+                StateChange::OutputType(screen_state)
             }
             StateChange::Sequence(mut sequence_state) => {
                 let index = seq.get_index(sequence_state.output.into());
